@@ -1,0 +1,18 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>메모장</title>
+<link rel="stylesheet" href="common.css"><style>
+body{background:#fff8d6;display:flex;flex-direction:column}header{display:flex;align-items:center;gap:8px;background:#e8b800;padding:10px}header b{flex:1;font-size:18px}header button{border:0;background:#fff9;border-radius:8px;padding:8px 12px;font-size:15px}
+#l{flex:1;overflow:auto}.m{padding:14px 16px;border-bottom:1px solid #e6d98a}.m b{display:block}.m small{color:#8a7a20}
+#e{flex:1;border:0;background:#fffbe8;padding:16px;font-size:17px;line-height:1.6;resize:none;outline:0;display:none}
+</style></head><body><header><button id="b">←</button><b id="t">메모장</b><button id="n">＋ 새 메모</button><button id="d" style="display:none">삭제</button></header>
+<div id="l"></div><textarea id="e" placeholder="메모를 입력하세요"></textarea>
+<script>
+let M=JSON.parse(localStorage.memos||'[]'),c=null;const $=s=>document.querySelector(s),sv=()=>localStorage.memos=JSON.stringify(M);
+function list(){c=null;$('#e').style.display='none';$('#l').style.display='block';$('#d').style.display='none';$('#t').textContent='메모장';
+ $('#l').innerHTML=M.length?'':'<p style="padding:30px;color:#8a7a20;text-align:center">메모가 없습니다.</p>';
+ M.forEach((m,i)=>{const r=document.createElement('div');r.className='m';r.innerHTML='<b></b><small></small>';r.firstChild.textContent=m.t.split('\n')[0]||'(빈 메모)';r.lastChild.textContent=new Date(m.d).toLocaleString('ko-KR');r.onclick=()=>open(i);$('#l').appendChild(r)})}
+function open(i){c=i;$('#l').style.display='none';$('#e').style.display='block';$('#e').value=M[i].t;$('#d').style.display='';$('#t').textContent='편집';$('#e').focus()}
+$('#n').onclick=()=>{M.unshift({t:'',d:Date.now()});sv();open(0)};
+$('#e').oninput=()=>{M[c].t=$('#e').value;M[c].d=Date.now();sv()};
+$('#d').onclick=()=>{if(confirm('이 메모를 삭제할까요?')){M.splice(c,1);sv();list()}};
+$('#b').onclick=()=>c===null?location.href='index.html':list();list();
+</script></body></html>

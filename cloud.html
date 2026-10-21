@@ -1,0 +1,38 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>클라우드</title>
+<link rel="stylesheet" href="common.css"><style>
+body{background:#fafafa;color:#222;display:flex;flex-direction:column;user-select:none}
+header{display:flex;align-items:center;gap:6px;background:#212121;color:#fff;height:58px;padding:0 8px;flex:none}header.sel{background:#002f3f}
+header b{flex:1;font-size:20px;font-weight:400;margin-left:8px}header button{background:none;border:0;color:#fff;font-size:15px;padding:10px;border-radius:8px}
+.path{height:44px;border-bottom:1px solid #ddd;background:#fff;display:flex;align-items:center;padding:0 14px;gap:8px;font-size:14px;color:#666;flex:none}
+#l{flex:1;overflow:auto}.r{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #ddd;min-height:64px;background:#fafafa}.r.s{background:#4db6ab}
+.fi{width:44px;height:36px;border-radius:5px;background:linear-gradient(#f3c37a,#d89a45);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#6b3f00;flex:none}
+.n{flex:1;min-width:0}.n b{display:block;font-size:17px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.n small{color:#777}.r.s small{color:#124}
+.em{padding:50px 20px;text-align:center;color:#888}
+footer{display:none;background:#002f3f;color:#fff;padding-bottom:env(safe-area-inset-bottom)}footer.on{display:flex}footer button{flex:1;background:none;border:0;color:#fff;padding:12px 0;font-size:14px}
+</style></head><body>
+<header id="h"></header><div class="path">🏠 › 💾 FILE</div><div id="l"></div>
+<footer id="f"><button id="dn">⬇<br>내려받기</button><button id="rm">🗑<br>삭제</button><button id="al">☑<br>전체선택</button></footer>
+<input type="file" id="fi" multiple hidden>
+<script src="common.js"></script><script>
+let files=[],sel=new Set();
+const D='FILE';
+function head(){const h=$('#h'),on=sel.size>0;h.className=on?'sel':'';$('#f').className=on?'on':'';
+ h.innerHTML=on?`<button onclick="sel.clear();draw()">✕</button><b>${sel.size}/${files.length}</b>`:`<button onclick="location.href='index.html'">←</button><b>메인 저장소</b><button id=up>⬆ 올리기</button><button id=rf>↻</button>`;
+ if(!on){$('#up').onclick=()=>$('#fi').click();$('#rf').onclick=load}}
+function draw(){head();const L=$('#l');if(!files.length){L.innerHTML='<div class=em>파일이 없습니다.<br>올리기로 자료를 추가하세요.</div>';return}
+ L.innerHTML='';files.forEach(f=>{const r=document.createElement('div');r.className='r'+(sel.has(f.name)?' s':'');
+  r.innerHTML='<div class=fi></div><div class=n><b></b><small>'+mb(f.size)+'</small></div>';
+  r.querySelector('.fi').textContent=(f.name.split('.').pop()||'').slice(0,4).toUpperCase();r.querySelector('b').textContent=f.name;
+  const tg=()=>{sel.has(f.name)?sel.delete(f.name):sel.add(f.name);draw()};let t;
+  r.querySelector('.fi').onclick=tg;
+  r.onclick=e=>{if(e.target.closest('.fi'))return;sel.size?tg():dl([f])};
+  r.ontouchstart=()=>t=setTimeout(()=>{t=0;tg()},500);r.ontouchend=r.ontouchmove=()=>clearTimeout(t);r.oncontextmenu=e=>{e.preventDefault();tg()};
+  L.appendChild(r)})}
+async function dl(a){for(const f of a){const x=document.createElement('a');x.href=RAW(D+'/'+f.name);x.download=f.name;document.body.appendChild(x);x.click();x.remove();await new Promise(r=>setTimeout(r,500))}}
+async function load(){$('#l').innerHTML='<div class=em>불러오는 중…</div>';try{files=await ls(D);sel.clear();draw()}catch(e){$('#l').innerHTML='<div class=em>'+e.message+'</div>'}}
+$('#dn').onclick=()=>dl(files.filter(f=>sel.has(f.name)));
+$('#al').onclick=()=>{files.forEach(f=>sel.add(f.name));draw()};
+$('#rm').onclick=()=>{const a=files.filter(f=>sel.has(f.name));conf('삭제',`<p>선택한 ${a.length}개 파일을 깃허브 저장소에서 삭제합니다.</p>`,async st=>{for(let i=0;i<a.length;i++){st(`삭제 중 ${i+1}/${a.length}`);await del(D+'/'+a[i].name,a[i].sha)}toast('삭제 완료');load()})};
+$('#fi').onchange=e=>{upDlg(e.target.files,D,load);e.target.value=''};
+load();
+</script></body></html>

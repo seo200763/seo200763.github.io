@@ -1,0 +1,37 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>게임목록</title>
+<link rel="stylesheet" href="common.css"><style>
+body{background:#111;color:#fff;display:flex;flex-direction:column}
+h1{margin:0;padding:14px 14px 14px 18px;font-size:15px;border-left:4px solid #e8921a;background:#000;line-height:1.35}
+#l{flex:1;overflow:auto}.r{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #2a2a2a;background:linear-gradient(#222,#171717)}
+.th{width:92px;height:56px;border-radius:4px;flex:none;display:flex;align-items:center;justify-content:center;font:800 18px Arial;background:linear-gradient(135deg,var(--a),var(--b))}
+.in{flex:1;min-width:0}.in b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.in small{color:#aaa;font-size:12px}
+.h{border:0;background:#e8921a;color:#fff;border-radius:6px;width:42px;height:38px;font-size:18px}.h.off{color:#4a2c00}
+.p{border:0;background:#e8921a;color:#fff;border-radius:6px;height:38px;padding:0 12px;font-weight:700}
+.em{padding:40px 20px;text-align:center;color:#999;line-height:1.7}
+nav{display:flex;background:#0a0a0a;border-top:1px solid #333;padding-bottom:env(safe-area-inset-bottom)}nav button{flex:1;border:0;background:none;color:#aaa;padding:12px 0;font-size:13px}nav .on{color:#e8921a;font-weight:700}
+</style></head><body>
+<h1>이 에뮬레이터는 최영호만을 위한 게임페이지입니다.</h1><div id="l"></div>
+<nav><button data-t="all">전체게임</button><button data-t="rec">최근플레이게임</button><button data-t="fav">즐겨찾기</button><button data-t="out">나가기</button></nav>
+<script src="common.js"></script><script>
+const S=SYS.find(s=>s.id==new URLSearchParams(location.search).get('sys'))||SYS[0],EX=S.x.split(' ');
+const J=(k,d)=>{try{return JSON.parse(localStorage[k])}catch(e){return d}},key=f=>S.id+'/'+f.name;
+let games=null,tab='all';document.body.style.setProperty('--a',S.a);document.body.style.setProperty('--b',S.b);
+async function load(){
+ if(!S.core){$('#l').innerHTML=`<div class=em>${S.n} 는 현재 웹 브라우저용 에뮬레이터 코어가 없어<br>실행할 수 없습니다.</div>`;return}
+ $('#l').innerHTML='<div class=em>불러오는 중…</div>';
+ try{games=(await ls('ROMFILE/'+S.f)).filter(f=>EX.includes(f.name.split('.').pop().toLowerCase())&&!/^neogeo\.zip$/i.test(f.name))}catch(e){$('#l').innerHTML='<div class=em>'+e.message+'</div>';return}
+ draw()}
+function draw(){
+ const fav=J('fav',[]),rec=J('rec',[]);let a=games||[];
+ if(tab=='fav')a=a.filter(f=>fav.includes(key(f)));
+ if(tab=='rec')a=rec.map(k=>a.find(f=>key(f)==k)).filter(Boolean);
+ if(!a.length){$('#l').innerHTML=`<div class=em>${games&&!games.length?`ROMFILE/${S.f} 폴더에 ${EX.map(e=>'.'+e).join(' ')} 파일을 넣어주세요.`:'게임이 없습니다.'}</div>`;return}
+ $('#l').innerHTML='';a.forEach(f=>{const r=document.createElement('div');r.className='r';
+  r.innerHTML=`<div class=th>${S.l}</div><div class=in><b></b><small>${S.n} · ${mb(f.size)}</small></div><button class="h ${fav.includes(key(f))?'':'off'}">♥</button><button class=p>게임실행</button>`;
+  r.querySelector('b').textContent=f.name.replace(/\.[^.]+$/,'');
+  r.querySelector('.h').onclick=()=>{let v=J('fav',[]);v=v.includes(key(f))?v.filter(x=>x!=key(f)):[...v,key(f)];localStorage.fav=JSON.stringify(v);draw()};
+  r.querySelector('.p').onclick=()=>{localStorage.rec=JSON.stringify([key(f),...J('rec',[]).filter(x=>x!=key(f))].slice(0,30));location.href='play.html?sys='+S.id+'&f='+encodeURIComponent(f.name)};
+  $('#l').appendChild(r)})}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.t=='out')return location.href='index.html';tab=b.dataset.t;document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x==b));draw()});
+document.querySelector('nav button').classList.add('on');load();
+</script></body></html>

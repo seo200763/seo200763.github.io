@@ -1,0 +1,62 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>사진첩</title>
+<link rel="stylesheet" href="common.css"><style>
+body{background:linear-gradient(120deg,#0a2c8a,#1a5ad0 50%,#0a3ca8);color:#fff;display:flex;flex-direction:column;user-select:none;overflow:hidden}
+body::before{content:"pictures";position:fixed;left:-10px;top:30px;font:italic 120px/1 Arial;color:#fff1;pointer-events:none}
+header{display:flex;align-items:center;gap:12px;padding:12px;position:relative;z-index:2}
+.bk{width:46px;height:46px;border-radius:50%;border:2px solid #fff8;background:radial-gradient(#5fe05f,#168a16);color:#fff;font-size:24px;font-weight:900;box-shadow:0 3px 6px #0006}
+header b{font-size:19px}header small{margin-left:auto;opacity:.8}
+#g{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px;padding:12px 16px 30px;align-content:start;position:relative}
+.t{position:relative;aspect-ratio:1;background:#2a52b8;border:2px solid #5a82e8;padding:7px;box-shadow:0 3px 6px #0005}.t img{width:100%;height:100%;object-fit:cover;display:block}
+.t.s{background:#22a822;border-color:#7af07a}.t.s::after{content:"✓";position:absolute;right:6px;top:6px;background:#22a822;border-radius:50%;width:26px;height:26px;text-align:center;line-height:26px;font-weight:900}
+.em{grid-column:1/-1;text-align:center;padding:60px 10px;opacity:.85}
+#mn{position:fixed;left:12px;top:66px;background:#0b2a80f2;border:1px solid #7ab;border-radius:6px;display:none;z-index:5;min-width:170px}#mn.on{display:block}
+#mn button{display:block;width:100%;text-align:left;background:none;border:0;color:#fff;padding:13px 16px;font-size:16px;border-bottom:1px solid #fff2}#mn button:hover{background:#2e8a2e}
+#tb{display:none;background:#001a55;padding:6px 6px calc(6px + env(safe-area-inset-bottom));position:relative;z-index:2}#tb.on{display:flex}#tb button{flex:1;background:none;border:0;color:#fff;padding:9px 0;font-size:13px}
+#vw{position:fixed;inset:0;background:#000;z-index:20;display:none}#vw.on{display:block}
+#sl{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory}.s{flex:none;width:100%;height:100%;scroll-snap-align:center;overflow:auto;display:flex}
+.s img{margin:auto;max-width:100%;max-height:100%;object-fit:contain}.s.z img{max-width:none;max-height:none;width:260%;margin:0}
+#vt{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:10px;background:linear-gradient(#000a,#0000);z-index:2}#vt button{background:#0008;border:0;color:#fff;border-radius:20px;padding:8px 14px;font-size:16px}#vt span{flex:1;text-align:center}
+</style></head><body>
+<header><button class="bk" id="bk">&lt;</button><b>사진첩</b><small id="cnt"></small></header>
+<div id="mn"><button data-m="cam">📷 사진촬영</button><button data-m="alb">🖼 사진앨범</button><button data-m="sel">☑ 선택(일괄선택)</button><button data-m="all">☑ 전체선택</button><button data-m="home">🏠 홈으로</button></div>
+<div id="g"></div>
+<div id="tb"><button data-a="all">전체선택</button><button data-a="dl">다운로드</button><button data-a="sh">공유</button><button data-a="rm">삭제</button><button data-a="x">취소</button></div>
+<div id="vw"><div id="vt"><button id="vx">✕</button><span id="vc"></span><button id="vz">🔍</button></div><div id="sl"></div></div>
+<input type="file" id="cam" accept="image/*" capture="environment" hidden><input type="file" id="alb" accept="image/*" multiple hidden>
+<script src="common.js"></script><script>
+let ph=[],sel=new Set(),mode=false;const P='PHOTO',IMG=/\.(jpe?g|png|gif|webp|bmp|heic)$/i;
+const url=f=>RAW(P+'/'+f.name);
+async function load(){$('#g').innerHTML='<div class=em>불러오는 중…</div>';try{ph=(await ls(P)).filter(f=>IMG.test(f.name)).sort((a,b)=>b.name.localeCompare(a.name));sel.clear();draw()}catch(e){$('#g').innerHTML='<div class=em>'+e.message+'</div>'}}
+function draw(){$('#cnt').textContent=mode?`선택 ${sel.size}/${ph.length}`:ph.length+'장';$('#tb').classList.toggle('on',mode);
+ const g=$('#g');if(!ph.length){g.innerHTML='<div class=em>사진이 없습니다.<br>&lt; 메뉴에서 사진촬영 또는 사진앨범으로 올려보세요.</div>';return}
+ g.innerHTML='';ph.forEach((f,i)=>{const t=document.createElement('div');t.className='t'+(sel.has(f.name)?' s':'');t.innerHTML='<img loading=lazy>';t.firstChild.src=url(f);
+  t.onclick=()=>{if(mode){sel.has(f.name)?sel.delete(f.name):sel.add(f.name);draw()}else view(i)};g.appendChild(t)})}
+/* 확대 뷰어: 옆으로 넘기기 + 더블탭/버튼 확대 */
+function view(i){const sl=$('#sl');sl.innerHTML='';ph.forEach(f=>{const s=document.createElement('div');s.className='s';s.innerHTML='<img>';s.firstChild.src=url(f);s.ondblclick=()=>s.classList.toggle('z');sl.appendChild(s)});
+ $('#vw').classList.add('on');history.pushState({v:1},'');sl.scrollLeft=sl.clientWidth*i;upd()}
+const cur=()=>Math.round($('#sl').scrollLeft/$('#sl').clientWidth);
+function upd(){$('#vc').textContent=(cur()+1)+' / '+ph.length}
+$('#sl').onscroll=upd;$('#vz').onclick=()=>$('#sl').children[cur()].classList.toggle('z');
+const closeV=()=>$('#vw').classList.remove('on');$('#vx').onclick=()=>history.back();onpopstate=closeV;
+let lt=0;$('#sl').addEventListener('touchend',e=>{const n=Date.now();if(n-lt<300){const s=$('#sl').children[cur()];s&&s.classList.toggle('z')}lt=n});
+/* 메뉴 < */
+$('#bk').onclick=e=>{e.stopPropagation();$('#mn').classList.toggle('on')};onclick=()=>$('#mn').classList.remove('on');
+$('#mn').onclick=e=>{const m=e.target.dataset.m;if(!m)return;
+ if(m=='cam')$('#cam').click();if(m=='alb')$('#alb').click();if(m=='home')location.href='index.html';
+ if(m=='sel'){mode=true;draw()}if(m=='all'){mode=true;ph.forEach(f=>sel.add(f.name));draw()}};
+const st=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())};
+/* 사진촬영: 기기 카메라 → 기기에 저장(다운로드) → 올리기 창(토큰) */
+$('#cam').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+ const ext=(f.name.split('.').pop()||'jpg').toLowerCase(),nm='IMG_'+st()+'.'+ext,a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=nm;a.click();
+ toast('기기에 저장했습니다. 이어서 올리기');setTimeout(()=>upDlg([f],P,load,()=>nm),600)};
+$('#alb').onchange=e=>{const a=[...e.target.files];e.target.value='';upDlg(a,P,load,(f,i)=>st()+'_'+(i+1)+'_'+f.name.replace(/[^\w.\-가-힣]/g,'_'))};
+/* 선택 도구 */
+$('#tb').onclick=async e=>{const a=e.target.dataset.a;if(!a)return;const L=ph.filter(f=>sel.has(f.name));
+ if(a=='x'){mode=false;sel.clear();return draw()}if(a=='all'){ph.forEach(f=>sel.add(f.name));return draw()}
+ if(!L.length)return toast('사진을 선택하세요');
+ if(a=='dl')for(const f of L){const x=document.createElement('a');x.href=url(f);x.download=f.name;document.body.appendChild(x);x.click();x.remove();await new Promise(r=>setTimeout(r,500))}
+ if(a=='sh'){try{const fs=await Promise.all(L.map(async f=>new File([await(await fetch(url(f))).blob()],f.name,{type:'image/'+(f.name.split('.').pop().toLowerCase().replace('jpg','jpeg'))})));
+  if(navigator.canShare&&navigator.canShare({files:fs}))await navigator.share({files:fs});else toast('이 브라우저는 사진 공유를 지원하지 않습니다')}catch(x){if(x.name!='AbortError')toast('공유 실패')}}
+ if(a=='rm')conf('삭제',`<p>선택한 사진 ${L.length}장을 깃허브 저장소에서도 삭제합니다.</p>`,async s=>{for(let i=0;i<L.length;i++){s(`삭제 중 ${i+1}/${L.length}`);await del(P+'/'+L[i].name,L[i].sha)}toast('삭제 완료');mode=false;load()})};
+load();
+</script></body></html>

@@ -1,0 +1,44 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>최영호의 게임에뮬레이터</title>
+<link rel="stylesheet" href="common.css"><style>
+html{background:#000}body{color:#fff;overflow:hidden;display:flex;flex-direction:column}
+#bgl{position:fixed;inset:0;z-index:-1;background:#1a2a3a center/cover no-repeat;transition:opacity .25s}
+#bgl::after{content:"";position:absolute;inset:0;background:linear-gradient(#0005,#0000 28%,#0000 55%,#0007)}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;font-size:18px;font-weight:600;text-shadow:0 1px 4px #000a}
+.rt{display:flex;align-items:center;gap:12px}
+#bgb{border:1px solid #fff6;background:#0005;color:#fff;border-radius:18px;padding:6px 14px;font-size:14px;font-weight:600;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.grid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:22px 6px;padding:20px 16px;align-content:start;max-width:980px;width:100%;margin:0 auto}
+a{color:#fff;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:13px;text-align:center;text-shadow:0 1px 3px #000d,0 0 8px #0008}
+.ic{width:66px;height:66px;border-radius:17px;position:relative;display:flex;align-items:center;justify-content:center;font:800 17px/1 Arial,sans-serif;letter-spacing:-.5px;text-shadow:0 2px 2px #0008,0 -1px 0 #fff4;
+ background:linear-gradient(165deg,var(--a),var(--b));box-shadow:0 5px 9px #000a,inset 0 1px 1px #fffb,inset 0 -4px 7px #0007,inset 0 0 0 1px #0005}
+.ic::before{content:"";position:absolute;left:3px;right:3px;top:2px;height:46%;border-radius:15px 15px 40% 40%/15px 15px 22px 22px;background:linear-gradient(#fff9,#fff1)}
+.im{width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 5px #0008)}.dock .im{width:66px;height:66px}
+.ic i{position:relative;font-style:normal;font-size:30px;text-shadow:0 2px 3px #0009}
+.dock{display:flex;justify-content:center;gap:26px;padding:12px 10px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(#0000,#000a 30%);border-top:1px solid #fff2;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.dock .ic{width:60px;height:60px}.dock a{font-size:12px}
+.bgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.bo{border:3px solid transparent;border-radius:10px;padding:0;background:#eee;overflow:hidden;position:relative;text-align:left;cursor:pointer}
+.bo img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.bo span{display:block;padding:6px 8px;font-size:13px;color:#222}
+.bo.on{border-color:#1d8a8a}.bo.on::after{content:"✓";position:absolute;right:6px;top:6px;background:#1d8a8a;color:#fff;border-radius:50%;width:22px;height:22px;line-height:22px;text-align:center;font-size:14px}
+.bo em{position:absolute;left:6px;top:6px;background:#000a;color:#fff;border-radius:10px;padding:2px 8px;font-size:11px;font-style:normal}
+</style></head><body>
+<div id="bgl"></div>
+<div class="bar"><span id="t"></span><span class="rt"><button id="bgb">🖼 배경선택</button><span>최영호</span></span></div>
+<div class="grid" id="g"></div>
+<div class="dock">
+<a href="photos.html"><img class="im" src="icons/photo.png" alt="">사진첩</a>
+<a href="music.html"><img class="im" src="icons/music.png" alt="">음악플레이어</a>
+<a href="memo.html"><img class="im" src="icons/memo.png" alt="">메모장</a>
+<a href="cloud.html"><img class="im" src="icons/cloud.png" alt="" onerror="this.outerHTML='<div class=ic style=&quot;--a:#9ae0ff;--b:#2a7ab0&quot;><i>☁️</i></div>'">클라우드</a></div>
+<script src="common.js"></script><script>
+$('#g').innerHTML=SYS.map(s=>`<a href="games.html?sys=${s.id}"><img class="im" src="icons/${s.id}.png" alt="${s.n}">${s.n}</a>`).join('');
+(f=>{f();setInterval(f,10000)})(()=>$('#t').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'numeric',minute:'2-digit'}));
+/* 배경선택: 1번(봄날의 계곡)이 기본, 선택값은 이 기기에 저장 */
+const BG=['평화로운 봄날의 계곡 (기본)','노을빛 도시 언덕 카페','별빛 도시를 보는 밤 언덕','별빛을 달리는 천공열차','꿈결 같은 은하수'];
+let cur=0;try{cur=parseInt(localStorage.bgSel)}catch(e){}if(!(cur>=0&&cur<BG.length))cur=0;
+function setBg(i){cur=i;$('#bgl').style.backgroundImage=`url(bg/bg${i+1}.jpg)`;try{localStorage.bgSel=i}catch(e){}}
+setBg(cur);
+$('#bgb').onclick=()=>{const d=dlg(`<h3>배경 선택</h3><div class=bgs>${BG.map((n,i)=>`<button class="bo${i==cur?' on':''}" data-i="${i}"><img src="bg/th${i+1}.jpg" alt="">${i==0?'<em>기본</em>':''}<span>${n.replace(' (기본)','')}</span></button>`).join('')}</div><div class=bt><button id=cl>닫기</button></div>`);
+ d.querySelector('#cl').onclick=()=>d.remove();
+ d.querySelectorAll('.bo').forEach(b=>b.onclick=()=>{setBg(+b.dataset.i);d.querySelectorAll('.bo').forEach(x=>x.classList.toggle('on',x==b))})};
+</script></body></html>

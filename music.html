@@ -1,0 +1,35 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>음악</title>
+<link rel="stylesheet" href="common.css"><style>
+body{background:#121212;color:#fff;display:grid;grid-template-columns:220px 1fr;grid-template-rows:1fr 88px;overflow:hidden}
+aside{background:#000;padding:20px 14px;grid-row:1}aside h2{margin:0 0 18px;font-size:20px}aside a{display:block;padding:10px;border-radius:8px;color:#ccc;text-decoration:none}aside a.on{background:#2a2a2a;color:#fff}
+main{overflow:auto;background:linear-gradient(#3a2a5a,#121212 320px);padding:26px}
+.hero{display:flex;gap:22px;align-items:flex-end;margin-bottom:22px}.art{width:180px;height:180px;border-radius:12px;background:linear-gradient(135deg,#ff6aa8,#6a5aff);display:flex;align-items:center;justify-content:center;font-size:70px;box-shadow:0 10px 30px #0008;flex:none}
+.hero h1{margin:4px 0;font-size:34px}.hero p{margin:0;color:#bbb}
+.tr{display:flex;align-items:center;gap:14px;padding:10px 12px;border-radius:8px;cursor:pointer}.tr:hover{background:#ffffff14}.tr.on{color:#ff6aa8}.tr span{width:24px;text-align:right;color:#999}.tr b{flex:1;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tr small{color:#999}
+footer{grid-column:1/3;background:#181818;border-top:1px solid #333;display:grid;grid-template-columns:1fr 2fr 1fr;align-items:center;padding:0 18px;gap:12px}
+.np{display:flex;align-items:center;gap:12px;min-width:0}.np .art{width:56px;height:56px;font-size:26px;border-radius:8px}.np b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct{display:flex;flex-direction:column;align-items:center;gap:6px}.ct div{display:flex;gap:14px;align-items:center}.ct button,.vl button{background:none;border:0;color:#ddd;font-size:20px}.ct .pl{width:42px;height:42px;border-radius:50%;background:#fff;color:#000;font-size:18px}.ct .on{color:#ff6aa8}
+.sk{display:flex;gap:8px;align-items:center;width:100%;font-size:12px;color:#aaa}.sk input{flex:1}.vl{display:flex;justify-content:flex-end;gap:6px;align-items:center}input[type=range]{accent-color:#ff6aa8}
+@media(max-width:700px){body{grid-template-columns:1fr}aside{display:none}footer{grid-column:1;grid-template-columns:1fr;height:auto;padding:8px 12px}body{grid-template-rows:1fr 130px}.vl,.hero .art{display:none}}
+</style></head><body>
+<aside><h2>🎵 뮤직</h2><a class="on">내 음악</a><a href="index.html">← 홈으로</a></aside>
+<main><div class="hero"><div class="art">🎶</div><div><p>플레이리스트</p><h1>내 음악</h1><p id="cn"></p></div></div><div id="l"></div></main>
+<footer><div class="np"><div class="art">♪</div><div style="min-width:0"><b id="tt">재생할 곡을 선택하세요</b><small id="ts" style="color:#999"></small></div></div>
+<div class="ct"><div><button id="sf">🔀</button><button id="pv">⏮</button><button class="pl" id="pp">▶</button><button id="nx">⏭</button><button id="rp">🔁</button></div>
+<div class="sk"><span id="cu">0:00</span><input type="range" id="sb" min="0" max="1000" value="0"><span id="du">0:00</span></div></div>
+<div class="vl">🔊<input type="range" id="vo" min="0" max="100" value="80"></div></footer>
+<audio id="au"></audio>
+<script src="common.js"></script><script>
+let T=[],i=-1,shuf=false,rep=0;const au=$('#au'),M='MUSIC',AU=/\.(mp3|m4a|wav|ogg|flac|aac)$/i,tm=s=>isFinite(s)?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):'0:00';
+async function load(){try{T=(await ls(M)).filter(f=>AU.test(f.name));}catch(e){$('#l').textContent=e.message;return}
+ $('#cn').textContent=T.length+'곡';$('#l').innerHTML=T.length?'':'<p style="color:#999">MUSIC 폴더에 음악 파일(mp3, m4a, wav, ogg, flac)을 넣어주세요.</p>';
+ T.forEach((f,k)=>{const r=document.createElement('div');r.className='tr';r.innerHTML=`<span>${k+1}</span><b></b><small>${mb(f.size)}</small>`;r.querySelector('b').textContent=f.name.replace(/\.[^.]+$/,'');r.onclick=()=>play(k);$('#l').appendChild(r)})}
+function play(k){if(!T.length)return;i=(k+T.length)%T.length;au.src=RAW(M+'/'+T[i].name);au.play();$('#tt').textContent=T[i].name.replace(/\.[^.]+$/,'');$('#ts').textContent='내 음악';document.querySelectorAll('.tr').forEach((r,n)=>r.classList.toggle('on',n==i))}
+const nxt=()=>play(shuf?Math.floor(Math.random()*T.length):i+1);
+$('#pp').onclick=()=>i<0?play(0):au.paused?au.play():au.pause();$('#nx').onclick=nxt;$('#pv').onclick=()=>play(i-1);
+$('#sf').onclick=e=>e.target.classList.toggle('on',shuf=!shuf);$('#rp').onclick=e=>{rep=(rep+1)%3;e.target.classList.toggle('on',rep>0);e.target.textContent=rep==2?'🔂':'🔁'};
+au.onplay=()=>$('#pp').textContent='⏸';au.onpause=()=>$('#pp').textContent='▶';
+au.onended=()=>{rep==2?play(i):(rep==1||i<T.length-1||shuf)?nxt():0};
+au.ontimeupdate=()=>{$('#cu').textContent=tm(au.currentTime);$('#du').textContent=tm(au.duration);if(au.duration)$('#sb').value=au.currentTime/au.duration*1000};
+$('#sb').oninput=e=>au.currentTime=au.duration*e.target.value/1000;au.volume=.8;$('#vo').oninput=e=>au.volume=e.target.value/100;load();
+</script></body></html>
