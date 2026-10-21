@@ -214,6 +214,7 @@ const OSES={
 const qs=new URLSearchParams(location.search);
 let OSID=qs.get('os');if(!OSES[OSID])OSID='win95';
 const OS=OSES[OSID];
+let GAMECMD='';   /* 윈도우95 바탕화면이 뜬 뒤 자동으로 실행할 명령 (실행 > 열기 칸에 입력) */
 const GAME=qs.get('game')||'';   /* ROMFILE/WIN95/<game> : 윈도우95 안에서 쓸 게임 (CD / 플로피 / 폴더 드라이브로 자동 연결) */
 document.title=OS.n+' 웹 에뮬레이터';
 
@@ -500,7 +501,7 @@ async function autoBoot(){
     if(!emu.is_running()){await sleep(500);continue}
     if(is9x){
       teal=abTealRatio()>0.35?teal+1:0;
-      if(teal>=2){status(diskName+' 실행 중 · 바탕화면');toast('바탕화면 도착 – 자동 부팅 완료',2500);return}
+      if(teal>=2){status(diskName+' 실행 중 · 바탕화면');toast('바탕화면 도착 – 자동 부팅 완료',2500);if(GAMECMD&&my===abToken)await autoRunGame();return}
       abKey(0x1C);                        /* Enter */
       await sleep(1800);
     }else{
@@ -516,7 +517,7 @@ async function autoBoot(){
       await sleep(2200);
     }
   }
-  if(my===abToken)status(diskName+' 실행 중');
+  if(my===abToken){status(diskName+' 실행 중');if(GAMECMD&&is9x&&!abUser)await autoRunGame()}
 }
 /* 사용자가 직접 입력하면 자동 입력 중단 */
 ['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,e=>{
@@ -1239,6 +1240,64 @@ addEventListener('keydown',e=>{
 });
 
 
+/* ---------- 게임 자동 실행: 실행할 파일 찾기 ---------- */
+function isoRoot(buf){   /* ISO9660 루트 폴더의 파일 목록 (autorun.inf 읽기용) */
+  try{
+    const u8=new Uint8Array(buf);if(u8.length<34000)return null;
+    if(String.fromCharCode(...u8.subarray(32769,32774))!=='CD001')return null;
+    const dv=new DataView(buf),lba=dv.getUint32(32768+156+2,true),len=dv.getUint32(32768+156+10,true);
+    const files=[];let p=lba*2048;const end=Math.min(u8.length,p+len);
+    while(p<end){
+      const l=u8[p];if(!l){p=(Math.floor(p/2048)+1)*2048;continue}
+      const nl=u8[p+32];
+      if(!(nl===1&&u8[p+33]<=1))files.push({name:String.fromCharCode(...u8.subarray(p+33,p+33+nl)).replace(/;\d+$/,''),lba:dv.getUint32(p+2,true),len:dv.getUint32(p+10,true),dir:!!(u8[p+25]&2)});
+      p+=l;
+    }
+    return{files,text:f=>new TextDecoder().decode(u8.subarray(f.lba*2048,f.lba*2048+Math.min(f.len,8192)))};
+  }catch(e){return null}
+}
+function autorunOpen(text){const m=/^\s*open\s*=\s*(.+)$/im.exec(text||'');return m?m[1].trim().replace(/^"(.*)"$/,'$1'):''}
+function pickExe(paths,base){   /* autorun 이 없을 때: 가장 그럴듯한 실행 파일 */
+  const ex=paths.filter(p=>/\.(exe|bat|com)$/i.test(p)&&!/(unins|uninst|remove|dxsetup|directx|dosbox|vcredist|readme)/i.test(p));
+  if(!ex.length)return '';
+  const b=(base||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const score=p=>{
+    const parts=p.split('/'),n=parts[parts.length-1].toLowerCase(),stem=n.replace(/\.[^.]+$/,'');
+    let s=(parts.length-1)*10;
+    if(/^(autorun|start|play|launch|run|game)/.test(stem))s-=6;
+    else if(/^(setup|install)/.test(stem))s-=4;
+    if(b&&stem.replace(/[^a-z0-9]/g,'')&&(b.includes(stem.replace(/[^a-z0-9]/g,''))||stem.replace(/[^a-z0-9]/g,'').includes(b)))s-=8;
+    if(/\.exe$/i.test(n))s-=1;
+    return s};
+  return ex.slice().sort((a,b)=>score(a)-score(b))[0];
+}
+function mkCmd(drive,rel,fromAutorun){
+  if(fromAutorun)return /^[a-z]:/i.test(rel)?rel:drive+'\\'+rel;   /* autorun 의 open= 값은 옵션(/go 등)이 있을 수 있어 그대로 사용 */
+  const win=rel.replace(/\//g,'\\');
+  return /\s/.test(win)?'"'+drive+'\\'+win+'"':drive+'\\'+win;
+}
+async function typeShift(str){
+  for(const ch of str){
+    const s=SC[ch.toLowerCase()]||SC[ch];if(!s)continue;
+    if(s[1])sendK([0x2A]);
+    sendK([s[0]]);await sleep(60);sendK([s[0]|0x80]);
+    if(s[1])sendK([0xAA]);
+    await sleep(90);
+  }
+  abKey(0x1C);
+}
+async function autoRunGame(){   /* 시작(Ctrl+Esc) → 실행(R) → 명령 입력 → Enter */
+  if(!GAMECMD||OSID!=='win95')return;
+  toast('바탕화면 도착 – 게임을 자동 실행합니다',4000);status('게임 자동 실행 중…');
+  for(let i=0;i<14&&!abUser;i++)await sleep(500);   /* 바탕화면이 안정될 때까지 잠깐 대기 */
+  if(abUser){status(diskName+' 실행 중 (수동 조작)');return}
+  sendK([0x1D,0x01,0x81,0x9D]);await sleep(1300);   /* Ctrl+Esc : 시작 메뉴 */
+  abKey(0x13);await sleep(1800);                    /* R : 실행... */
+  if(abUser)return;
+  await typeShift(GAMECMD);
+  status(diskName+' 실행 중 · '+GAMECMD);
+}
+
 /* ---------- 게임 자동 연결 (?os=win95&game=파일이름) ----------
    ROMFILE/WIN95/ 의 게임을 윈도우95에 끼워서 부팅합니다.
    · iso / bin / (큰) img  → CD-ROM 드라이브        · 작은 img(2.88MB 이하) → 3.5" 플로피(A:)
@@ -1255,11 +1314,15 @@ async function loadGameMedia(){
   const ab=blob.buf,low=name.toLowerCase();
   const setCD=(buf,nm)=>{media.cd=buf;media.names.cd=nm};
   const setFD=(buf,nm)=>{media.fda=padFloppy(buf,'fda');media.names.fda=nm};
-  if(/\.(iso|bin)$/.test(low)){setCD(ab,name)}
-  else if(/\.(img|ima|vfd|flp|dsk)$/.test(low)){ab.byteLength<=2949120?setFD(ab,name):setCD(ab,name)}
+  const base=name.replace(/\.[^.]+$/,'');
+  const cmdFromIso=(buf)=>{const r=isoRoot(buf);if(!r){GAMECMD='d:\\';return}
+    const ar=r.files.find(f=>/^autorun\.inf$/i.test(f.name)),op=ar?autorunOpen(r.text(ar)):'';
+    GAMECMD=op?mkCmd('d:',op,true):(a=>a?mkCmd('d:',a):'d:\\')(pickExe(r.files.filter(f=>!f.dir).map(f=>f.name),base))};
+  if(/\.(iso|bin)$/.test(low)){setCD(ab,name);cmdFromIso(ab)}
+  else if(/\.(img|ima|vfd|flp|dsk)$/.test(low)){if(ab.byteLength<=2949120){setFD(ab,name);GAMECMD='a:\\'}else{setCD(ab,name);cmdFromIso(ab)}}
   else if(/\.zip$/.test(low)){
     let done=false;
-    try{const r=await unzipDisk(ab,null,/\.(iso|bin|img|ima)$/i,'CD/플로피 이미지');(r.buf.byteLength<=2949120&&!/\.iso$/i.test(r.name))?setFD(r.buf,r.name):setCD(r.buf,r.name);done=true}catch(e){console.log('[game] zip 안에 디스크 이미지 없음 → 폴더 드라이브로 연결',e&&e.message)}
+    try{const r=await unzipDisk(ab,null,/\.(iso|bin|img|ima)$/i,'CD/플로피 이미지');if(r.buf.byteLength<=2949120&&!/\.iso$/i.test(r.name)){setFD(r.buf,r.name);GAMECMD='a:\\'}else{setCD(r.buf,r.name);cmdFromIso(r.buf)}done=true}catch(e){console.log('[game] zip 안에 디스크 이미지 없음 → 폴더 드라이브로 연결',e&&e.message)}
     if(!done){
       await needZip();
       const z=await JSZip.loadAsync(ab),root=name.replace(/\.[^.]+$/,'').toUpperCase().replace(/[^A-Z0-9_\-]/g,'_').slice(0,11)||'GAME',files=[];
@@ -1269,6 +1332,9 @@ async function loadGameMedia(){
       if(!files.length)throw Error('zip 이 비어 있습니다');
       const r=await mkFatImage(files,p=>ov(OS.n,'게임 파일을 드라이브로 변환 중…',{pct:p}));
       media.hdb=r.buf;media.names.hdb=r.label+' ('+r.count+'개 파일)';
+      const paths=files.map(f=>f.webkitRelativePath.slice(root.length+1)),ari=paths.findIndex(p=>/^autorun\.inf$/i.test(p));
+      let op='';if(ari>=0){try{op=autorunOpen(new TextDecoder().decode(await files[ari].arrayBuffer()))}catch(_){}}
+      GAMECMD=op?mkCmd('d:',op,true):(a=>a?mkCmd('d:',a):'d:\\')(pickExe(paths,base));
     }
   }else throw Error('지원하지 않는 형식입니다 (iso / bin / img / zip)');
   refreshMedia();
