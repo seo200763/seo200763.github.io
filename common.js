@@ -24,8 +24,8 @@ function upDlg(files,dir,done,rename){files=[...files];const okf=files.filter(f=
   for(let i=0;i<okf.length;i++){st(`올리는 중 ${i+1}/${okf.length} · ${okf[i].name}`);await put(dir+'/'+(rename?rename(okf[i],i):okf[i].name),okf[i])}
   toast('올리기 완료 (반영까지 1~2분)');done&&done()})}
 const SYS=[
-{id:'dos',n:'도스게임',f:'DOS',core:'dos',x:'zip dosz exe com bat iso cue',a:'#8a93a3',b:'#1c2230',l:'DOS'},
-{id:'win95',n:'윈도우95게임',f:'WIN95',core:null,x:'iso img zip',a:'#35c5c0',b:'#0b5a63',l:'95'},
+{id:'dos',n:'도스게임',f:'DOS',core:'jsdos',x:'zip dosz',a:'#8a93a3',b:'#1c2230',l:'DOS'},
+{id:'win95',n:'윈도우95게임',f:'WIN95',core:'v86',x:'iso bin img zip',a:'#35c5c0',b:'#0b5a63',l:'95'},
 {id:'mame',n:'마메',f:'MAME',core:'fbneo',x:'zip 7z',a:'#ffa13a',b:'#8a3400',l:'MAME'},
 {id:'neogeo',n:'네오지오',f:'NEOGEO',core:'fbneo',x:'zip',a:'#ffd53a',b:'#8a5a00',l:'NEO'},
 {id:'gbc',n:'GBC',f:'GBC',core:'gb',x:'gbc gb',a:'#3de0c9',b:'#0a5a50',l:'GBC'},
