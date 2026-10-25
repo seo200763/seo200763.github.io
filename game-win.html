@@ -561,7 +561,7 @@ async function makeEmulator(d){
     vga_bios:{url:lib.vga},
     autostart:!stateBuf,
     disable_mouse:false,
-    disable_keyboard:false,
+    disable_keyboard:true,
     preserve_mac_from_state_image:true
   };
   o[{hd:'hda',fd:'fda',cd:'cdrom'}[d.k]]={buffer:d.buf};
@@ -1423,12 +1423,13 @@ function kDown(def){
   if(KB.alt)mods.push(MOD.alt);
   if(KB.win)mods.push(MOD.win);
   if(useShift)mods.push(MOD.shift);
-  def.mods=mods;
+  def.mods=mods;def._t=performance.now();
   sendK([...mods,def.c]);
   if(KB.ctrl||KB.alt||KB.win||(KB.shift&&!KB.lock)){KB.ctrl=KB.alt=KB.win=false;if(!KB.lock)KB.shift=false;refreshKb()}
 }
 function kUp(def){
-  sendK([def.c|0x80,...[...(def.mods||[])].reverse().map(c=>c|0x80)]);
+  const t=Math.max(0,MINHOLD-(performance.now()-(def._t||0))),mm=def.mods||[];
+  setTimeout(()=>sendK([def.c|0x80,...[...mm].reverse().map(c=>c|0x80)]),t);
 }
 const press=new Map();
 function resolve(el){
@@ -1500,6 +1501,46 @@ $('kbBtn').onclick=toggleKb;
 $('fsKb').onclick=toggleKb;
 buildAcc();buildKeys();
 document.querySelectorAll('.k,.a').forEach(()=>{});
+
+
+/* ---------- 실제 키보드 → 윈도우 (게임이 키를 놓치지 않도록 최소 누름 시간 보장) ----------
+   게임(특히 DirectInput)은 화면을 그릴 때만 키 상태를 확인하는데, 에뮬레이터가 느리면 짧게 눌렀다 뗀 키를 못 봅니다.
+   그래서 키를 떼도 MINHOLD 밀리초 동안은 눌린 상태로 유지합니다. */
+const MINHOLD=200;
+const KC={Escape:1,Digit1:2,Digit2:3,Digit3:4,Digit4:5,Digit5:6,Digit6:7,Digit7:8,Digit8:9,Digit9:10,Digit0:11,Minus:12,Equal:13,Backspace:14,Tab:15,
+ KeyQ:16,KeyW:17,KeyE:18,KeyR:19,KeyT:20,KeyY:21,KeyU:22,KeyI:23,KeyO:24,KeyP:25,BracketLeft:26,BracketRight:27,Enter:28,ControlLeft:29,
+ KeyA:30,KeyS:31,KeyD:32,KeyF:33,KeyG:34,KeyH:35,KeyJ:36,KeyK:37,KeyL:38,Semicolon:39,Quote:40,Backquote:41,ShiftLeft:42,Backslash:43,
+ KeyZ:44,KeyX:45,KeyC:46,KeyV:47,KeyB:48,KeyN:49,KeyM:50,Comma:51,Period:52,Slash:53,ShiftRight:54,NumpadMultiply:55,AltLeft:56,Space:57,CapsLock:58,
+ F1:59,F2:60,F3:61,F4:62,F5:63,F6:64,F7:65,F8:66,F9:67,F10:68,NumLock:69,ScrollLock:70,
+ Numpad7:71,Numpad8:72,Numpad9:73,NumpadSubtract:74,Numpad4:75,Numpad5:76,Numpad6:77,NumpadAdd:78,Numpad1:79,Numpad2:80,Numpad3:81,Numpad0:82,NumpadDecimal:83,
+ F12:88,IntlBackslash:86};
+const KE={NumpadEnter:28,ControlRight:29,NumpadDivide:53,AltRight:56,Home:71,ArrowUp:72,PageUp:73,ArrowLeft:75,ArrowRight:77,End:79,ArrowDown:80,PageDown:81,Insert:82,Delete:83,MetaLeft:91,MetaRight:92,ContextMenu:93};
+const kHeld=new Map();
+function kCodes(code,up){
+  let c=KC[code],ext=0;if(c==null){c=KE[code];ext=1}
+  if(c==null)return null;
+  const a=ext?[0xE0,c|(up?0x80:0)]:[c|(up?0x80:0)];return a;
+}
+addEventListener('keydown',e=>{
+  const t=e.target&&e.target.tagName;if(/^(INPUT|SELECT|TEXTAREA)$/.test(t||''))return;
+  if(!emu||e.code==='F11'||e.code==='F5'||(e.ctrlKey&&e.shiftKey)||(e.ctrlKey&&/^Key[WTNRL]$/.test(e.code)&&!e.altKey))return;
+  const a=kCodes(e.code,false);if(!a)return;
+  e.preventDefault();
+  const h=kHeld.get(e.code);
+  if(h){clearTimeout(h.tm);h.tm=0;if(e.repeat)sendK(a);return}    /* 눌려 있는 중: 반복 입력 */
+  kHeld.set(e.code,{t:performance.now(),tm:0,down:true});sendK(a);
+},true);
+addEventListener('keyup',e=>{
+  const h=kHeld.get(e.code);if(!h)return;
+  const a=kCodes(e.code,true);if(!a)return;
+  e.preventDefault();
+  const rel=()=>{kHeld.delete(e.code);sendK(a)};
+  const w=Math.max(0,MINHOLD-(performance.now()-h.t));
+  if(w<=0)rel();else h.tm=setTimeout(rel,w);
+},true);
+addEventListener('blur',()=>{kHeld.forEach((h,c)=>{clearTimeout(h.tm);const a=kCodes(c,true);if(a)sendK(a)});kHeld.clear()});
+/* 화면을 누르면 키보드 포커스를 에뮬레이터 창으로 */
+$('pad').addEventListener('pointerdown',()=>{try{window.focus();document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(_){}},true);
 
 /* ---------- 단축키 ---------- */
 addEventListener('keydown',e=>{
