@@ -76,9 +76,62 @@ button{font:inherit;border:0;background:var(--card);color:var(--ac);padding:6px 
  .inapp #hi{background:var(--fg)}
  .toast{bottom:40px}
 }
+
+/* ===== 게임 앱 서랍 (iOS 앱 보관함 스타일) ===== */
+#al{position:fixed;inset:0;z-index:8500;display:flex;flex-direction:column;align-items:center;gap:22px;padding:44px 18px 80px;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#fff;
+ background:rgba(18,20,44,.58);backdrop-filter:blur(34px) saturate(1.5);-webkit-backdrop-filter:blur(34px) saturate(1.5);
+ opacity:0;visibility:hidden;transform:scale(1.12);transition:opacity .28s,transform .34s cubic-bezier(.2,.8,.2,1),visibility 0s .34s}
+#al.on{opacity:1;visibility:visible;transform:none;transition:opacity .28s,transform .34s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.als{width:min(440px,100%);flex:none}
+.als input{width:100%;padding:11px 16px;border-radius:14px;border:0;background:rgba(255,255,255,.2);color:#fff;font:16px inherit;outline:0;text-align:center}
+.als input::placeholder{color:#fffb}
+.alg{width:min(960px,100%);display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;align-content:start}
+.alc{background:rgba(255,255,255,.16);border-radius:28px;padding:14px 14px 10px;box-shadow:inset 0 0 0 1px #fff2}
+.alc h3{margin:0 0 10px 6px;font-size:13px;font-weight:600;letter-spacing:.3px;color:#ffffffd0}
+.ali{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 4px}
+.alk{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px 0;border-radius:14px;-webkit-tap-highlight-color:transparent}
+.alk img{width:68px;height:68px;filter:drop-shadow(0 4px 7px #0006);transition:transform .15s}
+.alk:hover img{transform:scale(1.08)}.alk:active img{transform:scale(.92)}
+.alk span{font-size:12px;text-align:center;text-shadow:0 1px 3px #0008;line-height:1.2;padding:0 2px}
+.alno{color:#fffa;margin-top:40px;display:none}
+#alp{position:fixed;inset:0;z-index:8600;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.38);opacity:0;visibility:hidden;transition:opacity .22s,visibility 0s .22s}
+#alp.on{opacity:1;visibility:visible;transition:opacity .22s}
+.alsh{width:min(680px,94vw);height:min(78vh,740px);display:flex;flex-direction:column;overflow:hidden;color:#fff;border-radius:26px;
+ background:rgba(30,30,36,.84);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:0 30px 80px #000a,inset 0 0 0 1px #fff2;
+ transform:scale(.78);opacity:0;transition:transform .32s cubic-bezier(.2,.9,.25,1.15),opacity .22s}
+#alp.on .alsh{transform:none;opacity:1}
+.alh{display:flex;align-items:center;gap:10px;padding:14px 14px 8px;flex:none}
+.alh>img{width:44px;height:44px;flex:none;filter:drop-shadow(0 2px 4px #0006)}
+.alh .tt2{flex:1;min-width:0}.alh h2{margin:0;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.alh small{color:#fff9;font-size:12px}
+.alh button,.alb button{background:rgba(255,255,255,.14);color:#fff;padding:8px 12px;border-radius:12px;font-size:14px}
+.alh button:active,.alb button:active{background:rgba(255,255,255,.28)}
+.alh .bk{background:none;color:#4aa3ff;font-size:17px;padding:8px 4px}
+.alb{display:flex;gap:8px;padding:0 14px 10px;flex:none;flex-wrap:wrap}.alb input{flex:1;min-width:120px;padding:9px 14px;border-radius:12px;border:0;background:rgba(255,255,255,.14);color:#fff;font:16px inherit;outline:0}
+.alb input::placeholder{color:#fff8}
+.all{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:0 10px 10px;border-radius:16px;background:rgba(255,255,255,.07)}
+.alr{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #fff1;cursor:pointer}
+.alr:last-child{border-bottom:0}.alr:hover,.alr:active{background:rgba(255,255,255,.12)}
+.alr img{width:38px;height:38px;flex:none}
+.alr .nm{flex:1;min-width:0;display:flex;flex-direction:column}.alr .nm b{font-weight:500;font-size:15px;word-break:keep-all;overflow-wrap:anywhere}.alr .nm small{color:#fff8;font-size:12px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alr i{font-style:normal;color:#4aa3ff;font-size:18px}
+.alm{padding:34px 22px;text-align:center;color:#fffc;line-height:1.75;white-space:pre-line;font-size:14px}.alm code{background:#fff2;border-radius:6px;padding:1px 6px;font-size:13px}
+.alf{padding:2px 16px 12px;color:#fff8;font-size:12px;flex:none;line-height:1.5}
+#gp{position:fixed;inset:0;z-index:20000;background:#000;display:none}
+#gp.on{display:block}
+#gp iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+#gp .gx{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;width:34px;height:34px;border-radius:50%;padding:0;background:#000a;color:#fff;font-size:15px;opacity:.55;z-index:2;backdrop-filter:blur(8px)}
+#gp .gx:hover{opacity:1}
+@supports(height:100dvh){.alsh{height:min(78dvh,740px)}}
+@media(max-width:760px){
+ #al{padding-top:48px}
+ #alp{align-items:flex-end}
+ .alsh{width:100%;height:calc(100% - 44px);border-radius:24px 24px 0 0}
+ @supports(height:100dvh){.alsh{height:calc(100dvh - 44px)}}
+}
 </style></head><body>
 <div id="mb"><span><b id="mt"> My Cloud</b><b id="sk"></b></span><span style="display:flex;align-items:center;gap:8px"><a id="lo" style="cursor:pointer;display:none">로그아웃</a><span id="ck"></span><span id="bt"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect y="8" width="3" height="4" rx=".6"/><rect x="5" y="5" width="3" height="7" rx=".6"/><rect x="10" y="2" width="3" height="10" rx=".6"/><rect x="15" width="3" height="12" rx=".6"/></svg><svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="21" height="11" rx="3" fill="none" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="18" height="8" rx="2" fill="currentColor"/><rect x="23" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg></span></span></div>
 <div id="hs"><div id="wd"></div></div><div id="pd"><i></i><i></i></div><div id="hi"></div><div id="dock"></div>
+<div id="al"></div><div id="alp"></div><div id="gp"></div>
 <div id="lg"><div class="lg"><h1>🔒 My Cloud</h1>
 <input id="u" placeholder="아이디" autocomplete="username"><input id="p" type="password" placeholder="비밀번호" autocomplete="current-password">
 <label style="font-size:13px;text-align:left"><input type="checkbox" id="sp" style="width:auto"> 비밀번호 보기</label><label style="font-size:13px;text-align:left"><input type="checkbox" id="al" style="width:auto" checked> 이 기기에서 자동 로그인</label><div id="er" style="color:#d70015;min-height:18px;font-size:13px"></div><button id="go">로그인</button><a id="ht">힌트</a><div id="kb"></div></div></div>
@@ -175,13 +228,116 @@ function openApp(k){const A=APPS[k],w=el('div','win'),mob=innerWidth<761;w.style
  t.onmousedown=e=>{if(mob||e.target.tagName=='I')return;const dx=e.clientX-w.offsetLeft,dy=e.clientY-w.offsetTop;
   const mv=e=>{w.style.left=e.clientX-dx+'px';w.style.top=Math.max(24,e.clientY-dy)+'px'};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',mv),{once:true})};
  Lib($('.bd',w),k,cl)}
+// ===== 게임 (iOS 앱 보관함 스타일 앱 서랍) =====
+// 롬 폴더: GAMEROM/<기종폴더>/  — 롬 파일을 넣으면 목록에 자동으로 나타나고, 누르면 바로 실행됩니다.
+const GR='GAMEROM',GN=['닌텐도','SEGA','아케이드','PC · 운영체제'];
+const SYS=[
+ {id:'nes',n:'NES',d:'NES',g:0,k:'ejs',core:'nes',x:'nes fds unf unif zip',kw:'패미컴 패미콤 famicom 닌텐도'},
+ {id:'snes',n:'SNES',d:'SNES',g:0,k:'ejs',core:'snes',x:'sfc smc fig swc zip',kw:'슈퍼패미컴 슈패 super famicom 닌텐도'},
+ {id:'gbc',n:'GBC',d:'GBC',g:0,k:'ejs',core:'gb',x:'gbc gb zip',kw:'게임보이 컬러 gameboy color 닌텐도'},
+ {id:'gba',n:'GBA',d:'GBA',g:0,k:'ejs',core:'gba',x:'gba zip',kw:'게임보이 어드밴스 gameboy advance 닌텐도'},
+ {id:'n64',n:'N64',d:'N64',g:0,k:'ejs',core:'n64',x:'z64 n64 v64 zip',kw:'닌텐도64 nintendo 64 닌텐도'},
+ {id:'nds',n:'NDS',d:'NDS',g:0,k:'ejs',core:'desmume2015',alt:'melonds,desmume',x:'nds zip',kw:'닌텐도ds 디에스 듀얼스크린 닌텐도'},
+ {id:'genesis',n:'세가 제네시스',d:'GENESIS',g:1,k:'ejs',core:'segaMD',x:'md gen smd bin zip',kw:'메가드라이브 megadrive genesis 세가 sega'},
+ {id:'sms',n:'마스터 시스템',d:'MASTERSYSTEM',g:1,k:'ejs',core:'segaMS',x:'sms zip',kw:'마스터시스템 master system 세가 sega'},
+ {id:'segacd',n:'세가 CD',d:'SEGACD',g:1,k:'ejs',core:'segaCD',x:'chd iso zip',cd:1,bios:/^(segacd|bios_cd|sega_cd)/i,kw:'세가씨디 메가씨디 sega cd mega cd 세가'},
+ {id:'sega32x',n:'세가 32X',d:'SEGA32X',g:1,k:'ejs',core:'sega32x',x:'32x bin md smd zip',kw:'32x 세가 sega'},
+ {id:'saturn',n:'세가 새턴',d:'SATURN',g:1,k:'ejs',core:'segaSaturn',x:'chd iso zip',cd:1,bios:/^(saturn|sega_101|mpr-)/i,kw:'새턴 사턴 saturn 세가 sega'},
+ {id:'neogeo',n:'네오지오',d:'NEOGEO',g:2,k:'ejs',core:'fbneo',alt:'mame2003_plus',neo:1,x:'zip 7z',kw:'네오지오 neogeo snk 오락실 킹오브파이터즈 메탈슬러그'},
+ {id:'mame',n:'마메게임',d:'MAME',g:2,k:'ejs',core:'fbneo',alt:'mame2003_plus',neo:1,x:'zip 7z',kw:'마메 mame 오락실 아케이드 arcade 철권 캡콤'},
+ {id:'dos',n:'DOS',d:'DOS',g:3,k:'dos',x:'zip jsdos',kw:'도스 msdos 엠에스도스'},
+ {id:'win31',n:'WIN 3.1',d:'WIN31',g:3,k:'win',os:'win31',x:'zip img ima iso',std:'win31.zip',stdT:'Windows 3.1 시작',kw:'윈도우 윈도 windows 3.1 마이크로소프트'},
+ {id:'win95',n:'WIN 95',d:'WIN95',g:3,k:'win',os:'win95',x:'zip img ima iso',std:'win95.zip',stdT:'Windows 95 시작',kw:'윈도우 윈도 windows 95 마이크로소프트'}];
+const gmC={};let gmT=null,gmBuilt=false;
+const gmExt=n=>(n.split('.').pop()||'').toLowerCase();
+async function gmTitles(){if(gmT)return gmT;gmT={};try{const r=await fetch(GR+'/titles.json?t='+Date.now(),{cache:'no-store'});if(r.ok){const j=await r.json();gmT=(j&&j.titles)||j||{}}}catch(e){}return gmT}
+async function gmFiles(dir,force){
+ const c=gmC[dir];if(c&&!force&&Date.now()-c.t<3e5)return c.v;
+ let files=null,limited=false;
+ try{const r=await fetch(api(GR+'/'+dir)+'?ref='+CFG.br,{headers:H()});
+  if(r.ok){const j=await r.json();if(Array.isArray(j))files=j.filter(f=>f.type=='file').map(f=>({name:f.name,size:f.size||0}))}
+  else if(r.status==403)limited=true}catch(e){}
+ if(!files){try{const r=await fetch(GR+'/'+dir+'/list.json?t='+Date.now(),{cache:'no-store'});   // GitHub 요청 한도 초과 시 대신 쓰는 목록(선택)
+  if(r.ok){const j=await r.json();files=(Array.isArray(j)?j:j.files||[]).map(x=>typeof x=='string'?{name:x,size:0}:{name:x.name||x.file,size:x.size||0}).filter(x=>x.name)}}catch(e){}}
+ if(!files&&limited)toast('GitHub 요청 한도 초과 – 잠시 후 다시 시도하세요');
+ const v={files:files||[],ok:!!files};if(files)gmC[dir]={t:Date.now(),v};return v}
+async function gmGames(s,force){
+ const [{files,ok},T]=await Promise.all([gmFiles(s.d,force),gmTitles()]);const ex=s.x.split(' ');
+ const L=files.filter(f=>f.name!='.gitkeep'&&f.name!='list.json'&&ex.includes(gmExt(f.name))).map(f=>{
+  const b=f.name.replace(/\.[^.]+$/,'');
+  f.title=T[f.name]||T[b]||(s.std&&f.name.toLowerCase()==s.std?s.stdT:b.replace(/_+/g,' ').trim());
+  f.std=!!(s.std&&f.name.toLowerCase()==s.std);return f});
+ L.sort((a,b)=>(b.std-a.std)||a.title.localeCompare(b.title,'ko'));return{L,ok}}
+let gmBi=null;
+async function gmBios(force){if(gmBi&&!force)return gmBi;gmBi=(await gmFiles('_BIOS',force)).files;return gmBi}
+// --- 실행 ---
+function gmStop(){const g=$('#gp');g.className='';g.innerHTML=''}
+function gmFrame(u,x,local){
+ const g=$('#gp');g.innerHTML='';g.className='on';const f=el('iframe');f.allow='autoplay; fullscreen; gamepad; accelerometer; gyroscope';f.setAttribute('allowfullscreen','');f.src=u;g.append(f);
+ if(x){const b=el('button','gx','✕');b.title='게임 종료';b.onclick=gmStop;g.append(b)}
+ if(local)f.onload=()=>f.contentWindow.postMessage({rom:local},'*')}
+async function gmPlay(s,f,local){
+ const t=f?f.title:(local?local.name.replace(/\.[^.]+$/,''):s.n);
+ if(s.k=='dos')return gmFrame('game-dos.html'+(f?'?f='+encodeURIComponent(f.name)+'&t='+encodeURIComponent(t):'?blank=1'),0);
+ if(s.k=='win')return gmFrame('game-win.html?os='+s.os+(f?'&img='+encodeURIComponent(GR+'/'+s.d+'/'+f.name):''),0);
+ const q=new URLSearchParams({core:s.core,name:t,icon:'mc-icons/game-'+s.id+'.png'});
+ if(s.alt)q.set('alt',s.alt);if(s.neo)q.set('neo','1');if(s.cd)q.set('url','1');
+ if(f)q.set('rom',GR+'/'+s.d+'/'+encodeURIComponent(f.name));else q.set('local','1');
+ if(s.bios){const b=(await gmBios()).find(x=>s.bios.test(x.name));
+  if(b){q.set('bios',GR+'/_BIOS/'+encodeURIComponent(b.name));q.set('biosName',b.name)}
+  else toast(s.n+' 바이오스가 없어요 → GAMEROM/_BIOS 폴더에 넣어 주세요',5000)}
+ gmFrame('game-ejs.html?'+q,1,local)}
+// --- 기종별 게임 목록 ---
+function gmShow(s){
+ const p=$('#alp');p.className='';p.onclick=e=>{if(e.target==p)gmBack()};
+ p.innerHTML=`<div class=alsh><div class=alh><button class=bk>‹ 보관함</button><img src="mc-icons/game-${s.id}.png" alt=""><div class=tt2><h2>${E(s.n)}</h2><small class=cn>불러오는 중…</small></div><button class=rf title="새로고침">⟳</button></div>
+  <div class=alb><input placeholder="🔍 게임 검색" autocomplete=off>${s.k=='ejs'?'<button class=lc>📂 내 기기에서 불러오기</button>':''}<button class=up>⬆ 업로드</button></div>
+  <div class=all></div><div class=alf></div></div>`;
+ void p.offsetWidth;p.className='on';
+ const L=$('.all',p),Q=$('input',p),C=$('.cn',p);let data=null;
+ $('.bk',p).onclick=gmBack;$('.rf',p).onclick=()=>load(true);
+ $('.alf',p).textContent=s.k=='dos'?'zip 안의 exe · com · bat 를 자동으로 찾아 실행합니다.':s.k=='win'?'디스크 이미지(.zip · .img · .iso)를 넣으면 목록에 나타납니다. 처음 실행은 이미지를 받느라 시간이 걸릴 수 있어요.':s.cd?'CD 게임은 .chd · .iso 또는 (cue+bin을 묶은) .zip 으로 넣어 주세요.'+(s.bios?' 바이오스는 GAMEROM/_BIOS 폴더에 넣습니다.':''):'';
+ if($('.lc',p))$('.lc',p).onclick=()=>{const i=el('input');i.type='file';i.accept=s.x.split(' ').map(x=>'.'+x).join(',');i.onchange=()=>{if(i.files[0])gmPlay(s,null,i.files[0])};i.click()};
+ $('.up',p).onclick=()=>{const i=el('input');i.type='file';i.multiple=true;i.accept=s.x.split(' ').map(x=>'.'+x).join(',');i.onchange=async()=>{if(!i.files.length)return;await up(GR+'/'+s.d,[...i.files]);load(true)};i.click()};
+ const row=(ic,title,sub,fn)=>{const r=el('div','alr',`<img src="mc-icons/game-${s.id}.png" alt=""><div class=nm><b>${ic}${E(title)}</b><small>${E(sub)}</small></div><i>▶</i>`);r.onclick=fn;return r};
+ function draw(){L.innerHTML='';const q=Q.value.trim().toLowerCase();
+  if(s.k=='dos'&&!q)L.append(row('⌨ ','DOS 프롬프트 (빈 C:)','게임 없이 시작',()=>gmPlay(s,null)));
+  if(!data)return;const rows=data.L.filter(f=>!q||(f.title+' '+f.name).toLowerCase().includes(q));
+  C.textContent=data.ok?data.L.length+'개 게임 · '+GR+'/'+s.d:'목록을 읽지 못했어요';
+  rows.forEach(f=>L.append(row('',f.title,f.name+(f.size?' · '+fmt(f.size):''),()=>gmPlay(s,f))));
+  if(!rows.length)L.append(el('div','alm',q?'검색 결과가 없어요.':data.ok
+   ?`<code>${GR}/${s.d}</code> 폴더가 비어 있어요.\n\n이 폴더에 ${s.x.split(' ').map(x=>'.'+x).join(' ')} 파일을 올리면\n여기에 나타나고, 누르면 바로 실행됩니다.\n\n${s.k=='ejs'?'(또는 위의 "내 기기에서 불러오기"로 바로 실행)':''}`
+   :`게임 목록을 불러오지 못했어요.\n잠시 후 ⟳ 를 눌러 다시 시도하거나,\n<code>${GR}/${s.d}/list.json</code> 에 파일 이름 목록을 적어 두세요.`))}
+ async function load(f){C.textContent='불러오는 중…';data=await gmGames(s,f);draw()}
+ Q.oninput=draw;draw();load(false)}
+function gmBack(){$('#alp').className='';setTimeout(()=>{if(!$('#alp').classList.contains('on'))$('#alp').innerHTML=''},300)}
+// --- 앱 보관함 ---
+function gmBuild(){gmBuilt=true;const a=$('#al');
+ a.innerHTML='<div class=als><input id=gq placeholder="🔍 게임 기종 검색" autocomplete=off></div><div class=alg></div><div class=alno>검색 결과가 없습니다</div>';
+ const g=$('.alg',a);
+ GN.forEach((n,gi)=>{const c=el('div','alc',`<h3>${E(n)}</h3><div class=ali></div>`),w=$('.ali',c);
+  SYS.filter(s=>s.g==gi).forEach(s=>{const d=el('div','alk',`<img src="mc-icons/game-${s.id}.png" alt=""><span>${E(s.n)}</span>`);
+   d.dataset.q=(s.n+' '+s.d+' '+s.id+' '+(s.kw||'')).toLowerCase();d.onclick=e=>{e.stopPropagation();gmShow(s)};w.append(d)});g.append(c)});
+ $('#gq').oninput=e=>{const q=e.target.value.trim().toLowerCase();let any=0;
+  g.querySelectorAll('.alk').forEach(k=>{const m=!q||k.dataset.q.includes(q);k.style.display=m?'':'none';if(m)any=1});
+  g.querySelectorAll('.alc').forEach(c=>c.style.display=[...c.querySelectorAll('.alk')].some(k=>k.style.display!='none')?'':'none');
+  $('.alno',a).style.display=any?'none':'block'};
+ $('#gq').onkeydown=e=>{if(e.key=='Enter'){const v=[...g.querySelectorAll('.alk')].filter(k=>k.style.display!='none');if(v.length==1)v[0].click()}};
+ a.onclick=e=>{if(e.target==a||e.target.classList.contains('alg')||e.target.classList.contains('als'))gmClose()}}
+function gmOpen(){if(!gmBuilt)gmBuild();const q=$('#gq');q.value='';q.oninput({target:q});$('#al').classList.add('on')}
+function gmClose(){gmBack();$('#al').classList.remove('on')}
+window.addEventListener('message',e=>{if(e.data==='sky-close')gmStop()});
+document.addEventListener('keydown',e=>{if(e.key!='Escape'||$('#gp').classList.contains('on'))return;
+ if($('#alp').classList.contains('on'))gmBack();else if($('#al').classList.contains('on'))gmClose()});
 function boot(){$('#lg').remove();cfg();$('#lo').style.display='';$('#lo').onclick=()=>{sessionStorage.clear();localStorage.removeItem('al');location.reload()};
  for(const k in APPS){const i=APPS[k];const d=el('img');d.src='mc-icons/'+i.i+'.png';d.title=i.n;d.onclick=()=>openApp(k);$('#dock').append(d);
-  const h=el('div','',`<img src="mc-icons/${i.i}.png"><div>${i.n}</div>`);h.onclick=()=>openApp(k);$('#hs').append(h)}}
+  const h=el('div','',`<img src="mc-icons/${i.i}.png"><div>${i.n}</div>`);h.onclick=()=>openApp(k);$('#hs').append(h)}
+ const gd=el('img');gd.src='mc-icons/Games.png';gd.title='게임';gd.onclick=gmOpen;$('#dock').append(gd);
+ const gh=el('div','',`<img src="mc-icons/Games.png"><div>게임</div>`);gh.onclick=gmOpen;$('#hs').append(gh)}
 const clock=()=>{const d=new Date(),t=d.toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit',hour12:false});
  $('#ck').textContent=d.toLocaleString('ko',{month:'short',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});$('#sk').textContent=t;
  $('#wd').innerHTML=`<b>${t}</b><span>${d.toLocaleDateString('ko',{month:'long',day:'numeric',weekday:'long'})} · My Cloud</span>`};clock();
-$('#hi').onclick=()=>{document.querySelectorAll('.win').forEach(w=>w.remove());document.body.classList.remove('inapp')};setInterval(clock,3e4);
+$('#hi').onclick=()=>{document.querySelectorAll('.win').forEach(w=>w.remove());document.body.classList.remove('inapp');gmStop();gmClose()};setInterval(clock,3e4);
 // ===== 로그인 / 힌트 =====
 const ok=()=>{sessionStorage.ok=1;if($('#al').checked)localStorage.al=H1;boot()};
 if(sessionStorage.ok||localStorage.al==H1)boot();

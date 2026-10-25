@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>게임</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;
+ -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;
+ font:14px -apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#fff}
+#game{position:fixed;left:0;top:0;width:100%;height:100%}
+#ld{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#000;text-align:center;padding:24px}
+#ld img{width:92px;height:92px;border-radius:21px;box-shadow:0 8px 28px #0009;image-rendering:pixelated}
+#ld b{font-size:17px;max-width:90vw;word-break:keep-all;overflow-wrap:anywhere}
+#ld small{color:#9aa;display:block;min-height:18px;max-width:90vw}
+#bar{width:min(260px,70vw);height:6px;border-radius:3px;background:#fff2;overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:#0a84ff;transition:width .15s}
+#ld.err #bar{display:none}#ld.err small{color:#ff8a80;white-space:pre-line}
+.hidectl .ejs_virtualGamepad_parent,.hidectl .ejs_menu_bar{display:none!important}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="ld"><img id="ic" alt=""><b id="nm">불러오는 중…</b><div id="bar"><i></i></div><small id="st"></small></div>
+<script>
+(function(){
+'use strict';
+var Q=new URLSearchParams(location.search);
+var CORE=Q.get('core')||'nes', ROM=Q.get('rom')||'', NAME=Q.get('name')||'', ICON=Q.get('icon')||'';
+var ALT=(Q.get('alt')||'').split(',').filter(Boolean);
+var BIOS=Q.get('bios')||'', NEO=Q.get('neo')==='1', BIGURL=Q.get('url')==='1';
+var $=function(i){return document.getElementById(i)};
+var started=false, dead=false;
+var abs=function(u){try{return new URL(u,location.href).href}catch(e){return u}};
+
+if(ICON)$('ic').src=ICON;else $('ic').style.display='none';
+$('nm').textContent=NAME||'게임';
+function status(t,p){$('st').textContent=t||'';if(p!=null)$('bar').firstChild.style.width=Math.max(0,Math.min(100,p))+'%'}
+function fail(m){if(started||dead)return;
+ /* 같은 게임을 다른 코어로 한 번 더 시도 */
+ if(ALT.length){var n=ALT.shift(),u=new URLSearchParams(Q);u.set('core',n);u.set('alt',ALT.join(','));location.replace('?'+u.toString());return}
+ dead=true;$('ld').classList.add('err');$('ld').style.display='flex';
+ $('st').textContent='게임을 시작하지 못했어요.\n'+(m||'')+'\n(롬 파일 형식이나 필요한 바이오스를 확인해 주세요)';
+ try{parent.postMessage('game-fail','*')}catch(e){}
+}
+
+/* 확대(핀치·더블탭) 방지 */
+['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault()},{passive:false})});
+document.addEventListener('contextmenu',function(e){e.preventDefault()});
+
+/* 아이패드 사파리(데스크톱 모드)는 '맥'으로 보여서 터치 조작버튼이 안 뜸 → 아이패드로 알려줌 */
+if(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1){
+ var IPAD='Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+ try{Object.defineProperty(navigator,'userAgent',{configurable:true,get:function(){return IPAD}})}catch(e){}
+}
+/* 아이폰 무음 스위치가 켜져 있어도 소리가 나게 (iOS 17+) */
+try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+/* iOS 는 터치 전에는 소리를 막음 → 만들어지는 AudioContext 를 모아 두었다가 터치할 때마다 깨움 */
+var AC=window.AudioContext||window.webkitAudioContext;
+if(AC){
+ var list=[];
+ var P=function(a,b){var x;try{x=new AC(a,b)}catch(e){x=new AC()}list.push(x);return x};
+ P.prototype=AC.prototype;
+ try{window.AudioContext=P;window.webkitAudioContext=P}catch(e){}
+ var unlock=function(){list.forEach(function(x){if(x.state!=='running'&&x.resume){try{var p=x.resume();if(p&&p.catch)p.catch(function(){})}catch(e){}}})};
+ ['touchstart','touchend','pointerdown','mousedown','click','keydown'].forEach(function(t){document.addEventListener(t,unlock,{passive:true,capture:true})});
+ document.addEventListener('visibilitychange',function(){if(!document.hidden)unlock()});
+}
+document.addEventListener('pointerdown',function(){try{window.focus()}catch(e){}},{passive:true,capture:true});
+
+/* ---------- 네오지오: 게임 zip 에 바이오스 파일 구조를 이어 붙임 (다시 압축하지 않아 빠름) ---------- */
+function parseZip(buf){
+ var dv=new DataView(buf),u8=new Uint8Array(buf),size=buf.byteLength,from=Math.max(0,size-70000),e=-1,i;
+ for(i=size-22;i>=from;i--){if(dv.getUint32(i,true)===0x06054b50){e=i;break}}
+ if(e<0)return null;
+ var n=dv.getUint16(e+10,true),sz=dv.getUint32(e+12,true),off=dv.getUint32(e+16,true);
+ if(n===0xFFFF||off===0xFFFFFFFF||off+sz>size)return null;
+ var ents=[],p=off,dec=new TextDecoder(),k;
+ for(k=0;k<n&&p+46<=off+sz;k++){
+  if(dv.getUint32(p,true)!==0x02014b50)break;
+  var nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),len=46+nl+el+cl;
+  ents.push({name:dec.decode(u8.subarray(p+46,p+46+nl)),raw:u8.slice(p,p+len)});p+=len;
+ }
+ return{off:off,ents:ents,u8:u8};
+}
+function bn(n){return String(n||'').split('/').pop().toLowerCase()}
+function merge(gameBuf,biosBuf){
+ var g=parseZip(gameBuf),b=parseZip(biosBuf);
+ if(!g||!b)return null;
+ var neo=0,have={},re=/^\d{3}-[cpmsv]\d?[a-z]?\d*\.[a-z]+\d*$/;
+ g.ents.forEach(function(e){var x=bn(e.name);have[x]=true;if(re.test(x))neo++});
+ if(neo<3||have['sm1.sm1']||have['sfix.sfix'])return null;     /* 네오지오 롬셋이 아니거나 이미 바이오스가 들어 있음 */
+ var cds=[],total=0,n=g.ents.length,added=0;
+ g.ents.forEach(function(e){cds.push(e.raw);total+=e.raw.length});
+ b.ents.forEach(function(e){
+  if(have[bn(e.name)])return;
+  var raw=e.raw.slice(0),dv=new DataView(raw.buffer);
+  dv.setUint32(42,dv.getUint32(42,true)+g.off,true);
+  cds.push(raw);total+=raw.length;n++;added++;
+ });
+ if(!added||n>65000)return null;
+ var eocd=new Uint8Array(22),ev=new DataView(eocd.buffer);
+ ev.setUint32(0,0x06054b50,true);ev.setUint16(8,n,true);ev.setUint16(10,n,true);ev.setUint32(12,total,true);ev.setUint32(16,g.off+b.off,true);
+ return new Blob([g.u8.subarray(0,g.off),b.u8.subarray(0,b.off)].concat(cds).concat([eocd]),{type:'application/zip'});
+}
+
+/* ---------- 롬 내려받기 (진행률) ---------- */
+function fetchBlob(url,label){
+ return fetch(url).then(function(r){
+  if(!r.ok)throw new Error(r.status===404?'롬 파일을 찾지 못했어요 (404)':'서버 오류 ('+r.status+')');
+  var tot=+r.headers.get('content-length')||0;
+  if(!r.body||!r.body.getReader)return r.blob();
+  var rd=r.body.getReader(),parts=[],got=0;
+  return(function pump(){return rd.read().then(function(x){
+   if(x.done)return new Blob(parts);
+   parts.push(x.value);got+=x.value.length;
+   status(label+' '+(got/1048576).toFixed(1)+'MB'+(tot?' / '+(tot/1048576).toFixed(1)+'MB':''),tot?got/tot*100:50);
+   return pump();
+  })})();
+ });
+}
+
+function launch(file,biosUrl,extra){
+ var W=window;
+ if(typeof WebAssembly!=='object')return fail('이 브라우저는 WebAssembly 를 지원하지 않아요');
+ W.EJS_player='#game';
+ W.EJS_core=CORE;
+ W.EJS_gameName=NAME||'game';
+ W.EJS_gameUrl=file;
+ W.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
+ W.EJS_startOnLoaded=true;
+ W.EJS_color='#0a84ff';
+ W.EJS_language='ko-KR';
+ if(/desmume|melonds/.test(CORE)){
+  W.EJS_controlScheme='nds';
+  W.EJS_defaultOptions={'desmume_pointer_type':'touch','melonds_touch_mode':'Touch'};
+ }
+ if(biosUrl){
+  W.EJS_biosUrl=biosUrl;
+  if(extra&&extra.name){var ef={};ef[extra.name]=biosUrl;W.EJS_externalFiles=ef}
+ }
+ W.EJS_onGameStart=function(){started=true;$('ld').style.display='none';try{parent.postMessage('game-start','*')}catch(e){}};
+ W.addEventListener('error',function(e){fail((e&&e.message)||'error')});
+ W.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;fail((r&&(r.message||r))||'rejection')});
+ /* 롬셋 누락 같은 코어 메시지를 감지 → 다른 코어로 전환 */
+ var FAIL_RE=/missing files for THIS VERSION|ROM with name .* is missing|failed to load content|unable to load content|romset .*(missing|not found)/i;
+ ['log','info','warn','error'].forEach(function(k){var o=console[k];console[k]=function(){
+  try{if(!started&&FAIL_RE.test(Array.prototype.join.call(arguments,' ')))setTimeout(function(){fail('롬셋/바이오스 파일이 맞지 않아요')},300)}catch(x){}
+  return o.apply(console,arguments)}});
+ status('에뮬레이터 엔진 불러오는 중…',100);
+ var s=document.createElement('script');
+ s.src=W.EJS_pathtodata+'loader.js';
+ s.onerror=function(){fail('에뮬레이터 엔진(EmulatorJS)을 불러오지 못했어요.\n인터넷 연결을 확인해 주세요.')};
+ document.body.appendChild(s);
+}
+
+function run(blob,fileName,bios){
+ var useBios='',go=function(bb){
+  var file=new File([bb],fileName,{type:bb.type||'application/octet-stream'});
+  if(NEO&&bios)useBios=abs('GAMEROM/_BIOS/neogeo.zip');
+  else if(BIOS)useBios=abs(BIOS);
+  launch(file,useBios,NEO?{name:'neogeo.zip'}:{name:Q.get('biosName')||''});
+ };
+ if(NEO&&bios&&/\.zip$/i.test(fileName)){
+  status('바이오스 합치는 중…',100);
+  blob.arrayBuffer().then(function(gb){var m=null;try{m=merge(gb,bios)}catch(e){}go(m||blob)});
+ }else go(blob);
+}
+function neoBios(){
+ return NEO?fetch(abs('GAMEROM/_BIOS/neogeo.zip')).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()}).catch(function(){return null}):Promise.resolve(null);
+}
+function main(){
+ /* 내 기기에서 고른 롬: 부모 페이지가 postMessage 로 파일을 보내 줌 */
+ if(Q.get('local')==='1'){
+  status('롬 받는 중…',100);
+  window.addEventListener('message',function(e){
+   var f=e.data&&e.data.rom;if(!f||main.got)return;main.got=1;
+   neoBios().then(function(b){run(f,f.name||'game.bin',b)});
+  });
+  return;
+ }
+ if(!ROM)return fail('롬 파일이 지정되지 않았어요');
+ var fileName=decodeURIComponent((ROM.split('?')[0].split('/').pop())||'game.bin');
+ /* CD 이미지(세가CD·새턴)처럼 큰 파일은 URL 을 그대로 엔진에 넘김 */
+ if(BIGURL&&!NEO){status('롬 불러오는 중…',100);return launch(abs(ROM),BIOS?abs(BIOS):'',{name:Q.get('biosName')||''})}
+ status('롬 내려받는 중…',5);
+ Promise.all([fetchBlob(abs(ROM),'롬 내려받는 중…'),neoBios()]).then(function(a){run(a[0],fileName,a[1])})
+  .catch(function(e){fail((e&&e.message)||'롬을 불러오지 못했어요')});
+}
+main();
+})();
+</script>
+</body>
+</html>
