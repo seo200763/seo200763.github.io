@@ -48,6 +48,8 @@ button{font:inherit;border:0;background:var(--card);color:var(--ac);padding:6px 
 #lg{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#3a6df0 linear-gradient(135deg,#3a6df0,#9b59d0 55%,#f08a5d)}
 .lg{width:min(320px,90vw);background:#fffd;color:#111;padding:24px;border-radius:20px;display:flex;flex-direction:column;gap:10px;text-align:center;backdrop-filter:blur(20px)}
 .lg h1{margin:0;font-size:22px}.lg button{background:var(--ac);color:#fff;padding:10px}.lg a{color:#555;cursor:pointer;font-size:13px}
+.sk{animation:sk .35s}@keyframes sk{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.sb{display:flex;gap:6px;padding:0 12px 8px;flex:none}.sb input,.sb select{padding:7px 10px;border-radius:18px;border:0;background:var(--card);color:var(--fg);font:inherit;min-width:0}.sb input{flex:1}
 .kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.kp button{background:#e5e5ea;color:#111;font-size:20px}
 @media(max-width:760px){
  .win{position:fixed!important;inset:0!important;width:auto;height:auto;border-radius:0}
@@ -55,16 +57,14 @@ button{font:inherit;border:0;background:var(--card);color:var(--ac);padding:6px 
  #dock{display:none}#hs{display:grid}
 }
 </style></head><body>
-<div id="mb"><b> My Cloud</b><span id="ck"></span></div>
+<div id="mb"><b> My Cloud</b><span><a id="lo" style="cursor:pointer;display:none">로그아웃</a> &nbsp;<span id="ck"></span></span></div>
 <div id="hs"></div><div id="dock"></div>
 <div id="lg"><div class="lg"><h1>🔒 My Cloud</h1>
 <input id="u" placeholder="아이디" autocomplete="username"><input id="p" type="password" placeholder="비밀번호" autocomplete="current-password">
-<button id="go">로그인</button><a id="ht">힌트</a><div id="kb"></div></div></div>
+<label style="font-size:13px;text-align:left"><input type="checkbox" id="sp" style="width:auto"> 비밀번호 보기</label><div id="er" style="color:#d70015;min-height:18px;font-size:13px"></div><button id="go">로그인</button><a id="ht">힌트</a><div id="kb"></div></div></div>
 <script>
 // ===== 설정 =====
 const H1='1090bc8f5bab42b4a2e1e2469b7129f095e8478f1cfc39a9d4104a16c0dd6624',H2='2603fc852a920c79aae37a4b78535932cb352ead5a43c8ff40a4834bdc077339';
-const EJ={s:'',t:'',k:''}; // EmailJS service_id / template_id / public key
-const TO='youngho7375@naver.com';
 const APPS={
  photo:{n:'사진',i:'Photos',d:'PHOTO',a:'image/*'},video:{n:'동영상',i:'Videos',d:'VIDEO',a:'video/*'},
  music:{n:'음악',i:'Music',d:'MUSIC',a:'audio/*'},note:{n:'메모',i:'Notes',d:'MEMO',a:'.txt'},file:{n:'파일',i:'Folder',d:'FILE',a:''}};
@@ -83,7 +83,7 @@ function cfg(){if(!CFG.repo){CFG={repo:prompt('GitHub 저장소 (예: 내아이�
 function tok(){let k=sessionStorage.t;if(!k){k=prompt('GitHub 토큰을 입력하세요 (이 탭에서만 기억됩니다)');if(k)sessionStorage.t=k}return k}
 const H=()=>sessionStorage.t?{Authorization:'Bearer '+sessionStorage.t}:{};
 const api=p=>`https://api.github.com/repos/${cfg().repo}/contents/`+p.split('/').map(encodeURIComponent).join('/');
-async function ls(d){const r=await fetch(api(d)+'?ref='+CFG.br,{headers:H()});if(!r.ok)return[];return(await r.json()).filter(f=>f.type=='file'&&f.name!='.gitkeep')}
+async function ls(d){const r=await fetch(api(d)+'?ref='+CFG.br,{headers:H()});if(!r.ok){if(r.status==403)toast('GitHub 요청 한도 초과 – 잠시 후 다시 하거나 토큰을 입력하세요');return[]}return(await r.json()).filter(f=>f.type=='file'&&f.name!='.gitkeep')}
 const bc={};const blob=async f=>bc[f.sha]||(bc[f.sha]=await(await fetch(f.download_url)).blob());
 async function up(d,files,sha){if(!tok())return;for(const f of files){const c=await new Promise(r=>{const x=new FileReader;x.onload=()=>r(x.result.split(',')[1]);x.readAsDataURL(f)});
  toast(f.name+' 업로드 중…');const r=await fetch(api(d+'/'+f.name),{method:'PUT',headers:H(),body:JSON.stringify({message:'add '+f.name,content:c,branch:CFG.br,sha:sha||undefined})});
@@ -91,17 +91,19 @@ async function up(d,files,sha){if(!tok())return;for(const f of files){const c=aw
 const rm=async f=>(await fetch(api(f.path),{method:'DELETE',headers:H(),body:JSON.stringify({message:'del '+f.name,sha:f.sha,branch:CFG.br})})).ok;
 // ===== 앱(사진·동영상·음악·메모·파일 공통) =====
 async function Lib(root,key,close){
- const A=APPS[key],all=key=='file';let it=[],sel=new Set,sm=false;
- root.innerHTML='';const hd=el('div','hd'),bd=el('div','lb'),ov=el('div','ov');root.append(hd,bd,ov);
+ const A=APPS[key],all=key=='file';let it=[],sel=new Set,sm=false,qs='',so=0;
+ root.innerHTML='';const hd=el('div','hd'),bd=el('div','lb'),ov=el('div','ov');const sb=el('div','sb','<input placeholder="🔍 검색"><select><option value=0>이름순</option><option value=2>이름 역순</option><option value=1>큰 용량순</option></select>');root.append(hd,sb,bd,ov);
+ $('input',sb).oninput=e=>{qs=e.target.value.toLowerCase();draw()};$('select',sb).onchange=e=>{so=+e.target.value;draw()};
+ const vis=()=>it.filter(f=>f.name.toLowerCase().includes(qs)).sort((a,b)=>so==1?b.size-a.size:so==2?b.name.localeCompare(a.name):a.name.localeCompare(b.name));
  const tb=(t,fn,c)=>{const b=el('button',c,t);b.onclick=fn;return b};
  const pick=()=>it.filter(f=>sel.has(f.sha));
  async function load(){bd.innerHTML='<p class=em>불러오는 중…</p>';it=[];for(const k of all?['photo','video','music','note','file']:[key])(await ls(APPS[k].d)).forEach(f=>{f.k=k;it.push(f)});draw()}
  const mode=m=>{sm=true;draw();toast(m)};
  function head(){hd.innerHTML='';hd.append(el('h2','',sm?sel.size+'개 선택':A.n+' <small>'+it.length+'</small>'));const r=el('div','tools');
-  if(sm){r.append(tb('전체',()=>{sel.size==it.length?sel.clear():it.forEach(f=>sel.add(f.sha));draw()}),tb('다운로드',async()=>{for(const f of pick())save(await blob(f),f.name)}),tb('공유',shS),tb('삭제',dlt));
+  if(sm){r.append(tb('전체',()=>{sel.size==it.length?sel.clear():vis().forEach(f=>sel.add(f.sha));draw()}),tb('다운로드',async()=>{for(const f of pick())save(await blob(f),f.name)}),tb('공유',shS),tb('삭제',dlt));
    if(all&&sel.size==1)r.append(tb('미리보기',()=>open(pick()[0])),tb('정보',()=>{const f=pick()[0];alert(`이름: ${f.name}\n크기: ${fmt(f.size)}\n경로: ${f.path}`)}));
    r.append(tb('취소',()=>{sm=false;sel.clear();draw()}))}
-  else{r.append(tb('선택',()=>mode('항목을 선택하세요')));
+  else{r.append(tb('⟳',load),tb('선택',()=>mode('항목을 선택하세요')));
    if(key=='photo')r.append(tb('사진올리기',upl),tb('공유',()=>mode('공유할 사진을 선택하세요')));
    else if(key=='note')r.append(tb('TXT불러오기',imp),tb('TXT저장하기',exp),tb('업로드',()=>edit()));
    else r.append(tb('업로드',upl));
@@ -109,7 +111,7 @@ async function Lib(root,key,close){
   hd.append(r)}
  function draw(){head();bd.innerHTML='';bd.className='lb'+(sm?' sm':'');if(!it.length){bd.append(el('p','em','항목이 없습니다.<br>'+A.d+' 폴더에 올리거나 업로드하세요.'));return}
   const g=el('div',key=='photo'||key=='video'?'g':'ls');bd.append(g);
-  it.forEach(f=>{const d=el('div','i'+(sel.has(f.sha)?' on':''));
+  vis().forEach(f=>{const d=el('div','i'+(sel.has(f.sha)?' on':''));
    d.innerHTML=g.className=='g'?(key=='photo'?`<img loading=lazy src="${f.download_url}">`:`<video preload=metadata muted src="${f.download_url}#t=0.5"></video><b>▶</b>`)+'<s></s>'
     :`<s></s><span class=ic>${ICO[f.k]}</span><span class=nm>${E(f.name)}<small>${fmt(f.size)}</small></span>`;
    d.onclick=()=>{if(sm){sel.has(f.sha)?sel.delete(f.sha):sel.add(f.sha);draw()}else open(f)};g.append(d)})}
@@ -129,37 +131,55 @@ async function Lib(root,key,close){
   blob(g).then(b=>{const f=new File([b],g.name,{type:b.type});navigator.canShare?.({files:[f]})?navigator.share({files:[f],title:t,text:txt}).catch(()=>{}):(toast('제목·설명·태그를 복사했습니다. 유튜브 업로드 페이지로 이동합니다'),open2('https://www.youtube.com/upload'))})}
  const open2=u=>window.open(u,'_blank');
  function open(f){const k=f.k||key;if(k=='file')return alert('해당 파일은 실행을 할 수가 없습니다.');if(k=='note')return edit(f);
-  const v=el('div','vw'),L=it.filter(a=>a.k==k);let n=L.indexOf(f);v.append(tb('✕',()=>v.remove(),'x'));
+  const v=el('div','vw'),L=vis().filter(a=>a.k==k);let n=L.indexOf(f);v.append(tb('✕',()=>v.remove(),'x'));
   const show=()=>{const g=L[n];$('.c',v)?.remove();const c=el('div','c');
    if(k=='photo')c.innerHTML=`<img src="${g.download_url}">`;
    if(k=='video'){c.innerHTML=`<video src="${g.download_url}" controls autoplay playsinline></video>`;c.append(tb('YouTube 업로드',()=>yt(g)))}
    if(k=='music'){c.className='c pl';c.innerHTML=`<div class=art>♪</div><h3>${E(g.name.replace(/\.\w+$/,''))}</h3><audio src="${g.download_url}" controls autoplay></audio>`;$('audio',c).onended=()=>{n=(n+1)%L.length;show()}}
    v.append(c)};
-  if(L.length>1)v.append(tb('‹',()=>{n=(n-1+L.length)%L.length;show()},'pv'),tb('›',()=>{n=(n+1)%L.length;show()},'nx'));
+  const go=d=>{if(L.length>1){n=(n+d+L.length)%L.length;show()}};
+  if(L.length>1)v.append(tb('‹',()=>go(-1),'pv'),tb('›',()=>go(1),'nx'));
+  const kd=e=>{if(!v.isConnected)return document.removeEventListener('keydown',kd);if(e.key=='Escape')v.remove();if(e.key=='ArrowLeft')go(-1);if(e.key=='ArrowRight')go(1)};document.addEventListener('keydown',kd);
+  let sx=0;v.ontouchstart=e=>sx=e.touches[0].clientX;v.ontouchend=e=>{const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>70)go(d<0?1:-1)};
   ov.append(v);show()}
- load()}
+ root.dropUp=async fs=>{await up(all?'FILE':A.d,[...fs]);load()};load()}
 // ===== 창 관리 =====
 let z=10;
 function openApp(k){const A=APPS[k],w=el('div','win'),mob=innerWidth<761;w.style.cssText=`left:${80+Math.random()*140|0}px;top:${40+Math.random()*60|0}px;z-index:${++z}`;
  w.innerHTML=`<div class=tt><i></i><i></i><i></i><b>${A.n}</b></div><div class=bd></div>`;document.body.append(w);
  const [r,y,g]=w.querySelectorAll('i'),t=$('.tt',w),cl=()=>w.remove();r.onclick=y.onclick=cl;g.onclick=()=>w.classList.toggle('max');
- w.onmousedown=()=>w.style.zIndex=++z;
+ w.onmousedown=()=>w.style.zIndex=++z;w.ondragover=e=>e.preventDefault();w.ondrop=e=>{e.preventDefault();$('.bd',w).dropUp?.(e.dataTransfer.files)};
  t.onmousedown=e=>{if(mob||e.target.tagName=='I')return;const dx=e.clientX-w.offsetLeft,dy=e.clientY-w.offsetTop;
   const mv=e=>{w.style.left=e.clientX-dx+'px';w.style.top=Math.max(24,e.clientY-dy)+'px'};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',mv),{once:true})};
  Lib($('.bd',w),k,cl)}
-function boot(){$('#lg').remove();cfg();
+function boot(){$('#lg').remove();cfg();$('#lo').style.display='';$('#lo').onclick=()=>{sessionStorage.clear();location.reload()};
  for(const k in APPS){const i=APPS[k];const d=el('img');d.src='mc-icons/'+i.i+'.png';d.title=i.n;d.onclick=()=>openApp(k);$('#dock').append(d);
   const h=el('div','',`<img src="mc-icons/${i.i}.png"><div>${i.n}</div>`);h.onclick=()=>openApp(k);$('#hs').append(h)}}
 const clock=()=>$('#ck').textContent=new Date().toLocaleString('ko',{month:'short',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});clock();setInterval(clock,3e4);
 // ===== 로그인 / 힌트 =====
 const ok=()=>{sessionStorage.ok=1;boot()};
 if(sessionStorage.ok)boot();
-$('#go').onclick=async()=>{await sha($('#u').value+'\n'+$('#p').value)==H1?ok():toast('아이디 또는 비밀번호가 틀렸습니다')};
+let fails=0,lock=+sessionStorage.l||0;const er=m=>$('#er').textContent=m;
+$('#sp').onchange=e=>$('#p').type=e.target.checked?'text':'password';
+$('#u').onkeydown=e=>{if(e.key=='Enter')$('#p').focus()};
+$('#go').onclick=async()=>{
+ if(Date.now()<lock)return er(`너무 많이 틀렸습니다. ${Math.ceil((lock-Date.now())/1e3)}초 후 다시 시도해주세요.`);
+ if(await sha($('#u').value.trim()+'\n'+$('#p').value)==H1)return ok();
+ fails++;$('#p').value='';$('#p').focus();const c=$('.lg');c.classList.remove('sk');void c.offsetWidth;c.classList.add('sk');
+ if(fails>=5){fails=0;lock=Date.now()+3e4;sessionStorage.l=lock;er('5회 틀려서 30초간 잠깁니다.')}
+ else er(`아이디 또는 비밀번호가 틀렸습니다. 다시 시도해주세요. (${fails}/5)`)};
 $('#p').onkeydown=e=>{if(e.key=='Enter')$('#go').click()};
-$('#ht').onclick=()=>{const kb=$('#kb');if(kb.firstChild)return kb.innerHTML='';let v='';const info=el('div','','보안키패드 4자리 입력 <b id=dt></b>'),kp=el('div','kp');
+const BLOB='44iEgvwarv4B+R3mri0nFA==.Ydfh0uYtvMZv1aZG.oXYgH9ZKY2OTSh3M0CXu/NZCv7e7URiLiXuRNovArWteIPN7';
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function unlock(pw){const [s,i,c]=BLOB.split('.').map(b64);const m=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+ const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:s,iterations:100000,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['decrypt']);
+ return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:i},k,c))}
+$('#ht').onclick=()=>{const kb=$('#kb');if(kb.firstChild)return kb.innerHTML='';let v='';
+ kb.innerHTML='<div>① 힌트 비밀번호 4자리를 입력하세요 <b id=dt></b></div><div class=kp></div>';const kp=$('.kp',kb);
  [...'0123456789'].sort(()=>Math.random()-.5).forEach(n=>{const b=el('button','',n);b.onclick=async()=>{v+=n;$('#dt').textContent='●'.repeat(v.length);
-  if(v.length==4){const good=await sha('pin:'+v)==H2;v='';$('#dt').textContent='';if(!good)return toast('번호가 틀렸습니다');
-   if(!EJ.s)return toast('EmailJS 설정(EJ)이 비어 있어 메일을 보낼 수 없습니다');
-   const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EJ.s,template_id:EJ.t,user_id:EJ.k,template_params:{to_email:TO}})});
-   toast(r.ok?'등록된 이메일로 전송했습니다':'메일 전송 실패')}};kp.append(b)});kb.append(info,kp)};
+  if(v.length<4)return;const pin=v;v='';$('#dt').textContent='';
+  if(await sha('pin:'+pin)!=H2)return er('힌트 비밀번호가 틀렸습니다. 다시 시도해주세요.');
+  er('');kb.innerHTML='<div style="margin:8px 0">② 니드포스피드, 마인크래프트 등을 구입한 구글계정의 이름은?</div><input id=an placeholder="답변" style="width:100%"><button id=ab style="margin-top:6px;width:100%">확인</button><div id=rs style="margin-top:8px;font-weight:600"></div>';
+  const chk=async()=>{try{const [u,p]=(await unlock(pin+'|'+$('#an').value.trim().toLowerCase())).split('\n');er('');$('#rs').innerHTML='아이디: '+E(u)+'<br>비밀번호: '+E(p)}catch(e){er('답변이 틀렸습니다. 다시 시도해주세요.')}};
+  $('#ab').onclick=chk;$('#an').onkeydown=e=>{if(e.key=='Enter')chk()};$('#an').focus()};kp.append(b)})};
 </script></body></html>
