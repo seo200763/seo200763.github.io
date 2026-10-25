@@ -62,7 +62,7 @@ button{font:inherit;border:0;background:var(--card);color:var(--ac);padding:6px 
 <div id="hs"></div><div id="dock"></div>
 <div id="lg"><div class="lg"><h1>🔒 My Cloud</h1>
 <input id="u" placeholder="아이디" autocomplete="username"><input id="p" type="password" placeholder="비밀번호" autocomplete="current-password">
-<label style="font-size:13px;text-align:left"><input type="checkbox" id="sp" style="width:auto"> 비밀번호 보기</label><div id="er" style="color:#d70015;min-height:18px;font-size:13px"></div><button id="go">로그인</button><a id="ht">힌트</a><div id="kb"></div></div></div>
+<label style="font-size:13px;text-align:left"><input type="checkbox" id="sp" style="width:auto"> 비밀번호 보기</label><label style="font-size:13px;text-align:left"><input type="checkbox" id="al" style="width:auto" checked> 이 기기에서 자동 로그인</label><div id="er" style="color:#d70015;min-height:18px;font-size:13px"></div><button id="go">로그인</button><a id="ht">힌트</a><div id="kb"></div></div></div>
 <script>
 // ===== 설정 =====
 const H1='1090bc8f5bab42b4a2e1e2469b7129f095e8478f1cfc39a9d4104a16c0dd6624',H2='2603fc852a920c79aae37a4b78535932cb352ead5a43c8ff40a4834bdc077339';
@@ -156,13 +156,13 @@ function openApp(k){const A=APPS[k],w=el('div','win'),mob=innerWidth<761;w.style
  t.onmousedown=e=>{if(mob||e.target.tagName=='I')return;const dx=e.clientX-w.offsetLeft,dy=e.clientY-w.offsetTop;
   const mv=e=>{w.style.left=e.clientX-dx+'px';w.style.top=Math.max(24,e.clientY-dy)+'px'};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',mv),{once:true})};
  Lib($('.bd',w),k,cl)}
-function boot(){$('#lg').remove();cfg();$('#lo').style.display='';$('#lo').onclick=()=>{sessionStorage.clear();location.reload()};
+function boot(){$('#lg').remove();cfg();$('#lo').style.display='';$('#lo').onclick=()=>{sessionStorage.clear();localStorage.removeItem('al');location.reload()};
  for(const k in APPS){const i=APPS[k];const d=el('img');d.src='mc-icons/'+i.i+'.png';d.title=i.n;d.onclick=()=>openApp(k);$('#dock').append(d);
   const h=el('div','',`<img src="mc-icons/${i.i}.png"><div>${i.n}</div>`);h.onclick=()=>openApp(k);$('#hs').append(h)}}
 const clock=()=>$('#ck').textContent=new Date().toLocaleString('ko',{month:'short',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});clock();setInterval(clock,3e4);
 // ===== 로그인 / 힌트 =====
-const ok=()=>{sessionStorage.ok=1;boot()};
-if(sessionStorage.ok)boot();
+const ok=()=>{sessionStorage.ok=1;if($('#al').checked)localStorage.al=H1;boot()};
+if(sessionStorage.ok||localStorage.al==H1)boot();
 let fails=0,lock=+sessionStorage.l||0;const er=m=>$('#er').textContent=m;
 $('#sp').onchange=e=>$('#p').type=e.target.checked?'text':'password';
 $('#u').onkeydown=e=>{if(e.key=='Enter')$('#p').focus()};
