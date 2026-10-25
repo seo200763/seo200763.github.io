@@ -48,6 +48,7 @@ button{font:inherit;border:0;background:var(--card);color:var(--ac);padding:6px 
 #lg{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#3a6df0 linear-gradient(135deg,#3a6df0,#9b59d0 55%,#f08a5d)}
 .lg{width:min(320px,90vw);background:#fffd;color:#111;padding:24px;border-radius:20px;display:flex;flex-direction:column;gap:10px;text-align:center;backdrop-filter:blur(20px)}
 .lg h1{margin:0;font-size:22px}.lg button{background:var(--ac);color:#fff;padding:10px}.lg a{color:#555;cursor:pointer;font-size:13px}
+.fr{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;padding:6px 12px 12px;text-align:center}.fr>div{cursor:pointer;font-size:13px;padding:6px;border-radius:12px}.fr>div:hover{background:#8883}.fr img{width:58px}.fr small{display:block;color:#888}.sec{padding:6px 14px;font-size:12px;color:#888}
 .sk{animation:sk .35s}@keyframes sk{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 .sb{display:flex;gap:6px;padding:0 12px 8px;flex:none}.sb input,.sb select{padding:7px 10px;border-radius:18px;border:0;background:var(--card);color:var(--fg);font:inherit;min-width:0}.sb input{flex:1}
 .kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.kp button{background:#e5e5ea;color:#111;font-size:20px}
@@ -91,15 +92,16 @@ async function up(d,files,sha){if(!tok())return;for(const f of files){const c=aw
 const rm=async f=>(await fetch(api(f.path),{method:'DELETE',headers:H(),body:JSON.stringify({message:'del '+f.name,sha:f.sha,branch:CFG.br})})).ok;
 // ===== 앱(사진·동영상·음악·메모·파일 공통) =====
 async function Lib(root,key,close){
- const A=APPS[key],all=key=='file';let it=[],sel=new Set,sm=false,qs='',so=0;
+ const A=APPS[key],all=key=='file';let it=[],sel=new Set,sm=false,qs='',so=0,cur=null;
  root.innerHTML='';const hd=el('div','hd'),bd=el('div','lb'),ov=el('div','ov');const sb=el('div','sb','<input placeholder="🔍 검색"><select><option value=0>이름순</option><option value=2>이름 역순</option><option value=1>큰 용량순</option></select>');root.append(hd,sb,bd,ov);
  $('input',sb).oninput=e=>{qs=e.target.value.toLowerCase();draw()};$('select',sb).onchange=e=>{so=+e.target.value;draw()};
- const vis=()=>it.filter(f=>f.name.toLowerCase().includes(qs)).sort((a,b)=>so==1?b.size-a.size:so==2?b.name.localeCompare(a.name):a.name.localeCompare(b.name));
+ const vis=()=>it.filter(f=>(!cur||f.k==cur)&&f.name.toLowerCase().includes(qs)).sort((a,b)=>so==1?b.size-a.size:so==2?b.name.localeCompare(a.name):a.name.localeCompare(b.name));
  const tb=(t,fn,c)=>{const b=el('button',c,t);b.onclick=fn;return b};
  const pick=()=>it.filter(f=>sel.has(f.sha));
  async function load(){bd.innerHTML='<p class=em>불러오는 중…</p>';it=[];for(const k of all?['photo','video','music','note','file']:[key])(await ls(APPS[k].d)).forEach(f=>{f.k=k;it.push(f)});draw()}
  const mode=m=>{sm=true;draw();toast(m)};
- function head(){hd.innerHTML='';hd.append(el('h2','',sm?sel.size+'개 선택':A.n+' <small>'+it.length+'</small>'));const r=el('div','tools');
+ function head(){hd.innerHTML='';hd.append(el('h2','',sm?sel.size+'개 선택':(cur?APPS[cur].n:A.n)+' <small>'+vis().length+'</small>'));const r=el('div','tools');
+  if(all&&cur&&!sm)r.append(tb('‹ 파일',()=>{cur=null;qs='';$('input',sb).value='';draw()}));
   if(sm){r.append(tb('전체',()=>{sel.size==it.length?sel.clear():vis().forEach(f=>sel.add(f.sha));draw()}),tb('다운로드',async()=>{for(const f of pick())save(await blob(f),f.name)}),tb('공유',shS),tb('삭제',dlt));
    if(all&&sel.size==1)r.append(tb('미리보기',()=>open(pick()[0])),tb('정보',()=>{const f=pick()[0];alert(`이름: ${f.name}\n크기: ${fmt(f.size)}\n경로: ${f.path}`)}));
    r.append(tb('취소',()=>{sm=false;sel.clear();draw()}))}
@@ -109,7 +111,9 @@ async function Lib(root,key,close){
    else r.append(tb('업로드',upl));
    if(all)r.append(tb('삭제',()=>mode('삭제할 파일 선택')),tb('다운로드',()=>mode('받을 파일 선택')),tb('종료',close))}
   hd.append(r)}
- function draw(){head();bd.innerHTML='';bd.className='lb'+(sm?' sm':'');if(!it.length){bd.append(el('p','em','항목이 없습니다.<br>'+A.d+' 폴더에 올리거나 업로드하세요.'));return}
+ function draw(){head();bd.innerHTML='';bd.className='lb'+(sm?' sm':'');
+  if(all&&!cur&&!sm){const fr=el('div','fr');for(const k of ['photo','video','music','note','file']){const d=el('div','',`<img src="mc-icons/Folder.png"><div>${APPS[k].n}</div><small>${it.filter(f=>f.k==k).length}개</small>`);d.onclick=()=>{cur=k;draw()};fr.append(d)}bd.append(fr);bd.append(el('div','sec','모든 파일'))}
+  if(!vis().length){bd.append(el('p','em',it.length?'검색 결과가 없습니다.':'항목이 없습니다.<br>'+(all&&cur?APPS[cur].d:A.d)+' 폴더에 올리거나 업로드하세요.'));return}
   const g=el('div',key=='photo'||key=='video'?'g':'ls');bd.append(g);
   vis().forEach(f=>{const d=el('div','i'+(sel.has(f.sha)?' on':''));
    d.innerHTML=g.className=='g'?(key=='photo'?`<img loading=lazy src="${f.download_url}">`:`<video preload=metadata muted src="${f.download_url}#t=0.5"></video><b>▶</b>`)+'<s></s>'
@@ -119,7 +123,7 @@ async function Lib(root,key,close){
   navigator.canShare&&navigator.canShare({files:fs})?navigator.share({files:fs}).catch(()=>{}):toast('이 브라우저는 파일 공유를 지원하지 않습니다 (모바일 권장)')}
  async function dlt(){if(!sel.size)return toast('선택된 항목이 없습니다');if(!tok()||!confirm(sel.size+'개를 삭제할까요?'))return;
   for(const f of pick())await rm(f)||toast('삭제 실패: '+f.name);sel.clear();sm=false;load()}
- function upl(){const i=el('input');i.type='file';i.multiple=true;i.accept=A.a;i.onchange=async()=>{await up(all?'FILE':A.d,[...i.files]);load()};i.click()}
+ function upl(){const i=el('input');i.type='file';i.multiple=true;i.accept=all&&cur?APPS[cur].a:A.a;i.onchange=async()=>{await up(all?(cur?APPS[cur].d:'FILE'):A.d,[...i.files]);load()};i.click()}
  function imp(){const i=el('input');i.type='file';i.accept='.txt';i.onchange=async()=>{edit();const v=ov.lastChild;$('textarea',v).value=await i.files[0].text();$('input',v).value=i.files[0].name.replace(/\.txt$/,'')};i.click()}
  async function exp(){let t='';for(const f of it)t+=`# ${f.name}\n${await(await blob(f)).text()}\n\n`;save(new Blob([t]),'memos.txt')}
  async function edit(f){const v=el('div','vw ed');v.innerHTML=`<div class=tools></div><input placeholder="제목" value="${f?E(f.name.replace(/\.txt$/,'')):''}"><textarea placeholder="메모를 입력하세요"></textarea>`;
@@ -142,7 +146,7 @@ async function Lib(root,key,close){
   const kd=e=>{if(!v.isConnected)return document.removeEventListener('keydown',kd);if(e.key=='Escape')v.remove();if(e.key=='ArrowLeft')go(-1);if(e.key=='ArrowRight')go(1)};document.addEventListener('keydown',kd);
   let sx=0;v.ontouchstart=e=>sx=e.touches[0].clientX;v.ontouchend=e=>{const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>70)go(d<0?1:-1)};
   ov.append(v);show()}
- root.dropUp=async fs=>{await up(all?'FILE':A.d,[...fs]);load()};load()}
+ root.dropUp=async fs=>{await up(all?(cur?APPS[cur].d:'FILE'):A.d,[...fs]);load()};load()}
 // ===== 창 관리 =====
 let z=10;
 function openApp(k){const A=APPS[k],w=el('div','win'),mob=innerWidth<761;w.style.cssText=`left:${80+Math.random()*140|0}px;top:${40+Math.random()*60|0}px;z-index:${++z}`;
