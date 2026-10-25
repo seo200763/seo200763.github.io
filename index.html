@@ -52,14 +52,33 @@ button{font:inherit;border:0;background:var(--card);color:var(--ac);padding:6px 
 .sk{animation:sk .35s}@keyframes sk{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 .sb{display:flex;gap:6px;padding:0 12px 8px;flex:none}.sb input,.sb select{padding:7px 10px;border-radius:18px;border:0;background:var(--card);color:var(--fg);font:inherit;min-width:0}.sb input{flex:1}
 .kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.kp button{background:#e5e5ea;color:#111;font-size:20px}
+#sk,#bt,#pd,#hi,#wd{display:none}
+@keyframes zin{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+@supports(height:100dvh){body{height:100dvh}}
 @media(max-width:760px){
- .win{position:fixed!important;inset:0!important;width:auto;height:auto;border-radius:0}
- .tt{height:44px}.tt i:not(:first-child){display:none}.tt i{width:auto;height:auto;background:none!important;color:var(--ac);font-style:normal;font-size:16px}.tt i::after{content:'‹ 홈'}.tt b{margin:0 50px 0 0}
- #dock{display:none}#hs{display:grid}
+ body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none;user-select:none}
+ #mb{position:fixed;top:0;left:0;right:0;z-index:9000;height:32px;background:none;backdrop-filter:none;padding:0 24px;font-size:15px;font-weight:600}
+ #mt,#ck{display:none}#sk{display:block}#bt{display:flex;align-items:center;gap:5px}
+ .inapp #mb{color:var(--fg);background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(20px)}
+ .win{position:fixed!important;inset:0!important;width:auto;height:auto;border-radius:0;animation:zin .25s ease-out}
+ .tt{height:76px;padding-top:32px;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(20px);cursor:default}
+ .tt b{margin:0 56px 0 0;font-size:17px}
+ .tt i:not(:first-child){display:none}.tt i{width:auto;height:auto;background:none!important;color:var(--ac);font-style:normal;font-size:17px}.tt i::after{content:'‹ 홈'}
+ .hd{height:56px}.hd h2{font-size:26px}.tools button{padding:8px 12px;font-size:15px}.sb input,.sb select{font-size:16px}
+ .bd{padding-bottom:22px}
+ #dock{display:none}
+ #hs{display:grid;padding:48px 20px 0;gap:26px 10px;align-content:start;user-select:none}
+ #wd{display:block;grid-column:1/-1;text-align:left;background:#fff3;backdrop-filter:blur(20px);border-radius:24px;padding:16px 20px;margin-bottom:8px}
+ #wd b{display:block;font-size:48px;font-weight:300;line-height:1.1}#wd span{font-size:15px}
+ #hs img{width:64px;filter:drop-shadow(0 3px 6px #0005)}#hs div{font-size:12px;text-shadow:0 1px 3px #0008}#hs #wd{text-shadow:none}
+ #pd{display:flex;position:fixed;bottom:26px;left:50%;transform:translateX(-50%);gap:8px}#pd i{width:7px;height:7px;border-radius:50%;background:#fff7}#pd i:first-child{background:#fff}
+ #hi{display:block;position:fixed;bottom:8px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#fff;z-index:9000;cursor:pointer}
+ .inapp #hi{background:var(--fg)}
+ .toast{bottom:40px}
 }
 </style></head><body>
-<div id="mb"><b> My Cloud</b><span><a id="lo" style="cursor:pointer;display:none">로그아웃</a> &nbsp;<span id="ck"></span></span></div>
-<div id="hs"></div><div id="dock"></div>
+<div id="mb"><span><b id="mt"> My Cloud</b><b id="sk"></b></span><span style="display:flex;align-items:center;gap:8px"><a id="lo" style="cursor:pointer;display:none">로그아웃</a><span id="ck"></span><span id="bt"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect y="8" width="3" height="4" rx=".6"/><rect x="5" y="5" width="3" height="7" rx=".6"/><rect x="10" y="2" width="3" height="10" rx=".6"/><rect x="15" width="3" height="12" rx=".6"/></svg><svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="21" height="11" rx="3" fill="none" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="18" height="8" rx="2" fill="currentColor"/><rect x="23" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg></span></span></div>
+<div id="hs"><div id="wd"></div></div><div id="pd"><i></i><i></i></div><div id="hi"></div><div id="dock"></div>
 <div id="lg"><div class="lg"><h1>🔒 My Cloud</h1>
 <input id="u" placeholder="아이디" autocomplete="username"><input id="p" type="password" placeholder="비밀번호" autocomplete="current-password">
 <label style="font-size:13px;text-align:left"><input type="checkbox" id="sp" style="width:auto"> 비밀번호 보기</label><label style="font-size:13px;text-align:left"><input type="checkbox" id="al" style="width:auto" checked> 이 기기에서 자동 로그인</label><div id="er" style="color:#d70015;min-height:18px;font-size:13px"></div><button id="go">로그인</button><a id="ht">힌트</a><div id="kb"></div></div></div>
@@ -150,8 +169,8 @@ async function Lib(root,key,close){
 // ===== 창 관리 =====
 let z=10;
 function openApp(k){const A=APPS[k],w=el('div','win'),mob=innerWidth<761;w.style.cssText=`left:${80+Math.random()*140|0}px;top:${40+Math.random()*60|0}px;z-index:${++z}`;
- w.innerHTML=`<div class=tt><i></i><i></i><i></i><b>${A.n}</b></div><div class=bd></div>`;document.body.append(w);
- const [r,y,g]=w.querySelectorAll('i'),t=$('.tt',w),cl=()=>w.remove();r.onclick=y.onclick=cl;g.onclick=()=>w.classList.toggle('max');
+ w.innerHTML=`<div class=tt><i></i><i></i><i></i><b>${A.n}</b></div><div class=bd></div>`;document.body.append(w);document.body.classList.add('inapp');
+ const [r,y,g]=w.querySelectorAll('i'),t=$('.tt',w),cl=()=>{w.remove();document.body.classList.toggle('inapp',!!$('.win'))};r.onclick=y.onclick=cl;g.onclick=()=>w.classList.toggle('max');
  w.onmousedown=()=>w.style.zIndex=++z;w.ondragover=e=>e.preventDefault();w.ondrop=e=>{e.preventDefault();$('.bd',w).dropUp?.(e.dataTransfer.files)};
  t.onmousedown=e=>{if(mob||e.target.tagName=='I')return;const dx=e.clientX-w.offsetLeft,dy=e.clientY-w.offsetTop;
   const mv=e=>{w.style.left=e.clientX-dx+'px';w.style.top=Math.max(24,e.clientY-dy)+'px'};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',mv),{once:true})};
@@ -159,7 +178,10 @@ function openApp(k){const A=APPS[k],w=el('div','win'),mob=innerWidth<761;w.style
 function boot(){$('#lg').remove();cfg();$('#lo').style.display='';$('#lo').onclick=()=>{sessionStorage.clear();localStorage.removeItem('al');location.reload()};
  for(const k in APPS){const i=APPS[k];const d=el('img');d.src='mc-icons/'+i.i+'.png';d.title=i.n;d.onclick=()=>openApp(k);$('#dock').append(d);
   const h=el('div','',`<img src="mc-icons/${i.i}.png"><div>${i.n}</div>`);h.onclick=()=>openApp(k);$('#hs').append(h)}}
-const clock=()=>$('#ck').textContent=new Date().toLocaleString('ko',{month:'short',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});clock();setInterval(clock,3e4);
+const clock=()=>{const d=new Date(),t=d.toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit',hour12:false});
+ $('#ck').textContent=d.toLocaleString('ko',{month:'short',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});$('#sk').textContent=t;
+ $('#wd').innerHTML=`<b>${t}</b><span>${d.toLocaleDateString('ko',{month:'long',day:'numeric',weekday:'long'})} · My Cloud</span>`};clock();
+$('#hi').onclick=()=>{document.querySelectorAll('.win').forEach(w=>w.remove());document.body.classList.remove('inapp')};setInterval(clock,3e4);
 // ===== 로그인 / 힌트 =====
 const ok=()=>{sessionStorage.ok=1;if($('#al').checked)localStorage.al=H1;boot()};
 if(sessionStorage.ok||localStorage.al==H1)boot();
