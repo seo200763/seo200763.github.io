@@ -155,7 +155,7 @@ const APPS={
 const E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=(s,e=document)=>e.querySelector(s);
 const el=(t,c,x)=>{const e=document.createElement(t);e.className=c||'';if(x!=null)e.innerHTML=x;return e};
-const toast=m=>{const d=el('div','toast',E(m));document.body.append(d);setTimeout(()=>d.remove(),2600)};
+const toast=(m,t)=>{const d=el('div','toast',E(m));document.body.append(d);setTimeout(()=>d.remove(),t||2600)};
 const sha=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,'0')).join('');
 const fmt=n=>n>1e6?(n/1e6).toFixed(1)+'MB':Math.ceil(n/1e3)+'KB';
 const ICO={photo:'🖼️',video:'🎞️',music:'🎵',note:'📝',file:'📄'};
@@ -163,14 +163,30 @@ function save(b,n){const a=el('a');a.href=URL.createObjectURL(b);a.download=n;a.
 // ===== GitHub 저장소 =====
 let CFG={repo:'seo200763/seo200763.github.io',br:'main',priv:false};
 function cfg(){if(!CFG.repo){CFG={repo:prompt('GitHub 저장소 (예: 내아이디/my-cloud)')||'',br:'main',priv:confirm('비공개(private) 저장소입니까?')};localStorage.cfg=JSON.stringify(CFG)}if(CFG.priv)tok();return CFG}
-function tok(){let k=sessionStorage.t;if(!k){k=prompt('GitHub 토큰을 입력하세요 (이 탭에서만 기억됩니다)');if(k)sessionStorage.t=k}return k}
-const H=()=>sessionStorage.t?{Authorization:'Bearer '+sessionStorage.t}:{};
+function tok(force){let k=(sessionStorage.t||'').replace(/[^\x21-\x7E]/g,'');if(!k||force){k=(prompt(force?'토큰이 올바르지 않거나 권한이 없습니다. GitHub 토큰을 다시 입력하세요':'GitHub 토큰을 입력하세요 (이 탭에서만 기억됩니다)')||'').replace(/[^\x21-\x7E]/g,'');if(k)sessionStorage.t=k;else delete sessionStorage.t}return k}
+const H=()=>{const k=(sessionStorage.t||'').replace(/[^\x21-\x7E]/g,'');return k?{Authorization:'Bearer '+k,Accept:'application/vnd.github+json'}:{Accept:'application/vnd.github+json'}};
 const api=p=>`https://api.github.com/repos/${cfg().repo}/contents/`+p.split('/').map(encodeURIComponent).join('/');
-async function ls(d){const r=await fetch(api(d)+'?ref='+CFG.br,{headers:H()});if(!r.ok){if(r.status==403)toast('GitHub 요청 한도 초과 – 잠시 후 다시 하거나 토큰을 입력하세요');return[]}return(await r.json()).filter(f=>f.type=='file'&&f.name!='.gitkeep')}
-const bc={};const blob=async f=>bc[f.sha]||(bc[f.sha]=await(await fetch(f.download_url)).blob());
-async function up(d,files,sha){if(!tok())return;for(const f of files){const c=await new Promise(r=>{const x=new FileReader;x.onload=()=>r(x.result.split(',')[1]);x.readAsDataURL(f)});
- toast(f.name+' 업로드 중…');const r=await fetch(api(d+'/'+f.name),{method:'PUT',headers:H(),body:JSON.stringify({message:'add '+f.name,content:c,branch:CFG.br,sha:sha||undefined})});
- toast(r.ok?f.name+' 완료':'실패: '+(await r.json()).message)}}
+async function ls(d){const go=h=>fetch(api(d)+'?ref='+CFG.br+'&_='+Date.now(),{headers:h,cache:'no-store'});let r=await go(H());if(r.status==401){delete sessionStorage.t;r=await go({Accept:'application/vnd.github+json'})}if(!r.ok){if(r.status==403)toast('GitHub 요청 한도 초과 – 잠시 후 다시 하거나 토큰을 입력하세요');return[]}return(await r.json()).filter(f=>f.type=='file'&&f.name!='.gitkeep')}
+const bc={};const blob=async f=>{if(bc[f.sha])return bc[f.sha];let b=null;if(/\.txt$/i.test(f.name)&&f.url){try{const r=await fetch(f.url+(f.url.includes('?')?'&':'?')+'_='+Date.now(),{headers:{...H(),Accept:'application/vnd.github.raw'},cache:'no-store'});if(r.ok)b=await r.blob()}catch(_){}}if(!b)b=await(await fetch(f.download_url)).blob();return bc[f.sha]=b};
+async function up(d,files,sha){if(!tok())return toast('토큰이 입력되지 않아 저장하지 못했습니다'),false;
+ for(const f of files){
+  const c=await new Promise(r=>{const x=new FileReader;x.onload=()=>r(x.result.split(',')[1]||'');x.readAsDataURL(f)});
+  const nm=f.name.replace(/[\\/]+/g,'_'),p=d+'/'+nm;let s=sha,done=false,msg='';
+  for(let n=0;n<4&&!done;n++){
+   toast(nm+' 업로드 중…');let r;
+   try{r=await fetch(api(p),{method:'PUT',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({message:'add '+nm,content:c,branch:CFG.br,sha:s||undefined})})}
+   catch(e){msg='네트워크 오류이거나 토큰에 사용할 수 없는 문자가 있습니다 ('+e.message+')';break}
+   if(r.ok){done=true;break}
+   let j={};try{j=await r.json()}catch(_){}
+   msg=r.status+' '+(j.message||'');
+   if(r.status==401){delete sessionStorage.t;if(!tok(true)){msg='토큰이 올바르지 않습니다 (401)';break}continue}
+   if(r.status==422&&!s){try{const g=await fetch(api(p)+'?ref='+CFG.br+'&_='+Date.now(),{headers:H(),cache:'no-store'});if(g.ok){s=(await g.json()).sha;continue}}catch(_){}}
+   if(r.status==409){await new Promise(z=>setTimeout(z,900));continue}
+   if(r.status==403||r.status==404){msg+=' – 토큰 권한을 확인하세요 (Contents: Read and write, 저장소 '+CFG.repo+' 선택)';break}
+   break}
+  if(!done){toast('실패: '+msg,6000);return false}
+  toast(nm+' 완료')}
+ return true}
 const rm=async f=>(await fetch(api(f.path),{method:'DELETE',headers:H(),body:JSON.stringify({message:'del '+f.name,sha:f.sha,branch:CFG.br})})).ok;
 // ===== 앱(사진·동영상·음악·메모·파일 공통) =====
 async function Lib(root,key,close){
@@ -210,7 +226,7 @@ async function Lib(root,key,close){
  async function exp(){let t='';for(const f of it)t+=`# ${f.name}\n${await(await blob(f)).text()}\n\n`;save(new Blob([t]),'memos.txt')}
  async function edit(f){const v=el('div','vw ed');v.innerHTML=`<div class=tools></div><input placeholder="제목" value="${f?E(f.name.replace(/\.txt$/,'')):''}"><textarea placeholder="메모를 입력하세요"></textarea>`;
   const ta=$('textarea',v),ti=$('input',v);ov.append(v);if(f)ta.value=await(await blob(f)).text();
-  $('.tools',v).append(tb('저장(토큰)',async()=>{const n=(ti.value||'메모 '+new Date().toLocaleString('ko').replace(/[\/:. ]+/g,'-'))+'.txt';await up('MEMO',[new File([ta.value],n)],f&&f.name==n?f.sha:null);v.remove();load()}),
+  $('.tools',v).append(tb('저장(토큰)',async()=>{if(!ta.value.trim())return toast('메모 내용이 비어 있습니다');const t=ti.value.trim().replace(/[\\/:*?"<>|]+/g,'-');const n=(t||'메모 '+new Date().toLocaleString('ko').replace(/[\/:. ]+/g,'-'))+'.txt';const ok=await up('MEMO',[new File([ta.value],n)],f&&f.name==n?f.sha:null);if(ok){v.remove();load()}}),
    tb('TXT 다운로드',()=>save(new Blob([ta.value]),(ti.value||'memo')+'.txt')),tb('닫기',()=>v.remove()))}
  function yt(g){const t=g.name.replace(/\.\w+$/,'').replace(/[_\-.]+/g,' ').trim(),tags=t.split(' ').filter(w=>w.length>1).join(', ');
   const txt=`제목: ${t}\n설명: ${t} - ${new Date().toLocaleDateString('ko')} 촬영/업로드한 영상입니다.\n태그: ${tags}`;navigator.clipboard?.writeText(txt);
