@@ -1506,7 +1506,7 @@ document.querySelectorAll('.k,.a').forEach(()=>{});
 /* ---------- 실제 키보드 → 윈도우 (게임이 키를 놓치지 않도록 최소 누름 시간 보장) ----------
    게임(특히 DirectInput)은 화면을 그릴 때만 키 상태를 확인하는데, 에뮬레이터가 느리면 짧게 눌렀다 뗀 키를 못 봅니다.
    그래서 키를 떼도 MINHOLD 밀리초 동안은 눌린 상태로 유지합니다. */
-const MINHOLD=200;
+const MINHOLD=260;
 const KC={Escape:1,Digit1:2,Digit2:3,Digit3:4,Digit4:5,Digit5:6,Digit6:7,Digit7:8,Digit8:9,Digit9:10,Digit0:11,Minus:12,Equal:13,Backspace:14,Tab:15,
  KeyQ:16,KeyW:17,KeyE:18,KeyR:19,KeyT:20,KeyY:21,KeyU:22,KeyI:23,KeyO:24,KeyP:25,BracketLeft:26,BracketRight:27,Enter:28,ControlLeft:29,
  KeyA:30,KeyS:31,KeyD:32,KeyF:33,KeyG:34,KeyH:35,KeyJ:36,KeyK:37,KeyL:38,Semicolon:39,Quote:40,Backquote:41,ShiftLeft:42,Backslash:43,
@@ -1519,6 +1519,9 @@ const kHeld=new Map();
 function kCodes(code,up){
   let c=KC[code],ext=0;if(c==null){c=KE[code];ext=1}
   if(c==null)return null;
+  /* 화살표·Home/End/PgUp/PgDn/Ins/Del/오른쪽 Ctrl·Alt 는 가상 키보드와 똑같이 E0 접두 없이 보낸다.
+     (가상 키보드는 게임 안에서 잘 먹히는데, E0 가 붙은 확장 코드는 게임이 못 읽는 경우가 있음) */
+  if(ext&&c<91){return [c|(up?0x80:0)]}
   const a=ext?[0xE0,c|(up?0x80:0)]:[c|(up?0x80:0)];return a;
 }
 function kDownC(code,repeat){
