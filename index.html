@@ -1,0 +1,165 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>My Cloud</title>
+<style>
+:root{--bg:#f2f2f7;--fg:#111;--card:#fff;--ac:#0a84ff;--bd:#0002}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1c1e;--fg:#f2f2f7;--card:#2c2c2e;--bd:#fff2}}
+*{box-sizing:border-box}
+body{margin:0;font:14px -apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:var(--fg);background:#3a6df0 linear-gradient(135deg,#3a6df0,#9b59d0 55%,#f08a5d) fixed;height:100vh;overflow:hidden}
+button{font:inherit;border:0;background:var(--card);color:var(--ac);padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap}
+#mb{height:24px;background:#0004;color:#fff;display:flex;justify-content:space-between;padding:0 12px;align-items:center;font-size:13px;backdrop-filter:blur(12px)}
+#dock{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:10px;padding:8px 12px;background:#fff4;border-radius:18px;backdrop-filter:blur(16px)}
+#dock img{width:54px;transition:.15s;cursor:pointer}#dock img:hover{transform:scale(1.25) translateY(-8px)}
+#hs{display:none;grid-template-columns:repeat(4,1fr);gap:22px 8px;padding:40px 18px;text-align:center;color:#fff}
+#hs img{width:62px;border-radius:14px}#hs div{font-size:12px;margin-top:4px}
+.win{position:absolute;width:780px;height:520px;background:var(--bg);border-radius:12px;box-shadow:0 20px 60px #0007;display:flex;flex-direction:column;overflow:hidden}
+.win.max{inset:24px 0 0 0!important;width:auto;height:auto;border-radius:0}
+.tt{height:32px;background:var(--card);display:flex;align-items:center;gap:8px;padding:0 12px;cursor:move;user-select:none;border-bottom:1px solid var(--bd)}
+.tt i{width:12px;height:12px;border-radius:50%;background:#ff5f57;cursor:pointer}.tt i:nth-child(2){background:#febc2e}.tt i:nth-child(3){background:#28c840}
+.tt b{flex:1;text-align:center;margin-right:52px}
+.bd{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.hd{height:50px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px;gap:8px}
+.hd h2{margin:0;font-size:20px;white-space:nowrap}.hd small{color:#888;font-size:13px}
+.tools{display:flex;gap:4px;overflow-x:auto}
+.lb{flex:1;overflow:auto}
+.em{text-align:center;color:#888;margin-top:60px}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:2px}
+.i{position:relative;cursor:pointer}
+.g .i{aspect-ratio:1;background:#000}.g img,.g video{width:100%;height:100%;object-fit:cover;display:block}
+.g .i b{position:absolute;right:6px;bottom:4px;color:#fff;font-size:12px}
+.i s{display:none;position:absolute;left:6px;top:6px;width:20px;height:20px;border-radius:50%;border:2px solid #fff;background:#0004}
+.sm .i s{display:block}.i.on s{background:var(--ac)}.i.on s::after{content:'✓';color:#fff;position:absolute;left:3px;top:-3px;font-size:13px}
+.i.on{outline:3px solid var(--ac);outline-offset:-3px}
+.ls .i{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 40px;background:var(--card);border-bottom:1px solid var(--bd)}
+.ls .i s{top:50%;margin-top:-10px;border-color:#888}
+.ls .nm{display:flex;flex-direction:column;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ls small{color:#888}
+.ic{font-size:26px}
+.ov{position:absolute;inset:0;pointer-events:none}.ov>*{pointer-events:auto}
+.vw{position:absolute;inset:0;background:#000d;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff}
+.vw .c{max-width:100%;max-height:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
+.vw img,.vw video{max-width:100%;max-height:80vh}
+.vw .x{position:absolute;top:8px;right:8px;z-index:2}.vw .pv,.vw .nx{position:absolute;top:50%;font-size:22px}.vw .pv{left:6px}.vw .nx{right:6px}
+.pl{width:100%;padding:20px;background:linear-gradient(#1db98a,#0b3b4a);height:100%;justify-content:center}
+.art{width:min(60vw,240px);aspect-ratio:1;border-radius:16px;background:#fff3;display:grid;place-items:center;font-size:80px}
+.vw.ed{background:var(--bg);color:var(--fg);align-items:stretch;justify-content:flex-start;padding:10px;gap:8px}
+.ed textarea{flex:1;background:#fffbe6;color:#222;border:0;border-radius:10px;padding:12px;font:15px/1.6 inherit;resize:none}
+.ed input,.lg input{padding:10px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--fg);font:inherit}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:8px 16px;border-radius:20px;z-index:9999}
+#lg{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#3a6df0 linear-gradient(135deg,#3a6df0,#9b59d0 55%,#f08a5d)}
+.lg{width:min(320px,90vw);background:#fffd;color:#111;padding:24px;border-radius:20px;display:flex;flex-direction:column;gap:10px;text-align:center;backdrop-filter:blur(20px)}
+.lg h1{margin:0;font-size:22px}.lg button{background:var(--ac);color:#fff;padding:10px}.lg a{color:#555;cursor:pointer;font-size:13px}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.kp button{background:#e5e5ea;color:#111;font-size:20px}
+@media(max-width:760px){
+ .win{position:fixed!important;inset:0!important;width:auto;height:auto;border-radius:0}
+ .tt{height:44px}.tt i:not(:first-child){display:none}.tt i{width:auto;height:auto;background:none!important;color:var(--ac);font-style:normal;font-size:16px}.tt i::after{content:'‹ 홈'}.tt b{margin:0 50px 0 0}
+ #dock{display:none}#hs{display:grid}
+}
+</style></head><body>
+<div id="mb"><b> My Cloud</b><span id="ck"></span></div>
+<div id="hs"></div><div id="dock"></div>
+<div id="lg"><div class="lg"><h1>🔒 My Cloud</h1>
+<input id="u" placeholder="아이디" autocomplete="username"><input id="p" type="password" placeholder="비밀번호" autocomplete="current-password">
+<button id="go">로그인</button><a id="ht">힌트</a><div id="kb"></div></div></div>
+<script>
+// ===== 설정 =====
+const H1='1090bc8f5bab42b4a2e1e2469b7129f095e8478f1cfc39a9d4104a16c0dd6624',H2='2603fc852a920c79aae37a4b78535932cb352ead5a43c8ff40a4834bdc077339';
+const EJ={s:'',t:'',k:''}; // EmailJS service_id / template_id / public key
+const TO='youngho7375@naver.com';
+const APPS={
+ photo:{n:'사진',i:'Photos',d:'PHOTO',a:'image/*'},video:{n:'동영상',i:'Videos',d:'VIDEO',a:'video/*'},
+ music:{n:'음악',i:'Music',d:'MUSIC',a:'audio/*'},note:{n:'메모',i:'Notes',d:'MEMO',a:'.txt'},file:{n:'파일',i:'Folder',d:'FILE',a:''}};
+// ===== 유틸 =====
+const E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=(s,e=document)=>e.querySelector(s);
+const el=(t,c,x)=>{const e=document.createElement(t);e.className=c||'';if(x!=null)e.innerHTML=x;return e};
+const toast=m=>{const d=el('div','toast',E(m));document.body.append(d);setTimeout(()=>d.remove(),2600)};
+const sha=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const fmt=n=>n>1e6?(n/1e6).toFixed(1)+'MB':Math.ceil(n/1e3)+'KB';
+const ICO={photo:'🖼️',video:'🎞️',music:'🎵',note:'📝',file:'📄'};
+function save(b,n){const a=el('a');a.href=URL.createObjectURL(b);a.download=n;a.click()}
+// ===== GitHub 저장소 =====
+let CFG={repo:'seo200763/seo200763.github.io',br:'main',priv:false};
+function cfg(){if(!CFG.repo){CFG={repo:prompt('GitHub 저장소 (예: 내아이디/my-cloud)')||'',br:'main',priv:confirm('비공개(private) 저장소입니까?')};localStorage.cfg=JSON.stringify(CFG)}if(CFG.priv)tok();return CFG}
+function tok(){let k=sessionStorage.t;if(!k){k=prompt('GitHub 토큰을 입력하세요 (이 탭에서만 기억됩니다)');if(k)sessionStorage.t=k}return k}
+const H=()=>sessionStorage.t?{Authorization:'Bearer '+sessionStorage.t}:{};
+const api=p=>`https://api.github.com/repos/${cfg().repo}/contents/`+p.split('/').map(encodeURIComponent).join('/');
+async function ls(d){const r=await fetch(api(d)+'?ref='+CFG.br,{headers:H()});if(!r.ok)return[];return(await r.json()).filter(f=>f.type=='file'&&f.name!='.gitkeep')}
+const bc={};const blob=async f=>bc[f.sha]||(bc[f.sha]=await(await fetch(f.download_url)).blob());
+async function up(d,files,sha){if(!tok())return;for(const f of files){const c=await new Promise(r=>{const x=new FileReader;x.onload=()=>r(x.result.split(',')[1]);x.readAsDataURL(f)});
+ toast(f.name+' 업로드 중…');const r=await fetch(api(d+'/'+f.name),{method:'PUT',headers:H(),body:JSON.stringify({message:'add '+f.name,content:c,branch:CFG.br,sha:sha||undefined})});
+ toast(r.ok?f.name+' 완료':'실패: '+(await r.json()).message)}}
+const rm=async f=>(await fetch(api(f.path),{method:'DELETE',headers:H(),body:JSON.stringify({message:'del '+f.name,sha:f.sha,branch:CFG.br})})).ok;
+// ===== 앱(사진·동영상·음악·메모·파일 공통) =====
+async function Lib(root,key,close){
+ const A=APPS[key],all=key=='file';let it=[],sel=new Set,sm=false;
+ root.innerHTML='';const hd=el('div','hd'),bd=el('div','lb'),ov=el('div','ov');root.append(hd,bd,ov);
+ const tb=(t,fn,c)=>{const b=el('button',c,t);b.onclick=fn;return b};
+ const pick=()=>it.filter(f=>sel.has(f.sha));
+ async function load(){bd.innerHTML='<p class=em>불러오는 중…</p>';it=[];for(const k of all?['photo','video','music','note','file']:[key])(await ls(APPS[k].d)).forEach(f=>{f.k=k;it.push(f)});draw()}
+ const mode=m=>{sm=true;draw();toast(m)};
+ function head(){hd.innerHTML='';hd.append(el('h2','',sm?sel.size+'개 선택':A.n+' <small>'+it.length+'</small>'));const r=el('div','tools');
+  if(sm){r.append(tb('전체',()=>{sel.size==it.length?sel.clear():it.forEach(f=>sel.add(f.sha));draw()}),tb('다운로드',async()=>{for(const f of pick())save(await blob(f),f.name)}),tb('공유',shS),tb('삭제',dlt));
+   if(all&&sel.size==1)r.append(tb('미리보기',()=>open(pick()[0])),tb('정보',()=>{const f=pick()[0];alert(`이름: ${f.name}\n크기: ${fmt(f.size)}\n경로: ${f.path}`)}));
+   r.append(tb('취소',()=>{sm=false;sel.clear();draw()}))}
+  else{r.append(tb('선택',()=>mode('항목을 선택하세요')));
+   if(key=='photo')r.append(tb('사진올리기',upl),tb('공유',()=>mode('공유할 사진을 선택하세요')));
+   else if(key=='note')r.append(tb('TXT불러오기',imp),tb('TXT저장하기',exp),tb('업로드',()=>edit()));
+   else r.append(tb('업로드',upl));
+   if(all)r.append(tb('삭제',()=>mode('삭제할 파일 선택')),tb('다운로드',()=>mode('받을 파일 선택')),tb('종료',close))}
+  hd.append(r)}
+ function draw(){head();bd.innerHTML='';bd.className='lb'+(sm?' sm':'');if(!it.length){bd.append(el('p','em','항목이 없습니다.<br>'+A.d+' 폴더에 올리거나 업로드하세요.'));return}
+  const g=el('div',key=='photo'||key=='video'?'g':'ls');bd.append(g);
+  it.forEach(f=>{const d=el('div','i'+(sel.has(f.sha)?' on':''));
+   d.innerHTML=g.className=='g'?(key=='photo'?`<img loading=lazy src="${f.download_url}">`:`<video preload=metadata muted src="${f.download_url}#t=0.5"></video><b>▶</b>`)+'<s></s>'
+    :`<s></s><span class=ic>${ICO[f.k]}</span><span class=nm>${E(f.name)}<small>${fmt(f.size)}</small></span>`;
+   d.onclick=()=>{if(sm){sel.has(f.sha)?sel.delete(f.sha):sel.add(f.sha);draw()}else open(f)};g.append(d)})}
+ async function shS(){const fs=await Promise.all(pick().map(async f=>new File([await blob(f)],f.name,{type:(await blob(f)).type})));
+  navigator.canShare&&navigator.canShare({files:fs})?navigator.share({files:fs}).catch(()=>{}):toast('이 브라우저는 파일 공유를 지원하지 않습니다 (모바일 권장)')}
+ async function dlt(){if(!sel.size)return toast('선택된 항목이 없습니다');if(!tok()||!confirm(sel.size+'개를 삭제할까요?'))return;
+  for(const f of pick())await rm(f)||toast('삭제 실패: '+f.name);sel.clear();sm=false;load()}
+ function upl(){const i=el('input');i.type='file';i.multiple=true;i.accept=A.a;i.onchange=async()=>{await up(all?'FILE':A.d,[...i.files]);load()};i.click()}
+ function imp(){const i=el('input');i.type='file';i.accept='.txt';i.onchange=async()=>{edit();const v=ov.lastChild;$('textarea',v).value=await i.files[0].text();$('input',v).value=i.files[0].name.replace(/\.txt$/,'')};i.click()}
+ async function exp(){let t='';for(const f of it)t+=`# ${f.name}\n${await(await blob(f)).text()}\n\n`;save(new Blob([t]),'memos.txt')}
+ async function edit(f){const v=el('div','vw ed');v.innerHTML=`<div class=tools></div><input placeholder="제목" value="${f?E(f.name.replace(/\.txt$/,'')):''}"><textarea placeholder="메모를 입력하세요"></textarea>`;
+  const ta=$('textarea',v),ti=$('input',v);ov.append(v);if(f)ta.value=await(await blob(f)).text();
+  $('.tools',v).append(tb('저장(토큰)',async()=>{const n=(ti.value||'메모 '+new Date().toLocaleString('ko').replace(/[\/:. ]+/g,'-'))+'.txt';await up('MEMO',[new File([ta.value],n)],f&&f.name==n?f.sha:null);v.remove();load()}),
+   tb('TXT 다운로드',()=>save(new Blob([ta.value]),(ti.value||'memo')+'.txt')),tb('닫기',()=>v.remove()))}
+ function yt(g){const t=g.name.replace(/\.\w+$/,'').replace(/[_\-.]+/g,' ').trim(),tags=t.split(' ').filter(w=>w.length>1).join(', ');
+  const txt=`제목: ${t}\n설명: ${t} - ${new Date().toLocaleDateString('ko')} 촬영/업로드한 영상입니다.\n태그: ${tags}`;navigator.clipboard?.writeText(txt);
+  blob(g).then(b=>{const f=new File([b],g.name,{type:b.type});navigator.canShare?.({files:[f]})?navigator.share({files:[f],title:t,text:txt}).catch(()=>{}):(toast('제목·설명·태그를 복사했습니다. 유튜브 업로드 페이지로 이동합니다'),open2('https://www.youtube.com/upload'))})}
+ const open2=u=>window.open(u,'_blank');
+ function open(f){const k=f.k||key;if(k=='file')return alert('해당 파일은 실행을 할 수가 없습니다.');if(k=='note')return edit(f);
+  const v=el('div','vw'),L=it.filter(a=>a.k==k);let n=L.indexOf(f);v.append(tb('✕',()=>v.remove(),'x'));
+  const show=()=>{const g=L[n];$('.c',v)?.remove();const c=el('div','c');
+   if(k=='photo')c.innerHTML=`<img src="${g.download_url}">`;
+   if(k=='video'){c.innerHTML=`<video src="${g.download_url}" controls autoplay playsinline></video>`;c.append(tb('YouTube 업로드',()=>yt(g)))}
+   if(k=='music'){c.className='c pl';c.innerHTML=`<div class=art>♪</div><h3>${E(g.name.replace(/\.\w+$/,''))}</h3><audio src="${g.download_url}" controls autoplay></audio>`;$('audio',c).onended=()=>{n=(n+1)%L.length;show()}}
+   v.append(c)};
+  if(L.length>1)v.append(tb('‹',()=>{n=(n-1+L.length)%L.length;show()},'pv'),tb('›',()=>{n=(n+1)%L.length;show()},'nx'));
+  ov.append(v);show()}
+ load()}
+// ===== 창 관리 =====
+let z=10;
+function openApp(k){const A=APPS[k],w=el('div','win'),mob=innerWidth<761;w.style.cssText=`left:${80+Math.random()*140|0}px;top:${40+Math.random()*60|0}px;z-index:${++z}`;
+ w.innerHTML=`<div class=tt><i></i><i></i><i></i><b>${A.n}</b></div><div class=bd></div>`;document.body.append(w);
+ const [r,y,g]=w.querySelectorAll('i'),t=$('.tt',w),cl=()=>w.remove();r.onclick=y.onclick=cl;g.onclick=()=>w.classList.toggle('max');
+ w.onmousedown=()=>w.style.zIndex=++z;
+ t.onmousedown=e=>{if(mob||e.target.tagName=='I')return;const dx=e.clientX-w.offsetLeft,dy=e.clientY-w.offsetTop;
+  const mv=e=>{w.style.left=e.clientX-dx+'px';w.style.top=Math.max(24,e.clientY-dy)+'px'};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',mv),{once:true})};
+ Lib($('.bd',w),k,cl)}
+function boot(){$('#lg').remove();cfg();
+ for(const k in APPS){const i=APPS[k];const d=el('img');d.src='mc-icons/'+i.i+'.png';d.title=i.n;d.onclick=()=>openApp(k);$('#dock').append(d);
+  const h=el('div','',`<img src="mc-icons/${i.i}.png"><div>${i.n}</div>`);h.onclick=()=>openApp(k);$('#hs').append(h)}}
+const clock=()=>$('#ck').textContent=new Date().toLocaleString('ko',{month:'short',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});clock();setInterval(clock,3e4);
+// ===== 로그인 / 힌트 =====
+const ok=()=>{sessionStorage.ok=1;boot()};
+if(sessionStorage.ok)boot();
+$('#go').onclick=async()=>{await sha($('#u').value+'\n'+$('#p').value)==H1?ok():toast('아이디 또는 비밀번호가 틀렸습니다')};
+$('#p').onkeydown=e=>{if(e.key=='Enter')$('#go').click()};
+$('#ht').onclick=()=>{const kb=$('#kb');if(kb.firstChild)return kb.innerHTML='';let v='';const info=el('div','','보안키패드 4자리 입력 <b id=dt></b>'),kp=el('div','kp');
+ [...'0123456789'].sort(()=>Math.random()-.5).forEach(n=>{const b=el('button','',n);b.onclick=async()=>{v+=n;$('#dt').textContent='●'.repeat(v.length);
+  if(v.length==4){const good=await sha('pin:'+v)==H2;v='';$('#dt').textContent='';if(!good)return toast('번호가 틀렸습니다');
+   if(!EJ.s)return toast('EmailJS 설정(EJ)이 비어 있어 메일을 보낼 수 없습니다');
+   const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EJ.s,template_id:EJ.t,user_id:EJ.k,template_params:{to_email:TO}})});
+   toast(r.ok?'등록된 이메일로 전송했습니다':'메일 전송 실패')}};kp.append(b)});kb.append(info,kp)};
+</script></body></html>
