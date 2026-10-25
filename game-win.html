@@ -998,7 +998,7 @@ function setGameMedia(r,label){
   if(!MEDIA_OS[slot].includes(OSID)){
     throw Error(OS.n+'은(는) '+(slot==='cd'?'CD-ROM(iso / cue+bin)':MEDIA_NAME[slot])+' 형식 게임을 지원하지 않습니다. '+(OSID==='win31'?'게임 폴더 zip 또는 플로피 .img 로 올려 주세요.':''));
   }
-  media[slot]=r.buf;media.names[slot]=label;if(slot==='cd'||slot==='fda')late[slot]=true;refreshMedia();
+  media[slot]=r.buf;media.names[slot]=label;if(slot==='fda')late[slot]=true;refreshMedia();
   return slot;
 }
 async function loadGameServer(url,title){
@@ -1521,23 +1521,30 @@ function kCodes(code,up){
   if(c==null)return null;
   const a=ext?[0xE0,c|(up?0x80:0)]:[c|(up?0x80:0)];return a;
 }
+function kDownC(code,repeat){
+  const a=kCodes(code,false);if(!a)return false;
+  const h=kHeld.get(code);
+  if(h){clearTimeout(h.tm);h.tm=0;if(repeat)sendK(a);return true}   /* 눌려 있는 중: 반복 입력 */
+  kHeld.set(code,{t:performance.now(),tm:0});sendK(a);status('키 입력: '+code);return true;
+}
+function kUpC(code){
+  const h=kHeld.get(code);if(!h)return;
+  const a=kCodes(code,true);if(!a)return;
+  const rel=()=>{kHeld.delete(code);sendK(a)};
+  const w=Math.max(0,MINHOLD-(performance.now()-h.t));
+  if(w<=0)rel();else h.tm=setTimeout(rel,w);
+}
 addEventListener('keydown',e=>{
   const t=e.target&&e.target.tagName;if(/^(INPUT|SELECT|TEXTAREA)$/.test(t||''))return;
   if(!emu||e.code==='F11'||e.code==='F5'||(e.ctrlKey&&e.shiftKey)||(e.ctrlKey&&/^Key[WTNRL]$/.test(e.code)&&!e.altKey))return;
-  const a=kCodes(e.code,false);if(!a)return;
-  e.preventDefault();
-  const h=kHeld.get(e.code);
-  if(h){clearTimeout(h.tm);h.tm=0;if(e.repeat)sendK(a);return}    /* 눌려 있는 중: 반복 입력 */
-  kHeld.set(e.code,{t:performance.now(),tm:0,down:true});sendK(a);
+  if(kDownC(e.code,e.repeat))e.preventDefault();
 },true);
-addEventListener('keyup',e=>{
-  const h=kHeld.get(e.code);if(!h)return;
-  const a=kCodes(e.code,true);if(!a)return;
-  e.preventDefault();
-  const rel=()=>{kHeld.delete(e.code);sendK(a)};
-  const w=Math.max(0,MINHOLD-(performance.now()-h.t));
-  if(w<=0)rel();else h.tm=setTimeout(rel,w);
-},true);
+addEventListener('keyup',e=>{if(kHeld.has(e.code)){e.preventDefault();kUpC(e.code)}},true);
+/* 바깥 페이지(index.html)가 키보드 포커스를 가지고 있을 때 전달해 주는 키 */
+addEventListener('message',e=>{
+  const d=e.data;if(!d||d.k!==1||!emu)return;
+  if(d.t==='keydown')kDownC(d.code,d.repeat);else if(d.t==='keyup')kUpC(d.code);
+});
 addEventListener('blur',()=>{kHeld.forEach((h,c)=>{clearTimeout(h.tm);const a=kCodes(c,true);if(a)sendK(a)});kHeld.clear()});
 /* 화면을 누르면 키보드 포커스를 에뮬레이터 창으로 */
 $('pad').addEventListener('pointerdown',()=>{try{window.focus();document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(_){}},true);

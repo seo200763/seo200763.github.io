@@ -287,6 +287,13 @@ async function gmGames(s,force){
  return{L,ok,G}}
 let gmBi=null;
 async function gmBios(force){if(gmBi&&!force)return gmBi;gmBi=(await gmFiles('_BIOS',force)).files;return gmBi}
+// 윈도우 게임 창이 열려 있으면 키보드 입력을 그 창(iframe)으로 전달 (포커스가 바깥에 있어도 키가 먹히도록)
+['keydown','keyup'].forEach(ty=>addEventListener(ty,e=>{
+ const g=document.getElementById('gp');if(!g||!g.classList.contains('on'))return;
+ const f=g.querySelector('iframe');if(!f||!/game-win/.test(f.src))return;
+ if(/^(INPUT|TEXTAREA|SELECT)$/.test((e.target&&e.target.tagName)||'')||['F5','F11','F12'].includes(e.code))return;
+ e.preventDefault();try{f.contentWindow.postMessage({k:1,t:ty,code:e.code,repeat:e.repeat},'*')}catch(_){}
+},true));
 // --- 실행 ---
 function gmStop(){const g=$('#gp');g.className='';g.innerHTML=''}
 function gmFrame(u,x,local,title,ic){
