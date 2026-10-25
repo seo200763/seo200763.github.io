@@ -112,7 +112,7 @@ async function Lib(root,key,close){
    if(all)r.append(tb('삭제',()=>mode('삭제할 파일 선택')),tb('다운로드',()=>mode('받을 파일 선택')),tb('종료',close))}
   hd.append(r)}
  function draw(){head();bd.innerHTML='';bd.className='lb'+(sm?' sm':'');
-  if(all&&!cur&&!sm){const fr=el('div','fr');for(const k of ['photo','video','music','note','file']){const d=el('div','',`<img src="mc-icons/Folder.png"><div>${APPS[k].n}</div><small>${it.filter(f=>f.k==k).length}개</small>`);d.onclick=()=>{cur=k;draw()};fr.append(d)}bd.append(fr);bd.append(el('div','sec','모든 파일'))}
+  if(all&&!cur&&!sm){const fr=el('div','fr');for(const k of ['photo','video','music','note','file']){const d=el('div','',`<img src="mc-icons/f-${k}.png"><div>${APPS[k].n}</div><small>${it.filter(f=>f.k==k).length}개</small>`);d.onclick=()=>{cur=k;draw()};fr.append(d)}bd.append(fr);bd.append(el('div','sec','모든 파일'))}
   if(!vis().length){bd.append(el('p','em',it.length?'검색 결과가 없습니다.':'항목이 없습니다.<br>'+(all&&cur?APPS[cur].d:A.d)+' 폴더에 올리거나 업로드하세요.'));return}
   const g=el('div',key=='photo'||key=='video'?'g':'ls');bd.append(g);
   vis().forEach(f=>{const d=el('div','i'+(sel.has(f.sha)?' on':''));
