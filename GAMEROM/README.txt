@@ -22,6 +22,23 @@ DOS             MS-DOS            .zip (안에 exe / com / bat 가 있는 게임
 WIN31           윈도우 3.1         win31.zip (기본 포함) 또는 다른 .img .iso .zip
 WIN95           윈도우 95          win95.zip (기본 포함) 또는 다른 .img .iso .zip
 
+[윈도우 게임 — WIN95/OSGAME , WIN31/OSGAME]
+GAMEROM/WIN95/OSGAME/ 폴더에 게임을 올리면 'WIN 95' 목록의 🎮 게임 칸(그리고 윈도우 에뮬레이터의
+'💾 이미지 불러오기' 창)에 나타납니다. 누르면 서버의 win95.zip(윈도우95)이 켜지면서 게임이 함께 장착됩니다.
+
+  올리는 파일                          윈도우에서 보이는 모습
+  -----------------------------------------------------------------------------
+  .iso / .cue + .bin / .bin / .zip(안에 iso·cue+bin)   CD-ROM 드라이브(D:)  — autorun.inf 가 있으면 바탕화면 후 자동 실행
+  .zip (안에 게임 폴더: exe · dat …)    새 하드디스크 드라이브(D:)로 변환되어 연결 (내 컴퓨터에서 열어 실행)
+  .img (2.88MB 이하 = 플로피)           A: 드라이브
+  .img (MBR + FAT16 하드디스크 이미지)   두 번째 하드디스크
+  - cue 를 쓸 때는 cue 와 bin 을 같은 폴더에 함께 올리세요 (목록에는 cue 하나만 표시됩니다).
+  - 윈도우 3.1(WIN31/OSGAME)은 CD-ROM 을 지원하지 않으므로 zip(게임 폴더) 또는 플로피 .img 로 올리세요.
+  - 음악(오디오) 트랙은 지원하지 않고 데이터 트랙만 사용합니다.
+  - 파일 하나는 GitHub 100MB 이하여야 합니다.
+  - 한글 제목: titles.json 에 {"GAME.iso":"게임 이름"} 형식으로 적으면 됩니다.
+  - 목록이 안 뜨면(요청 한도) OSGAME/list.json 에 ["GAME.iso","GAME2.zip"] 처럼 적어 두세요.
+
 [바이오스]  GAMEROM/_BIOS/
 - neogeo.zip   : 네오지오 게임용 (기본 포함, 자동으로 합쳐져 실행됩니다)
 - 세가 CD      : bios_CD_U.bin (또는 bios_CD_E.bin / bios_CD_J.bin) 를 넣으세요. 이름이 segacd 또는 bios_cd 로 시작해야 인식됩니다.

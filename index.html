@@ -277,7 +277,14 @@ async function gmGames(s,force){
   const b=f.name.replace(/\.[^.]+$/,'');
   f.title=T[f.name]||T[b]||(s.std&&f.name.toLowerCase()==s.std?s.stdT:b.replace(/_+/g,' ').trim());
   f.std=!!(s.std&&f.name.toLowerCase()==s.std);return f});
- L.sort((a,b)=>(b.std-a.std)||a.title.localeCompare(b.title,'ko'));return{L,ok}}
+ L.sort((a,b)=>(b.std-a.std)||a.title.localeCompare(b.title,'ko'));
+ let G=[];   // 윈도우 전용: GAMEROM/WIN95(WIN31)/OSGAME 안의 게임 (img · iso · cue+bin · zip)
+ if(s.k=='win'){const r=await gmFiles(s.d+'/OSGAME',force),low=r.files.map(f=>f.name.toLowerCase()),gx=['zip','img','ima','iso','bin','cue','vhd','vfd','flp'];
+  G=r.files.filter(f=>f.name!='.gitkeep'&&f.name!='list.json'&&gx.includes(gmExt(f.name)))
+   .filter(f=>!(gmExt(f.name)=='bin'&&low.includes(f.name.replace(/\.[^.]+$/,'').toLowerCase()+'.cue')))   // cue 가 있으면 bin 은 숨김
+   .map(f=>{const b=f.name.replace(/\.[^.]+$/,'');return{name:f.name,size:f.size,game:1,title:T[f.name]||T[b]||b.replace(/_+/g,' ').trim()}});
+  G.sort((a,b)=>a.title.localeCompare(b.title,'ko'))}
+ return{L,ok,G}}
 let gmBi=null;
 async function gmBios(force){if(gmBi&&!force)return gmBi;gmBi=(await gmFiles('_BIOS',force)).files;return gmBi}
 // --- 실행 ---
@@ -304,7 +311,7 @@ function gmFrame(u,x,local,title,ic){
 async function gmPlay(s,f,local){
  const t=f?f.title:(local?local.name.replace(/\.[^.]+$/,''):s.n);
  if(s.k=='dos')return gmFrame('game-dos.html'+(f?'?f='+encodeURIComponent(f.name)+'&t='+encodeURIComponent(t):'?blank=1'),0,null,t,'mc-icons/game-dos.png');
- if(s.k=='win')return gmFrame('game-win.html?os='+s.os+(f?'&img='+encodeURIComponent(GR+'/'+s.d+'/'+f.name):''),0,null,t,'mc-icons/game-'+s.id+'.png');
+ if(s.k=='win')return gmFrame('game-win.html?os='+s.os+(f?(f.game?'&game='+encodeURIComponent(GR+'/'+s.d+'/OSGAME/'+f.name)+'&t='+encodeURIComponent(f.title):'&img='+encodeURIComponent(GR+'/'+s.d+'/'+f.name)):''),0,null,t,'mc-icons/game-'+s.id+'.png');
  const q=new URLSearchParams({core:s.core,name:t,icon:'mc-icons/game-'+s.id+'.png'});
  if(s.alt)q.set('alt',s.alt);if(s.neo)q.set('neo','1');if(s.cd)q.set('url','1');
  if(f)q.set('rom',GR+'/'+s.d+'/'+encodeURIComponent(f.name));else q.set('local','1');
@@ -316,21 +323,26 @@ async function gmPlay(s,f,local){
 function gmShow(s){
  const p=$('#alp');p.className='';p.onclick=e=>{if(e.target==p)gmBack()};
  p.innerHTML=`<div class=alsh><div class=alh><button class=bk>‹ 보관함</button><img src="mc-icons/game-${s.id}.png" alt=""><div class=tt2><h2>${E(s.n)}</h2><small class=cn>불러오는 중…</small></div><button class=rf title="새로고침">⟳</button></div>
-  <div class=alb><input placeholder="🔍 게임 검색" autocomplete=off>${s.k=='ejs'?'<button class=lc>📂 내 기기에서 불러오기</button>':''}<button class=up>⬆ 업로드</button></div>
+  <div class=alb><input placeholder="🔍 게임 검색" autocomplete=off>${s.k=='ejs'?'<button class=lc>📂 내 기기에서 불러오기</button>':''}<button class=up>⬆ 업로드</button>${s.k=='win'?'<button class=up2>🎮 게임 업로드</button>':''}</div>
   <div class=all></div><div class=alf></div></div>`;
  void p.offsetWidth;p.className='on';
  const L=$('.all',p),Q=$('input',p),C=$('.cn',p);let data=null;
  $('.bk',p).onclick=gmBack;$('.rf',p).onclick=()=>load(true);
- $('.alf',p).textContent=s.k=='dos'?'zip 안의 exe · com · bat 를 자동으로 찾아 실행합니다.':s.k=='win'?'디스크 이미지(.zip · .img · .iso)를 넣으면 목록에 나타납니다. 처음 실행은 이미지를 받느라 시간이 걸릴 수 있어요.':s.cd?'CD 게임은 .chd · .iso 또는 (cue+bin을 묶은) .zip 으로 넣어 주세요.'+(s.bios?' 바이오스는 GAMEROM/_BIOS 폴더에 넣습니다.':''):'';
+ $('.alf',p).textContent=s.k=='dos'?'zip 안의 exe · com · bat 를 자동으로 찾아 실행합니다.':s.k=='win'?'위쪽은 윈도우(OS) 이미지, 🎮 게임은 OSGAME 폴더의 파일입니다. 게임을 누르면 윈도우가 켜지면서 CD(D:) 또는 새 드라이브로 자동 장착돼요. 처음 실행은 이미지를 받느라 시간이 걸릴 수 있어요.':s.cd?'CD 게임은 .chd · .iso 또는 (cue+bin을 묶은) .zip 으로 넣어 주세요.'+(s.bios?' 바이오스는 GAMEROM/_BIOS 폴더에 넣습니다.':''):'';
  if($('.lc',p))$('.lc',p).onclick=()=>{const i=el('input');i.type='file';i.accept=s.x.split(' ').map(x=>'.'+x).join(',');i.onchange=()=>{if(i.files[0])gmPlay(s,null,i.files[0])};i.click()};
  $('.up',p).onclick=()=>{const i=el('input');i.type='file';i.multiple=true;i.accept=s.x.split(' ').map(x=>'.'+x).join(',');i.onchange=async()=>{if(!i.files.length)return;await up(GR+'/'+s.d,[...i.files]);load(true)};i.click()};
+ if($('.up2',p))$('.up2',p).onclick=()=>{const i=el('input');i.type='file';i.multiple=true;i.accept='.zip,.img,.ima,.iso,.bin,.cue,.vhd,.vfd,.flp';i.onchange=async()=>{if(!i.files.length)return;await up(GR+'/'+s.d+'/OSGAME',[...i.files]);load(true)};i.click()};
  const row=(ic,title,sub,fn)=>{const r=el('div','alr',`<img src="mc-icons/game-${s.id}.png" alt=""><div class=nm><b>${ic}${E(title)}</b><small>${E(sub)}</small></div><i>▶</i>`);r.onclick=fn;return r};
  function draw(){L.innerHTML='';const q=Q.value.trim().toLowerCase();
   if(s.k=='dos'&&!q)L.append(row('⌨ ','DOS 프롬프트 (빈 C:)','게임 없이 시작',()=>gmPlay(s,null)));
   if(!data)return;const rows=data.L.filter(f=>!q||(f.title+' '+f.name).toLowerCase().includes(q));
-  C.textContent=data.ok?data.L.length+'개 게임 · '+GR+'/'+s.d:'목록을 읽지 못했어요';
+  const grows=s.k=='win'?(data.G||[]).filter(f=>!q||(f.title+' '+f.name).toLowerCase().includes(q)):[];
+  C.textContent=data.ok?(s.k=='win'?'OS '+data.L.length+'개 · 게임 '+(data.G||[]).length+'개 · '+GR+'/'+s.d:data.L.length+'개 게임 · '+GR+'/'+s.d):'목록을 읽지 못했어요';
   rows.forEach(f=>L.append(row('',f.title,f.name+(f.size?' · '+fmt(f.size):''),()=>gmPlay(s,f))));
-  if(!rows.length)L.append(el('div','alm',q?'검색 결과가 없어요.':data.ok
+  if(s.k=='win'){L.append(el('div','alm','🎮 게임 · <code>'+GR+'/'+s.d+'/OSGAME</code>'));
+   grows.forEach(f=>L.append(row('🎮 ',f.title,f.name+(f.size?' · '+fmt(f.size):''),()=>gmPlay(s,f))));
+   if(!grows.length)L.append(el('div','alm',q?'검색 결과가 없어요.':'<code>'+GR+'/'+s.d+'/OSGAME</code> 폴더에 게임 파일을\n(.zip · .iso · .cue+.bin · .img) 올리면 여기에 나타나요.'))}
+  if(!rows.length&&s.k!='win')L.append(el('div','alm',q?'검색 결과가 없어요.':data.ok
    ?`<code>${GR}/${s.d}</code> 폴더가 비어 있어요.\n\n이 폴더에 ${s.x.split(' ').map(x=>'.'+x).join(' ')} 파일을 올리면\n여기에 나타나고, 누르면 바로 실행됩니다.\n\n${s.k=='ejs'?'(또는 위의 "내 기기에서 불러오기"로 바로 실행)':''}`
    :`게임 목록을 불러오지 못했어요.\n잠시 후 ⟳ 를 눌러 다시 시도하거나,\n<code>${GR}/${s.d}/list.json</code> 에 파일 이름 목록을 적어 두세요.`))}
  async function load(f){C.textContent='불러오는 중…';data=await gmGames(s,f);draw()}
