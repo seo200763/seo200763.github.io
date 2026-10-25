@@ -174,7 +174,7 @@ html,body{margin:0;width:100%;height:100%;background:#000;color:#eee;font-family
 
   <div class="screen" id="screen">
     <div id="screen_container"><div style="white-space:pre;font:14px monospace;line-height:14px"></div><canvas style="display:none"></canvas></div>
-    <div id="pad"></div>
+    <div id="pad" tabindex="0" style="outline:none"></div>
 
     <div id="mpop">
       <h3>🖱 마우스 설정</h3>
@@ -1534,12 +1534,33 @@ function kUpC(code){
   const w=Math.max(0,MINHOLD-(performance.now()-h.t));
   if(w<=0)rel();else h.tm=setTimeout(rel,w);
 }
-addEventListener('keydown',e=>{
-  const t=e.target&&e.target.tagName;if(/^(INPUT|SELECT|TEXTAREA)$/.test(t||''))return;
-  if(!emu||e.code==='F11'||e.code==='F5'||(e.ctrlKey&&e.shiftKey)||(e.ctrlKey&&/^Key[WTNRL]$/.test(e.code)&&!e.altKey))return;
-  if(kDownC(e.code,e.repeat))e.preventDefault();
-},true);
-addEventListener('keyup',e=>{if(kHeld.has(e.code)){e.preventDefault();kUpC(e.code)}},true);
+/* e.code 가 비어 있는 환경(일부 IME/모바일 키보드)을 위해 keyCode 로 보정 */
+const KCODE={8:'Backspace',9:'Tab',13:'Enter',16:'ShiftLeft',17:'ControlLeft',18:'AltLeft',19:'Pause',20:'CapsLock',27:'Escape',32:'Space',33:'PageUp',34:'PageDown',35:'End',36:'Home',37:'ArrowLeft',38:'ArrowUp',39:'ArrowRight',40:'ArrowDown',45:'Insert',46:'Delete',
+ 186:'Semicolon',187:'Equal',188:'Comma',189:'Minus',190:'Period',191:'Slash',192:'Backquote',219:'BracketLeft',220:'Backslash',221:'BracketRight',222:'Quote'};
+for(let i=0;i<10;i++){KCODE[48+i]='Digit'+i;KCODE[96+i]='Numpad'+i}
+for(let i=65;i<=90;i++)KCODE[i]='Key'+String.fromCharCode(i);
+for(let i=1;i<=12;i++)KCODE[111+i]='F'+i;
+function evCode(e){
+  let c=e.code;
+  if(!c||c==='Unidentified'){c=KCODE[e.keyCode||e.which]||''}
+  return c;
+}
+const isTextField=t=>t&&((t.tagName==='TEXTAREA')||(t.tagName==='INPUT'&&/^(text|search|number|password|email|url|tel)$/i.test(t.type||'text')));
+function onKeyDown(e){
+  if(isTextField(e.target))return;
+  const code=evCode(e);
+  if(!emu||!code||code==='F11'||code==='F5'||(e.ctrlKey&&e.shiftKey)||(e.ctrlKey&&/^Key[WTNRL]$/.test(code)&&!e.altKey))return;
+  if(kDownC(code,e.repeat)){e.preventDefault();e.stopPropagation()}
+}
+function onKeyUp(e){
+  const code=evCode(e);
+  if(kHeld.has(code)){e.preventDefault();e.stopPropagation();kUpC(code)}
+}
+/* window 와 document 양쪽(캡처 단계)에 달아 포커스 위치와 상관없이 받는다 */
+window.addEventListener('keydown',onKeyDown,true);
+document.addEventListener('keydown',onKeyDown,true);
+window.addEventListener('keyup',onKeyUp,true);
+document.addEventListener('keyup',onKeyUp,true);
 /* 바깥 페이지(index.html)가 키보드 포커스를 가지고 있을 때 전달해 주는 키 */
 addEventListener('message',e=>{
   const d=e.data;if(!d||d.k!==1||!emu)return;
@@ -1547,7 +1568,13 @@ addEventListener('message',e=>{
 });
 addEventListener('blur',()=>{kHeld.forEach((h,c)=>{clearTimeout(h.tm);const a=kCodes(c,true);if(a)sendK(a)});kHeld.clear()});
 /* 화면을 누르면 키보드 포커스를 에뮬레이터 창으로 */
-$('pad').addEventListener('pointerdown',()=>{try{window.focus();document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(_){}},true);
+function focusEmu(){try{window.focus();document.activeElement&&document.activeElement!==document.body&&document.activeElement.blur&&document.activeElement.blur();$('pad').focus({preventScroll:true})}catch(_){}}
+$('pad').addEventListener('pointerdown',()=>{focusEmu();setTimeout(focusEmu,0)},true);
+$('pad').addEventListener('mousedown',focusEmu,true);
+$('pad').addEventListener('touchstart',focusEmu,{capture:true,passive:true});
+addEventListener('focus',()=>{try{if(emu)$('pad').focus({preventScroll:true})}catch(_){}});
+/* 바깥 페이지가 "포커스를 이 창에 달라"고 요청할 때 */
+addEventListener('message',e=>{const d=e.data;if(d&&d.k===2)focusEmu()});
 
 /* ---------- 단축키 ---------- */
 addEventListener('keydown',e=>{

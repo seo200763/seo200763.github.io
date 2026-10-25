@@ -291,8 +291,9 @@ async function gmBios(force){if(gmBi&&!force)return gmBi;gmBi=(await gmFiles('_B
 ['keydown','keyup'].forEach(ty=>addEventListener(ty,e=>{
  const g=document.getElementById('gp');if(!g||!g.classList.contains('on'))return;
  const f=g.querySelector('iframe');if(!f||!/game-win/.test(f.src))return;
- if(/^(INPUT|TEXTAREA|SELECT)$/.test((e.target&&e.target.tagName)||'')||['F5','F11','F12'].includes(e.code))return;
- e.preventDefault();try{f.contentWindow.postMessage({k:1,t:ty,code:e.code,repeat:e.repeat},'*')}catch(_){}
+ if(['F5','F11','F12'].includes(e.code))return;
+ if(e.target&&e.target.tagName==='TEXTAREA')return;   // 게임 창이 열려 있으면 글자 입력칸이 아닌 이상 모든 키를 게임으로
+ e.preventDefault();e.stopPropagation();try{f.contentWindow.postMessage({k:1,t:ty,code:e.code,repeat:e.repeat,key:e.key,keyCode:e.keyCode},'*')}catch(_){}
 },true));
 // --- 실행 ---
 function gmStop(){const g=$('#gp');g.className='';g.innerHTML=''}
@@ -314,7 +315,11 @@ function gmFrame(u,x,local,title,ic){
  drag(gt,(dx,dy,L,T)=>{w.style.left=Math.min(innerWidth-80,Math.max(80-w.offsetWidth,L+dx))+'px';w.style.top=Math.min(innerHeight-34,Math.max(0,T+dy))+'px'});
  drag(gz,(dx,dy,L,T,ww,hh)=>{w.style.width=Math.max(320,ww+dx)+'px';w.style.height=Math.max(240,hh+dy)+'px'});
  g.append(w);
- if(local)f.onload=()=>f.contentWindow.postMessage({rom:local},'*')}
+ try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(_){}
+ const _fx=()=>{try{f.focus();f.contentWindow.postMessage({k:2},'*')}catch(_){}};
+ f.addEventListener('load',()=>{_fx();setTimeout(_fx,500)});
+ f.addEventListener('pointerenter',_fx);
+ if(local)f.addEventListener('load',()=>f.contentWindow.postMessage({rom:local},'*'))}
 async function gmPlay(s,f,local){
  const t=f?f.title:(local?local.name.replace(/\.[^.]+$/,''):s.n);
  if(s.k=='dos')return gmFrame('game-dos.html'+(f?'?f='+encodeURIComponent(f.name)+'&t='+encodeURIComponent(t):'?blank=1'),0,null,t,'mc-icons/game-dos.png');
