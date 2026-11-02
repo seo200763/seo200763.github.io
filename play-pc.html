@@ -78,7 +78,15 @@ function launch(file){
  var name=file.name.replace(/\.[^.]+$/,''),W=window,core=cores[CI%cores.length];
  document.title=name+' · 영호의 게임에뮬레이터';$('tName').textContent=S.n+' · '+name;
  setLoad(55,'에뮬레이터 엔진 다운로드 중…',S.n+' · '+name);show('ovLoad');show('ovPick',false);
- if(isMame){$('bCore').textContent='🧩 '+MG.coreName(core);MG.hook(window)}
+ if(isMame){$('bCore').textContent='🧩 '+MG.coreName(core);MG.hook(window);
+  var badDone=false;
+  var onBad=function(t){
+   if(badDone)return;badDone=true;
+   if(CI+1<cores.length){var u=new URL(location.href);u.searchParams.set('ci',CI+1);location.replace(u.href);return}
+   giveUp('이 롬이 '+MG.coreName(core)+' 코어의 롬셋과 맞지 않아요.\n· 롬 zip 이름이 롬셋 이름(예: tekken3.zip)과 같은지\n· 롬 버전이 코어(FBNeo / MAME 0.78)와 맞는지\n· 필요한 바이오스가 MAME/_bios 폴더에 있는지\n확인해 주세요.\n('+String(t).slice(0,80)+')','롬셋이 맞지 않아요');
+  };
+  ['log','info','warn','error'].forEach(function(k){var o=console[k];console[k]=function(){try{var t=Array.prototype.join.call(arguments,' ');if(MG.BAD.test(t))onBad(t)}catch(x){}return o.apply(console,arguments)}});
+ }
  if(/iPad|Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1){try{Object.defineProperty(navigator,'userAgent',{configurable:true,get:function(){return IPAD_UA}})}catch(e){}}
  W.EJS_player='#game';W.EJS_core=core;W.EJS_gameName=name;W.EJS_gameUrl=new File([file],file.name);
  W.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';W.EJS_startOnLoaded=true;W.EJS_color=S.a;W.EJS_language='ko-KR';

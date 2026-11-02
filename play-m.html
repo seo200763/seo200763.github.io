@@ -67,11 +67,18 @@ function startGame(file,ci,lvl){
   if(my!==seq||started||!hasNext)return false;
   clearTimeout(watchT);fr.onload=null;YH.toast('다른 코어로 다시 시도합니다…');startGame(file,ci+1);return true;
  }
+var badDone=false;
+ function onBadSet(t){
+  if(my!==seq||badDone)return;badDone=true;
+  if(hasNext){clearTimeout(watchT);fr.onload=null;YH.toast('이 코어는 롬을 알아보지 못해요. 다른 코어로 다시 시도합니다…');startGame(file,ci+1);return}
+  giveUp('이 롬이 '+MG.coreName(coreName)+' 코어의 롬셋과 맞지 않아요.\n· 롬 zip 이름이 롬셋 이름(예: tekken3.zip)과 같은지\n· 롬 버전이 코어(FBNeo / MAME 0.78)와 맞는지\n· 필요한 바이오스가 MAME/_bios 폴더에 있는지\n확인해 주세요.\n('+String(t).slice(0,80)+')','롬셋이 맞지 않아요');
+ }
+ function sniff(w){try{['log','info','warn','error'].forEach(function(k){var o=w.console[k];w.console[k]=function(){try{var t=Array.prototype.join.call(arguments,' ');if(MG.BAD.test(t))onBadSet(t)}catch(x){}return o.apply(w.console,arguments)}})}catch(e){}}
  fr.onload=function(){
   fr.onload=null;if(my!==seq)return;
   var w;try{w=fr.contentWindow;if(!w||typeof w.startEmu!=='function')throw 0}
   catch(e){giveUp('에뮬레이터 화면(emuhost.html)을 불러오지 못했어요. emuhost.html 파일이 사이트에 같이 올라갔는지 확인해 주세요.');return}
-  if(isMame)MG.hook(w);
+  if(isMame){MG.hook(w);sniff(w)}
   if(isPs)LoadGame.watchError(w,function(){return my===seq&&!started},function(m){
    if(my!==seq||started)return;
    if(psLvl<2){clearTimeout(watchT);YH.toast('저사양 안전 모드로 다시 시도합니다…');startGame(file,ci,2);return}
@@ -86,6 +93,7 @@ function startGame(file,ci,lvl){
      lastErr=m;
      if(isPs&&/failed to (start|load|initialize)/i.test(m))return;
      if(hasNext&&!/out of memory|RangeError/i.test(m)&&/abort|wasm|WebAssembly|runtime|unreachable|core/i.test(m)){if(tryNext())return}
+     if(isMame&&/out of bounds|unreachable/i.test(m)){giveUp('이 게임을 '+MG.coreName(coreName)+' 코어로 실행하지 못했어요.\n롬 zip 이 코어의 롬셋과 맞지 않거나 필요한 바이오스(MAME/_bios)가 없을 가능성이 커요. 3D 게임(철권 등)은 폰에서 너무 무거울 수도 있어요.\n🧩 코어 버튼으로 다른 코어를 시도해 보세요.\n('+m.slice(0,80)+')','게임 실행 실패');return}
      if(/out of memory|memory|allocat|Aborted|RangeError|WebAssembly/i.test(m))giveUp('기기 메모리가 부족해 이 게임을 열 수 없어요. 다른 탭·앱을 닫고 다시 시도하거나 용량이 작은 게임을 선택해 보세요.\n('+m.slice(0,80)+')','메모리 부족');
     },
     onStart:function(){

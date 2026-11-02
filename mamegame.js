@@ -157,11 +157,35 @@ function merge(gameBuf,biosBuf){
 /* ---------------------------------------------------------------------
    실행 준비: 롬 zip → (네오지오면 바이오스 합침) + 코어에 넘길 바이오스 목록(file.mgBios)
    --------------------------------------------------------------------- */
+var BAD=/Romset is unknown|romset .*(missing|not found)|missing files for THIS VERSION|ROM with name .* is missing|failed to load content|unable to load content/i;
+/* _bios 폴더 안의 바이오스 zip 을 모두 찾아서 코어에 넘김 (철권 등 Namco·Capcom 바이오스 포함) */
+var BIOSDIRS=['MAME/_bios/','ROMS/MAME/_bios/'];
+var KNOWN_BIOS=['neogeo.zip','bubsys.zip','coh1000c.zip','coh1000t.zip','coh3002c.zip','coh3002t.zip','namco50.zip','namco51.zip','namco52.zip','namco53.zip','namco54.zip','namco62.zip','namcoc76.zip','cpzn1.zip','cpzn2.zip','taitofx1.zip','konamigx.zip','stvbios.zip','pgm.zip','decocass.zip','playch10.zip','nmk004.zip','segae.zip','segas32.zip','tps.zip','ym2608.zip','skns.zip','tourvis.zip'];
+var allP=null;
+function allBios(){
+ if(allP)return allP;
+ var r=ghRepo();
+ allP=Promise.all(BIOSDIRS.map(function(d){
+  var viaApi=r?fetch('https://api.github.com/repos/'+r+'/contents/'+d.replace(/\/$/,''),{headers:{Accept:'application/vnd.github+json'}})
+   .then(function(res){if(!res.ok)throw 0;return res.json()})
+   .then(function(a){if(!Array.isArray(a))throw 0;return a.filter(function(f){return f.type==='file'&&/\.zip$/i.test(f.name)}).map(function(f){return f.name})}):Promise.reject(0);
+  return viaApi.catch(function(){
+   return Promise.all(KNOWN_BIOS.map(function(n){return fetch(d+n,{method:'HEAD'}).then(function(x){return x.ok?n:null}).catch(function(){return null})})).then(function(a){return a.filter(Boolean)});
+  }).then(function(names){return names.map(function(n){return{name:n,url:abs(d+encodeURIComponent(n))}})});
+ })).then(function(rs){
+  var seen={},out=[];
+  rs.forEach(function(a){a.forEach(function(b){var k=b.name.toLowerCase();if(!seen[k]){seen[k]=1;out.push(b)}})});
+  out.sort(function(a,b){return(b.name.toLowerCase()===BIOSZIP)-(a.name.toLowerCase()===BIOSZIP)});
+  return out;
+ }).catch(function(){return[]});
+ return allP;
+}
 function prepare(file){
- return biosInfo().then(function(bi){
-  if(!bi){file.mgBios=[];return file}
-  var done=function(f){f.mgBios=[{name:BIOSZIP,url:bi.url}];return f};
-  if(!/\.zip$/i.test(file.name))return done(file);
+ return Promise.all([biosInfo(),allBios()]).then(function(r){
+  var bi=r[0],all=r[1].slice();
+  if(bi&&!all.some(function(b){return b.name.toLowerCase()===BIOSZIP}))all.unshift({name:BIOSZIP,url:bi.url});
+  var done=function(f){f.mgBios=all;return f};
+  if(!bi||!/\.zip$/i.test(file.name))return done(file);
   return readBuf(file).then(function(gb){
    var m=null;try{m=merge(gb,bi.buf)}catch(e){}
    return done(m?new File([m],file.name,{type:'application/zip'}):file);
@@ -295,6 +319,7 @@ var MG=window.MG={
  is:function(c){return!!c&&c.id==='mamegame'},
  coreName:function(c){return CN[c]||c},
  isRom:isRom,
+ BAD:BAD,
  mount:mount,
  prepare:prepare,
  hook:hook,
