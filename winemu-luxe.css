@@ -1,0 +1,28 @@
+/* winemu-luxe.css — 윈도우 웹 에뮬레이터(winemu.html) 고급스러운 다크 글래스 디자인
+   기능은 그대로, 색·모양만 바꿉니다. 원래 느낌으로 되돌리려면 winemu.html 의 이 파일 링크를 지우세요. */
+:root{--wa:#8b5cf6;--wb:#3b82f6;--wc:#22d3ee;--wl:rgba(130,140,255,.45)}
+html,body{background:#02021f}
+.app{background:radial-gradient(ellipse at 50% 0,#14106b,#02021f 72%);font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+.toolbar{background:linear-gradient(180deg,rgba(14,12,96,.96),rgba(8,6,66,.96))!important;color:#fff!important;border-bottom:1px solid #4a58f0;box-shadow:0 6px 24px rgba(0,0,40,.55);gap:8px!important;position:relative;z-index:10}
+.toolbar button,.toolbar label,.toolbar a.btn,.toolbar select{font-family:"Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif!important;font-weight:600!important;font-size:13px!important;color:#fff!important;background:rgba(70,70,210,.3)!important;border:1px solid var(--wl)!important;border-radius:10px!important;padding:8px 13px!important;transition:.16s;box-shadow:none!important;backdrop-filter:blur(6px)}
+.toolbar select{padding:7px 8px!important}.toolbar select option{color:#111;background:#fff}
+.toolbar button:hover,.toolbar label:hover,.toolbar a.btn:hover{background:rgba(120,110,255,.55)!important;border-color:#b3bcff!important}
+.toolbar button:active,.toolbar label:active,.toolbar a.btn:active,.toolbar button.on{background:linear-gradient(90deg,var(--wa),var(--wb))!important;border-color:#c9d0ff!important;transform:translateY(1px)}
+#boot{background:linear-gradient(90deg,var(--wa),var(--wb))!important;border-color:transparent!important;box-shadow:0 4px 16px rgba(100,90,255,.5)!important}
+.status{color:#b8c0ff!important}
+.screen{background:#000;box-shadow:inset 0 0 0 1px rgba(100,110,255,.28)}
+.overlay{background:radial-gradient(circle at 50% 30%,rgba(22,18,120,.9),rgba(2,2,30,.95))!important;backdrop-filter:blur(6px)}
+.card{background:rgba(18,16,104,.7)!important;border:1.5px solid #6b7bff!important;border-radius:22px!important;padding:30px 26px!important;box-shadow:0 0 44px rgba(100,100,255,.35),inset 0 1px 0 rgba(255,255,255,.12)}
+.card h2{font-size:22px!important;font-weight:900;background:linear-gradient(90deg,#c4b5fd,#93c5fd 60%,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.card p{color:#d0d5ff!important}
+.card button{font-family:"Noto Sans KR",Arial,sans-serif!important;font-weight:700!important;font-size:15px!important;color:#fff!important;background:linear-gradient(90deg,var(--wa),var(--wb))!important;border:0!important;border-radius:99px!important;padding:11px 24px!important;box-shadow:0 4px 16px rgba(90,90,255,.45)}
+.card button:hover{filter:brightness(1.12)}
+.bar{height:14px!important;background:#0a0a50!important;border:1px solid #4a58f0!important;border-radius:9px;overflow:hidden}
+.bar i{background:linear-gradient(90deg,#a855f7,#3b82f6,#22d3ee)!important}
+.help{background:#06053c!important;color:#aab2ee!important;border-top:1px solid #2b2f9c;font-size:12px!important}
+#mpop{background:rgba(14,12,92,.96)!important;color:#fff!important;border:1.5px solid #6b7bff!important;border-radius:16px!important;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,40,.6)}
+#mpop button{font-family:"Noto Sans KR",Arial,sans-serif!important;color:#fff!important;background:rgba(80,80,220,.35)!important;border:1px solid var(--wl)!important;border-radius:9px!important}
+#mpop button.on{background:linear-gradient(90deg,var(--wa),var(--wb))!important}
+#mpop small{color:#b8c0ff!important}
+#fsTools button{font-family:"Noto Sans KR",Arial,sans-serif!important;color:#fff!important;background:rgba(10,8,90,.82)!important;border:1px solid var(--wl)!important;border-radius:99px!important;backdrop-filter:blur(8px)}
+#toast{background:rgba(8,6,80,.95)!important;border:1px solid #6b7bff!important;border-radius:99px;color:#fff}

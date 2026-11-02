@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ko" data-cg="index">
+<head>
+<meta charset="utf-8">
+<script src="noads.js"></script>
+<script src="saver.js"></script>
+<script src="adnotice.js" defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b1f4b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/app-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="게임에뮬레이터">
+<title>영호의 게임에뮬레이터</title>
+<script>
+/* 선택을 기억해 두었다가(이번 접속 동안 / 다음 접속부터) 바로 해당 화면으로 보냅니다. ?select=1 로 접속하면 다시 선택할 수 있습니다. */
+var T={m:'mobile.html',d:'dex.html',e:'emulator.html',t:'tablet.html',v:'videos.html',c:'classic.html',x:'multi/win10.html'};
+function go(k,keep){
+ try{if(k==='m'||k==='d')sessionStorage.setItem('ver',k);if(keep===true)localStorage.setItem('ver',k);else if(keep===false)localStorage.removeItem('ver')}catch(e){}
+ var p=new URLSearchParams(location.search);p.delete('select');var s=p.toString();
+ location.replace(T[k]+(s?'?'+s:''));
+}
+(function(){
+ if(new URLSearchParams(location.search).has('select'))return;
+ var v=null;try{v=sessionStorage.getItem('ver')||localStorage.getItem('ver')}catch(e){}
+ if(T[v])go(v);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+:root{
+ --red:#e8495b;--red2:#ff8a96;--green:#2f9e6e;--gold:#ffcf7d;--blue:#4a8fe0;--orange:#e8963a;
+ --ink:#1b1f4b;--cream:#fff8ef;--brown:#5a2a3a;--mut:#8a5a66;
+ --jua:Jua,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+ --kr:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:#1b1f4b}
+html,body{margin:0;min-height:100%;color:#fff;font-family:var(--kr)}
+body{min-height:100vh;min-height:100dvh;overflow-x:hidden;background:transparent}
+
+/* ───── 배경 : 눈 내리는 겨울밤 ───── */
+.scene{position:fixed;inset:0;z-index:0;pointer-events:none;background:#1b1f4b url(emuwall/christmas_pc.jpg) center/cover no-repeat}
+/* 휴대폰·세로 화면: 세로 구도로 잘라 둔 배경 사용 (화면 크기에 맞춤) */
+@media (max-width:700px) and (orientation:portrait),(max-aspect-ratio:3/4){.scene{background-image:url(emuwall/christmas_mobile.jpg);background-position:42% center}}
+.scene:after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(10,14,50,.38),rgba(10,14,50,.06) 38%,rgba(12,16,54,.34))}
+.lights{position:fixed;left:0;right:0;top:0;height:22px;z-index:3;pointer-events:none;
+ background:
+  radial-gradient(circle 4.5px at 10px 13px,#ff6b7a 96%,transparent 100%) 0 0/80px 22px repeat-x,
+  radial-gradient(circle 4.5px at 30px 14px,#ffd36b 96%,transparent 100%) 0 0/80px 22px repeat-x,
+  radial-gradient(circle 4.5px at 50px 13px,#7be3a6 96%,transparent 100%) 0 0/80px 22px repeat-x,
+  radial-gradient(circle 4.5px at 70px 14px,#86c5ff 96%,transparent 100%) 0 0/80px 22px repeat-x,
+  linear-gradient(#3b2f58,#3b2f58) 0 3px/100% 2px no-repeat;
+ filter:drop-shadow(0 0 5px rgba(255,225,170,.75));animation:tw 2.6s ease-in-out infinite alternate}
+@keyframes tw{from{opacity:.6}to{opacity:1}}
+.clock{position:fixed;right:clamp(18px,3vw,44px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:3;font:400 clamp(15px,1.6vw,20px) var(--jua);letter-spacing:.1em;color:#fff;text-shadow:0 2px 8px rgba(10,6,40,.7);display:none}
+.tagl{position:fixed;left:clamp(18px,3vw,44px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:3;font:400 14px var(--jua);letter-spacing:.14em;color:#ffe0a8;text-shadow:0 2px 8px rgba(10,6,40,.7);display:none}
+@media (min-width:900px){.clock{display:block}}
+@media (min-width:1100px){.tagl{display:block}}
+
+/* ───── 공통 둥근 패널 ───── */
+.cp{--col:var(--red);position:relative}
+
+/* ───── 레이아웃 ───── */
+.stage{position:relative;z-index:10;max-width:1020px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:clamp(14px,2.6vh,26px);
+ padding:max(34px,calc(env(safe-area-inset-top,0px) + 30px)) clamp(14px,3vw,30px) max(30px,calc(env(safe-area-inset-bottom,0px) + 24px))}
+.topnav,.botnav{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(6px,1.2vw,12px);width:100%}
+.btn{appearance:none;margin:0;cursor:pointer;height:42px;padding:0 clamp(14px,2vw,22px);border-radius:99px;position:relative;
+ border:2px solid rgba(255,255,255,.7);background:rgba(255,248,239,.9);color:var(--red);
+ font:400 clamp(13px,1.4vw,15.5px) var(--jua);letter-spacing:.03em;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+ box-shadow:0 4px 0 rgba(120,40,70,.35),0 8px 18px rgba(10,6,40,.3);transition:transform .15s,box-shadow .15s,background .2s}
+.btn:hover{transform:translateY(-2px);background:#fff;box-shadow:0 6px 0 rgba(120,40,70,.35),0 12px 22px rgba(10,6,40,.35)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(120,40,70,.35)}
+.btn:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.btn.y{color:var(--green)}.btn.r{color:var(--orange)}
+.btn.fill{color:#fff;background:linear-gradient(135deg,var(--red2),var(--red) 70%);border-color:#ffd0d6;text-shadow:0 1px 2px rgba(120,20,40,.5);box-shadow:0 4px 0 #a8263d,0 8px 18px rgba(232,73,91,.4)}
+.btn.fill:hover{background:linear-gradient(135deg,#ffa0aa,#f0556a 70%)}
+.btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn .dot{position:absolute;top:-3px;right:-2px;width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid #fff;display:none}
+.btn.new .dot{display:block}
+
+/* 제목 */
+header{text-align:center;display:flex;flex-direction:column;align-items:center;gap:clamp(10px,1.8vh,18px);margin-top:clamp(4px,2vh,22px)}
+.eyebrow{font:400 clamp(13px,1.8vw,17px) var(--jua);letter-spacing:.1em;color:#ffe0a8;text-shadow:0 2px 10px rgba(10,6,40,.6)}
+h1{margin:0;font:400 clamp(34px,7.4vw,70px)/1.14 var(--jua);letter-spacing:.02em;word-break:keep-all;text-wrap:balance;color:#fff;
+ text-shadow:3px 0 #d63c52,-3px 0 #d63c52,0 3px #d63c52,0 -3px #d63c52,2px 2px #d63c52,-2px -2px #d63c52,2px -2px #d63c52,-2px 2px #d63c52,0 7px 0 #a8263d,0 18px 28px rgba(10,6,40,.5)}
+.sub{margin:0;max-width:720px;font:400 clamp(13px,1.55vw,15.5px)/1.75 var(--kr);color:#f4e8f7;word-break:keep-all;text-shadow:0 2px 8px rgba(10,6,40,.7)}
+.sub b{color:#ffe08a;font-weight:700}
+
+/* 방문자 */
+.visit{display:inline-flex;gap:14px;align-items:center;padding:7px 22px;border-radius:99px;background:rgba(40,26,76,.62);border:1.5px solid rgba(255,214,170,.5);
+ -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font:400 clamp(13px,1.4vw,14.5px) var(--jua);letter-spacing:.06em;color:#f1e3f5}
+.visit b{color:#ffd98a;font:400 1.15em var(--jua)}
+.visit u{width:1px;height:14px;background:rgba(255,214,170,.5);text-decoration:none}
+
+/* 카드 : 사탕 줄무늬 테두리 선물 카드 */
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,2.4vw,28px);width:100%}
+.card{--bw:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;
+ padding:clamp(24px,4vw,44px) clamp(14px,2.4vw,26px);color:var(--brown);text-decoration:none;min-height:clamp(170px,26vw,250px);
+ border:var(--bw) solid transparent;border-radius:32px;
+ background:linear-gradient(180deg,#fffaf2,#ffeee6) padding-box,repeating-linear-gradient(45deg,var(--col) 0 12px,#fff 12px 24px) border-box;
+ box-shadow:0 14px 30px rgba(10,6,40,.4),0 0 0 1px rgba(255,255,255,.4);
+ transition:transform .25s cubic-bezier(.2,.9,.3,1),box-shadow .25s}
+.card.y{--col:var(--red)}
+#cd{--col:var(--green)}
+#cold{--col:var(--blue)}
+#cp{--col:var(--orange)}
+#cx{--col:#8a5ad6}
+.card:before{content:"";position:absolute;left:12%;right:12%;top:-15px;height:18px;pointer-events:none;border-radius:10px 10px 0 0;
+ background:radial-gradient(circle 7px at 10% 11px,#fff 96%,transparent 100%),radial-gradient(circle 9px at 36% 12px,#fff 96%,transparent 100%),
+  radial-gradient(circle 6px at 62% 11px,#fff 96%,transparent 100%),radial-gradient(circle 8px at 88% 12px,#fff 96%,transparent 100%),
+  linear-gradient(#fff,#fff) 0 0/100% 11px no-repeat;filter:drop-shadow(0 2px 2px rgba(20,20,80,.3))}
+.card:hover{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 22px 40px rgba(10,6,40,.5),0 0 34px rgba(255,200,140,.45),0 0 0 1px rgba(255,255,255,.5)}
+.card:active{transform:scale(.98)}
+.card:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.card svg{width:clamp(70px,11vw,118px);height:auto;fill:none;stroke:var(--col);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-bottom:clamp(4px,1.2vw,12px)}
+.card b{font:400 clamp(18px,2.5vw,27px)/1.3 var(--jua);color:var(--brown);word-break:keep-all}
+.card span{font:400 clamp(12px,1.35vw,14px)/1.5 var(--kr);color:var(--mut);word-break:keep-all}
+.card .tg{position:absolute;left:20px;top:12px;font:400 12px var(--jua);letter-spacing:.1em;color:var(--col)}
+.card .rec{position:absolute;right:14px;top:12px;display:none;padding:3px 12px;border-radius:99px;background:var(--red);color:#fff;font:400 12.5px var(--jua);letter-spacing:.05em;box-shadow:0 2px 0 #a8263d}
+.card.rec-on .rec{display:block}
+.card.wide{grid-column:1/-1}
+.card.sm{min-height:clamp(120px,17vw,170px);padding:clamp(16px,2.6vw,26px) clamp(12px,2vw,20px)}
+.card.sm svg{width:clamp(44px,6.4vw,70px)}
+.card.sm b{font-size:clamp(16px,2vw,22px)}
+
+/* 하단 */
+.keep{display:flex;align-items:center;gap:10px;color:#fff;font:400 14px var(--jua);cursor:pointer;user-select:none;text-shadow:0 2px 6px rgba(10,6,40,.7)}
+.keep input{width:18px;height:18px;accent-color:var(--red)}
+.legacy{font:400 13.5px var(--jua);letter-spacing:.06em;color:#ffe0a8;text-decoration:none;border-bottom:2px dotted rgba(255,224,168,.6);padding-bottom:2px;text-shadow:0 2px 6px rgba(10,6,40,.7)}
+.legacy:hover{color:#fff;border-color:#fff}
+
+@media (max-width:600px){
+ .choices{grid-template-columns:1fr;max-width:340px;margin:0 auto;gap:12px}
+ .card,.card.sm{--bw:5px;border-radius:24px;gap:12px!important;padding:14px 14px 14px 16px!important}
+ .card svg,.card.sm svg{width:44px!important}
+ .card b{font-size:16px!important}
+ .card span{font-size:11.5px!important}
+ .card,.card.sm{flex-direction:row;text-align:left;justify-content:flex-start;gap:16px;min-height:0;padding:22px 18px 22px 20px}
+ .card svg,.card.sm svg{width:58px;margin:0;flex:none}
+ .card .tx{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+ .card .tg{display:none}
+ .card .rec{top:8px}
+ .topnav .btn,.botnav .btn{flex:1 1 44%;justify-content:center}
+}
+@media (min-width:601px){.card .tx{display:flex;flex-direction:column;align-items:center;gap:6px}}
+
+/* ───── 시트 / 설명창 ───── */
+#sh{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(22,10,44,.62);opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s .25s}
+#sh.on{opacity:1;visibility:visible;transition-delay:0s}
+#sh .sheet{width:min(100%,600px);max-height:86vh;max-height:86dvh;display:flex;flex-direction:column;color:var(--brown);font-family:var(--kr);
+ background:linear-gradient(180deg,#fffaf2,#ffeee6);border:5px solid #fff;border-radius:30px;box-shadow:0 0 0 3px var(--red),0 24px 60px rgba(10,6,40,.6);
+ transform:translateY(16px) scale(.97);transition:transform .3s cubic-bezier(.2,.9,.25,1)}
+#sh.on .sheet{transform:none}
+.grab{display:none}
+.sh-h{flex:none;display:flex;align-items:center;justify-content:space-between;padding:18px 22px 8px 26px;border-bottom:2px dotted rgba(232,73,91,.35)}
+.sh-h b{font:400 24px var(--jua);color:var(--red);letter-spacing:.02em}
+.sh-h button{border:0;border-radius:99px;background:var(--red);color:#fff;font:400 14px var(--jua);cursor:pointer;padding:7px 16px;box-shadow:0 3px 0 #a8263d}
+.sh-h button:active{transform:translateY(2px);box-shadow:none}
+.sh-s{flex:none;padding:8px 26px 0;color:var(--mut);font:400 13px var(--jua);letter-spacing:.06em}
+.sh-b{overflow:auto;padding:14px 18px 24px;-webkit-overflow-scrolling:touch}
+.gc{background:#fff;border-left:5px solid var(--green);border-radius:14px;padding:14px 16px;margin-bottom:12px;font:400 15px/1.7 var(--kr);color:var(--brown);white-space:pre-wrap;word-break:keep-all;overflow-wrap:break-word;box-shadow:0 3px 10px rgba(120,40,70,.1)}
+.gc h3{margin:0 0 6px;font:400 17px/1.45 var(--jua);color:var(--red);white-space:normal}
+.gc.em{color:var(--mut);text-align:center;white-space:normal}
+.gc ol{margin:0;padding:0;list-style:none;counter-reset:s;white-space:normal}
+.gc li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:9px 0}
+.gc li+li{border-top:1px dashed rgba(232,73,91,.3)}
+.gc li:before{content:counter(s);flex:none;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font:400 15px/28px var(--jua);text-align:center;box-shadow:0 2px 0 #a8263d}
+.gc small{display:block;margin-top:10px;color:var(--mut);font:400 12.5px/1.55 var(--kr);white-space:normal}
+.ne-edit{display:block;margin:0 0 12px auto;border:0;border-radius:99px;background:var(--red);color:#fff;font:400 14px var(--jua);padding:8px 16px;cursor:pointer;box-shadow:0 3px 0 #a8263d}
+.ne-ta{width:100%;border:2px solid #f0c9c9;border-radius:12px;padding:10px;font:400 14px/1.6 var(--kr);color:var(--brown);resize:vertical;background:#fff}
+.ne-in{width:100%;margin-top:8px;border:2px solid #f0c9c9;border-radius:12px;padding:10px;font:400 14px var(--kr);background:#fff;color:var(--brown)}
+.ne-h{margin:6px 2px;color:var(--mut);font:400 12.5px/1.55 var(--kr)}
+.ne-c{display:block;margin:8px 2px;color:var(--brown);font:400 13.5px var(--kr)}
+.ne-m{min-height:18px;margin:4px 2px;color:var(--red);font:700 13px var(--kr)}
+.ne-r{display:flex;gap:8px;margin:6px 0}
+.ne-b{flex:1;height:44px;border:0;border-radius:99px;background:#d9c7c7;color:var(--brown);font:400 16px var(--jua);cursor:pointer}
+.ne-b.ok{background:var(--green);color:#fff}
+.ne-b:disabled{opacity:.6}
+
+#guideOv{position:fixed;inset:0;z-index:110;display:flex;flex-direction:column;background:rgba(22,10,44,.72);padding:max(12px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s .25s}
+#guideOv.on{opacity:1;visibility:visible;transition-delay:0s}
+#guideOv .gv{flex:1;min-height:0;width:min(100%,900px);margin:0 auto;display:flex;flex-direction:column;overflow:hidden;background:#fff;border:4px solid #fff;border-radius:24px;box-shadow:0 0 0 3px var(--red),0 20px 60px rgba(10,6,40,.6)}
+#guideOv iframe{flex:1;min-height:0;width:100%;border:0;background:#fff}
+#guideOv .gv-f{flex:none;display:flex;gap:8px;padding:10px;background:#fff2ea}
+#guideOv .gv-close{flex:1;height:46px;border:0;border-radius:99px;background:var(--red);color:#fff;font:400 17px var(--jua);cursor:pointer;box-shadow:0 4px 0 #a8263d}
+
+/* 앱 설치 안내 배너 */
+#instBn{display:none;position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:90;max-width:520px;margin:0 auto;align-items:center;gap:12px;padding:12px 12px 12px 14px;
+ background:#fffaf2;border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 2px var(--red),0 14px 34px rgba(10,6,40,.5);color:var(--brown);animation:instup .4s cubic-bezier(.2,.9,.3,1)}
+#instBn.on{display:flex}
+@keyframes instup{from{opacity:0;transform:translateY(24px)}}
+#instBn img{flex:none;border-radius:12px}
+#instBn .ib-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-family:var(--kr)}
+#instBn .ib-t b{font:400 15px var(--jua);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--red)}
+#instBn .ib-t span{font-size:12px;line-height:1.45;color:var(--mut);word-break:keep-all}
+#instGo{flex:none;border:0;border-radius:99px;padding:10px 18px;background:var(--red);color:#fff;font:400 14px var(--jua);cursor:pointer;box-shadow:0 3px 0 #a8263d}
+#instNo{flex:none;border:0;background:none;color:var(--mut);font-size:17px;padding:6px;cursor:pointer}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<link rel="stylesheet" href="cutegame.css?v=1">
+</head>
+<body>
+<div class="scene" aria-hidden="true"></div>
+<div class="lights" aria-hidden="true"></div>
+<div class="tagl" aria-hidden="true">❄ MERRY CHRISTMAS ❄</div>
+<div class="clock" id="clk" aria-hidden="true"></div>
+
+<div id="instBn" role="dialog" aria-label="앱 설치 안내"><img src="icons/app-192.png" alt="" width="44" height="44"><div class="ib-t"><b>영호의 게임에뮬레이터</b><span id="instSub">주소창 없이 앱처럼 크게 즐겨요</span></div><button type="button" id="instGo">앱 설치</button><button type="button" id="instNo" aria-label="닫기">✕</button></div>
+
+<div class="stage">
+  <!-- 상단 메뉴 -->
+  <nav class="topnav" aria-label="상단 메뉴">
+    <button type="button" class="btn cp" id="bNotice">공지사항<i class="dot"></i></button>
+    <button type="button" class="btn cp" id="bGuide">어플설치방법</button>
+    <button type="button" class="btn cp" id="bSave">세이브파일저장방법</button>
+    <button type="button" class="btn cp y fill" id="bInstall"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/></svg>앱설치</button>
+  </nav>
+
+  <header>
+    <div class="eyebrow">🎄 Merry Christmas &amp; Happy Holidays 🎄</div>
+    <h1 data-t="영호의 게임에뮬레이터">영호의 게임에뮬레이터</h1>
+    <p class="sub">* 다양한 콘솔기기의 게임에뮬레이터를 통해 <b>롬파일</b>을 불러와 게임을 즐길 수 있는 추억의 게임웹에뮬레이터 사이트입니다.</p>
+    <div class="visit cp" id="visit"><span>오늘 방문 <b id="vToday">…</b></span><u></u><span>전체 방문 <b id="vTotal">…</b></span></div>
+  </header>
+
+  <!-- 접속 선택 -->
+  <main class="choices">
+    <a class="card cp y" id="cm" href="mobile.html" data-k="m">
+      <span class="tg">// MOBILE</span><span class="rec">추천</span>
+      <svg viewBox="0 0 64 64"><rect x="19" y="5" width="26" height="54" rx="5"/><path d="M27 11h10M28 53h8"/><rect x="24" y="18" width="16" height="26" rx="1.5"/><path d="M28 31h8M32 27v8"/></svg>
+      <div class="tx"><b>휴대폰으로 접속하기</b><span>스마트폰에 맞춘 인터페이스</span></div>
+    </a>
+    <a class="card cp" id="cold" href="emulator.html" data-k="e">
+      <span class="tg">// PC &amp; TABLET</span><span class="rec">추천</span>
+      <svg viewBox="0 0 64 64"><rect x="8" y="10" width="48" height="32" rx="3"/><path d="M22 52h20M32 42v10"/><path d="M20 26h6M23 23v6M40 26h.1M45 26h.1"/></svg>
+      <div class="tx"><b>컴퓨터(PC)/태블릿으로 접속하기</b><span>예전 방식의 게임 에뮬레이터 화면</span></div>
+    </a>
+    <a class="card cp" id="cx" href="multi/win10.html" data-k="x">
+      <span class="tg">// MULTI</span>
+      <svg viewBox="0 0 64 64"><rect x="6" y="10" width="52" height="34" rx="3"/><path d="M22 54h20M32 44v10"/><rect x="12" y="16" width="10" height="10" rx="2"/><rect x="26" y="16" width="10" height="10" rx="2"/><rect x="40" y="16" width="10" height="10" rx="2"/></svg>
+      <div class="tx"><b>멀티기능으로 접속하기</b><span>윈도우10 스타일 화면 · 음악(MP3) 등 다양한 기능</span></div>
+    </a>
+    <a class="card cp" id="cv" href="videos.html" data-k="v">
+      <span class="tg">// GAME VIDEO</span>
+      <svg viewBox="0 0 64 64"><rect x="6" y="12" width="52" height="38" rx="9"/><path d="M27 23v16l14-8z"/><path d="M18 57h28"/></svg>
+      <div class="tx"><b>게임동영상 보기</b><span>유튜브에 올린 내 게임 영상을 바로 보기</span></div>
+    </a>
+  </main>
+
+  <!-- 하단 메뉴 -->
+  <nav class="botnav" aria-label="하단 메뉴">
+    <button type="button" class="btn cp r js-wipe" id="bWipe" title="이 사이트에 쌓인 기록을 모두 지우고 처음 접속한 상태로 되돌립니다"><span id="bWipeT">데이터삭제</span></button>
+    <button type="button" class="btn cp" id="bCache"><span id="bCacheT">캐쉬삭제</span></button>
+    <button type="button" class="btn cp y" id="bHow">게임하는방법</button>
+    <button type="button" class="btn cp y" id="bHome">홈에 바로가기 추가하기</button>
+  </nav>
+
+  <label class="keep"><input type="checkbox" id="keep">다음부터 이 화면으로 바로 접속</label>
+  <a class="legacy" href="classic.html" id="bClassic" data-k="c">통합 화면 (윈도우·DOS 에뮬레이터)</a>
+</div>
+
+<div id="sh" aria-hidden="true"><div class="sheet cp" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh-h"><b id="shT"></b><button type="button" id="shX">닫기</button></div><div class="sh-s" id="shS"></div><div class="sh-b" id="shB"></div></div></div>
+<div id="guideOv" aria-hidden="true"><div class="gv"><iframe id="guideFr" title="안내" referrerpolicy="no-referrer"></iframe><div class="gv-f"><button type="button" class="gv-close" id="guideX">닫기</button></div></div></div>
+
+<script src="xmas.js?v=1"></script>
+<script>
+(function(){
+ XmasSnow.on(1);
+ var clk=document.getElementById('clk');
+ function tick(){var d=new Date();clk.textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+ tick();setInterval(tick,15000);
+})();
+</script>
+
+<script>
+(function(){
+var $=function(s){return document.querySelector(s)};
+var sh=$('#sh');
+function mk(c,t,tag){var e=document.createElement(tag||'div');if(c)e.className=c;if(t!=null)e.textContent=t;return e}
+function open_(title,sub,nodes){$('#shT').textContent=title;$('#shS').textContent=sub||'';$('#shS').style.display=sub?'':'none';var b=$('#shB');b.innerHTML='';nodes.forEach(function(n){b.appendChild(n)});b.scrollTop=0;sh.classList.add('on');sh.setAttribute('aria-hidden','false');$('#shX').focus()}
+function close_(){sh.classList.remove('on');sh.setAttribute('aria-hidden','true')}
+$('#shX').onclick=close_;
+sh.addEventListener('click',function(e){if(e.target===sh)close_()});
+addEventListener('keydown',function(e){if(e.key==='Escape')close_()});
+
+/* ---------- 공지사항 : INFO-WEB.TXT ---------- */
+var notice=null,SEEN='noticeSeen';
+function sig(t){return t.length+':'+t.slice(0,60)}
+function seen(){try{return localStorage.getItem(SEEN)}catch(e){return null}}
+function loadNotice(){
+ return fetch('INFO-WEB.TXT?t='+Date.now(),{cache:'no-store'}).then(function(r){
+  if(!r.ok)throw 0;
+  var lm=r.headers.get('last-modified');
+  return r.arrayBuffer().then(function(buf){
+   var t;try{t=new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch(e){t=new TextDecoder('euc-kr').decode(buf)}
+   t=t.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').trim();
+   return{text:t,date:lm?new Date(lm):null};
+  });
+ }).catch(function(){return{text:'',date:null}});
+}
+loadNotice().then(function(n){notice=n;if(n.text&&sig(n.text)!==seen())$('#bNotice').classList.add('new')});
+$('#bNotice').onclick=function(){
+ var go=function(n){
+  var nodes=[];
+  if(!n.text)nodes.push(mk('gc em','등록된 공지가 없습니다.'));
+  else n.text.split(/\n[ \t]*-{3,}[ \t]*\n/).forEach(function(ch){
+   ch=ch.trim();if(!ch)return;
+   var c=mk('gc'),i=ch.indexOf('\n');
+   if(i>0){c.appendChild(mk('',null,'h3')).textContent=ch.slice(0,i).trim();c.appendChild(document.createTextNode(ch.slice(i+1).trim()))}
+   else c.textContent=ch;
+   nodes.push(c);
+  });
+  var sub=n.date?'업데이트 '+n.date.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'}):'';
+  var eb=mk('ne-edit','✏️ 수정','button');eb.type='button';eb.onclick=neEdit;nodes.unshift(eb);
+  open_('공지사항',sub,nodes);
+  if(n.text){try{localStorage.setItem(SEEN,sig(n.text))}catch(e){}}
+  $('#bNotice').classList.remove('new');
+ };
+ if(notice)go(notice);else loadNotice().then(function(n){notice=n;go(n)});
+};
+
+/* ---------- 공지사항 수정 : GitHub 토큰으로 INFO-WEB.TXT 저장 ---------- */
+var NE={o:'youngho1206',r:'youngho1206.github.io',b:'main',p:'INFO-WEB.TXT'};
+function neTok(){try{return localStorage.getItem('gh_token')||''}catch(e){return''}}
+function neB64(s){var b=new TextEncoder().encode(s),o='';for(var i=0;i<b.length;i+=8192)o+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(o)}
+function neApi(t,m,path,body){return fetch('https://api.github.com/repos/'+NE.o+'/'+NE.r+path,{method:m,cache:'no-store',headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+t,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined})}
+async function neSave(text,t){
+ var rr=await neApi(t,'GET',''),rj=await rr.json();
+ if(rr.status===401)throw new Error('토큰이 올바르지 않습니다');
+ if(!rr.ok)throw new Error('저장소를 확인할 수 없습니다 ('+rr.status+')');
+ if(rj.permissions&&rj.permissions.push===false)throw new Error('이 저장소에 쓰기 권한이 없는 토큰입니다');
+ for(var n=0;n<3;n++){
+  var fr=await neApi(t,'GET','/contents/'+NE.p+'?ref='+NE.b),sha;
+  if(fr.ok)sha=(await fr.json()).sha;else if(fr.status!==404)throw new Error('공지 파일을 읽지 못했습니다 ('+fr.status+')');
+  var pr=await neApi(t,'PUT','/contents/'+NE.p,{message:'공지사항 수정',content:neB64(text),sha:sha,branch:NE.b});
+  if(pr.ok)return;
+  if(pr.status===409||pr.status===422){await new Promise(function(r){setTimeout(r,600)});continue}
+  if(pr.status===403||pr.status===404)throw new Error('쓰기 권한이 없습니다. 토큰에 Contents 쓰기 권한이 있는지 확인하세요');
+  throw new Error('저장에 실패했습니다 ('+pr.status+')');
+ }
+ throw new Error('동시에 수정되어 실패했습니다. 다시 시도해 주세요');
+}
+function neEdit(){
+ var ta=mk('ne-ta',null,'textarea');ta.value=(notice&&notice.text)||'';ta.rows=14;ta.spellcheck=false;
+ var hint=mk('ne-h','공지가 여러 개면 사이에 --- 한 줄을 넣어 나눕니다. 각 공지의 첫 줄이 제목으로 보입니다.');
+ var tk=mk('ne-in',null,'input');tk.type='password';tk.placeholder='GitHub 토큰 (ghp_… / github_pat_…)';tk.value=neTok();tk.autocomplete='off';
+ var lb=mk('ne-c',null,'label'),cb=document.createElement('input');cb.type='checkbox';cb.checked=!!neTok();lb.appendChild(cb);lb.appendChild(document.createTextNode(' 이 기기에 토큰 기억하기'));
+ var msg=mk('ne-m'),row=mk('ne-r'),sv=mk('ne-b ok','저장','button'),cn=mk('ne-b','취소','button');
+ sv.type=cn.type='button';row.appendChild(sv);row.appendChild(cn);
+ var help=mk('ne-h','※ 구글 계정으로는 GitHub에 직접 저장할 수 없어 GitHub 토큰으로 저장합니다. 만들기: GitHub → Settings → Developer settings → Personal access tokens → 이 저장소(youngho1206.github.io)의 Contents "Read and write" 권한.');
+ open_('공지사항 수정','',[ta,hint,tk,lb,msg,row,help]);
+ cn.onclick=function(){$('#bNotice').onclick()};
+ sv.onclick=async function(){
+  var t=tk.value.trim(),txt=ta.value.replace(/\r\n?/g,'\n').trim();
+  if(!txt){msg.textContent='공지 내용을 입력해 주세요';return}
+  if(!t){msg.textContent='GitHub 토큰을 입력해 주세요';return}
+  sv.disabled=true;sv.textContent='저장 중…';msg.textContent='';
+  try{
+   await neSave(txt+'\n',t);
+   try{if(cb.checked)localStorage.setItem('gh_token',t);else localStorage.removeItem('gh_token')}catch(e){}
+   notice={text:txt,date:new Date()};try{localStorage.setItem(SEEN,sig(txt))}catch(e){}
+   $('#bNotice').onclick();
+   $('#shS').textContent='저장되었습니다 · 사이트 반영까지 1~2분 걸릴 수 있어요';$('#shS').style.display='';
+  }catch(e){msg.textContent=e.message;sv.disabled=false;sv.textContent='저장'}
+ };
+}
+
+/* ---------- 앱 설치 / 홈 바로가기 ---------- */
+var dip=null,ua=navigator.userAgent;
+var ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+var android=/Android/.test(ua);
+var macSafari=!ios&&/Macintosh/.test(ua)&&/Safari/.test(ua)&&!/Chrome|Chromium|Edg|OPR|Firefox/.test(ua);
+var standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+if(standalone)$('#bInstall').style.display='none';
+var samsung=/SamsungBrowser/.test(ua),DKEY='instDismissed',bn=$('#instBn');
+function dismissed(){try{var t=+localStorage.getItem(DKEY)||0;return Date.now()-t<3*864e5}catch(e){return false}}
+function hideBn(remember){bn.classList.remove('on');if(remember){try{localStorage.setItem(DKEY,String(Date.now()))}catch(e){}}}
+function showBn(){
+ if(standalone||dismissed()||bn.classList.contains('on'))return;
+ if(ios)$('#instSub').textContent='공유 버튼 → “홈 화면에 추가”로 앱처럼 설치할 수 있어요';
+ bn.classList.add('on');
+}
+addEventListener('beforeinstallprompt',function(e){e.preventDefault();dip=e;setTimeout(showBn,1200)});
+addEventListener('appinstalled',function(){$('#bInstall').style.display='none';dip=null;hideBn(false)});
+$('#instNo').onclick=function(){hideBn(true)};
+$('#instGo').onclick=function(){hideBn(false);$('#bInstall').click()};
+setTimeout(function(){if(!dip&&(ios||samsung))showBn()},2500);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+function steps(list,foot){
+ var c=mk('gc'),ol=document.createElement('ol');
+ list.forEach(function(t){ol.appendChild(mk('',t,'li'))});
+ c.appendChild(ol);if(foot)c.appendChild(mk('',foot,'small'));return c;
+}
+$('#bInstall').onclick=function(){
+ if(dip){var d=dip;dip=null;d.prompt();return}
+ if(ios)open_('앱 설치하기','아이폰 · 아이패드',[steps(['Safari로 이 페이지를 엽니다.','화면 아래(또는 위)의 공유 버튼을 누릅니다.','“홈 화면에 추가”를 선택합니다.','오른쪽 위의 “추가”를 누르면 홈 화면에 앱이 생깁니다.'],'다른 브라우저에서는 보이지 않을 수 있어요. Safari에서 열어 주세요.')]);
+ else if(macSafari)open_('앱 설치하기','Mac · Safari',[steps(['메뉴 막대에서 “파일”을 엽니다.','“Dock에 추가”를 선택합니다.','이름을 확인하고 “추가”를 누릅니다.'])]);
+ else open_('앱 설치하기','PC · 안드로이드',[steps(['주소창 오른쪽의 설치 아이콘을 누릅니다.','아이콘이 없으면 브라우저 메뉴(⋮)를 엽니다.','“앱 설치” 또는 “홈 화면에 추가”를 선택합니다.'],'Chrome, Edge, 삼성 인터넷에서 설치할 수 있어요. PC용 Firefox는 앱 설치를 지원하지 않습니다.')]);
+};
+$('#bHome').onclick=function(){
+ if(ios)open_('홈에 바로가기 추가하기','아이폰 · 아이패드',[steps(['Safari로 이 페이지를 엽니다.','공유 버튼(□↑)을 누릅니다.','“홈 화면에 추가”를 선택합니다.','오른쪽 위의 “추가”를 누르면 홈 화면에 바로가기가 생깁니다.'])]);
+ else if(android)open_('홈에 바로가기 추가하기','안드로이드',[steps(['Chrome(또는 삼성 인터넷)으로 이 페이지를 엽니다.','오른쪽 위(또는 아래)의 메뉴(⋮ / ≡)를 누릅니다.','“홈 화면에 추가”를 선택합니다.','“추가”를 누르면 홈 화면에 바로가기가 생깁니다.'])]);
+ else open_('홈에 바로가기 추가하기','PC',[steps(['Chrome 또는 Edge로 이 페이지를 엽니다.','오른쪽 위 메뉴(⋮ / …)에서 “바로가기 만들기”(Chrome) 또는 “앱 → 이 사이트를 앱으로 설치”(Edge)를 선택합니다.','Chrome은 “창으로 열기”를 체크하면 독립된 창으로 열립니다.','바탕화면·작업표시줄에 생긴 바로가기를 사용하세요.'],'메뉴 이름은 브라우저 버전에 따라 조금 다를 수 있어요.')]);
+};
+
+/* ---------- 게임하는 방법 ---------- */
+$('#bHow').onclick=function(){
+ open_('게임하는 방법','HOW TO PLAY',[steps([
+  '위에서 내 기기에 맞는 버전(휴대폰 / 컴퓨터(PC)/태블릿)을 고릅니다.',
+  '원하는 게임기종을 선택합니다.',
+  '‘게임 파일 불러오기’로 내가 가진 롬파일(zip 포함)을 선택하거나 화면에 끌어다 놓습니다.',
+  '게임이 시작되면 화면의 버튼으로 조작하고, 저장·화면캡처·전체화면 기능을 이용합니다.',
+  '게임을 저장했다면 ‘세이브파일저장방법’을 눌러 백업하는 방법을 확인하세요.'
+ ],'롬파일은 본인이 합법적으로 소유한 게임만 사용하세요. 이 사이트는 게임 파일을 제공하지 않습니다.')]);
+};
+
+/* ---------- 어플설치방법 · 세이브파일저장방법 ---------- */
+var ov=$('#guideOv'),fr=$('#guideFr');
+function gOpen(u,t){if(fr.getAttribute('src')!==u){fr.src=u}fr.title=t;ov.classList.add('on');ov.setAttribute('aria-hidden','false');$('#guideX').focus()}
+function gClose(){ov.classList.remove('on');ov.setAttribute('aria-hidden','true')}
+$('#bGuide').onclick=function(){gOpen('https://youngho1206.tistory.com/m/1','어플 설치 방법')};
+$('#bSave').onclick=function(){gOpen('https://youngho1206.tistory.com/2','세이브파일 저장 방법')};
+$('#guideX').onclick=gClose;
+addEventListener('keydown',function(e){if(e.key==='Escape')gClose()});
+
+/* ---------- 접속 버전 선택 ---------- */
+$((innerWidth>=700?'#cold':'#cm')).classList.add('rec-on');
+document.querySelectorAll('.card[data-k],#bClassic[data-k]').forEach(function(a){
+ a.addEventListener('click',function(e){e.preventDefault();go(a.dataset.k,document.getElementById('keep').checked)});
+});
+})();
+</script>
+
+<script>
+/* 캐쉬지우기: 이 사이트의 임시 저장 파일(캐쉬)을 모두 지우고 최신 버전으로 다시 불러옵니다. (업데이트 반영용)
+   내 설정·메모·사진 토큰 같은 저장 데이터(localStorage)는 지우지 않습니다. */
+(function(){
+ var btn=document.getElementById('bCache');if(!btn)return;
+ var lab=document.getElementById('bCacheT'),busy=false;
+ var FILES=['./','index.html','index-select.html','mobile.html','dex.html','emulator.html','pcthemes/themes.json','classic.html','index-1.html','winemu.html','dosplayer.html','dos.html','emuhost.html',
+  'gallery.html','tablet.html','videos.html','videos/videos.json','map.html','memo.html','calc.html','life.html','search.html',
+  'retro.js','retro.css','perf.css','cutegame.css','mamegame.js','arcade.js','arcade.css','dock.js','emudata.js','theme.js','themeadd.js','pctheme.js','pcplus.js',
+  'manifest.webmanifest','sw.js','INFO-WEB.TXT','MAME/games.json','pctheme/data.json','pctheme/retro.js','pctheme/retro.css',
+  'webthema/themes.json','webthema/names.json','webthema/base-style.css','webthema/thema01.html','webthema/thema02.html','webthema/thema05.html','xmas.css','xmas.js'];
+ function urls(){
+  var u={};
+  FILES.forEach(function(f){u[f]=1});
+  document.querySelectorAll('link[href],script[src]').forEach(function(e){
+   var v=e.getAttribute('href')||e.getAttribute('src');
+   if(v&&!/^(https?:)?\/\//.test(v)&&v.indexOf('data:')!==0)u[v]=1;   // ?v=1 이 붙은 주소까지 포함
+  });
+  return Object.keys(u);
+ }
+ function say(t){lab.textContent=t}
+ btn.addEventListener('click',function(){
+  if(busy)return;
+  if(!confirm('이 사이트의 저장된 캐쉬(임시 파일)를 모두 지우고\n최신 버전으로 새로 불러옵니다.\n\n설정·메모 등 내 데이터는 지워지지 않습니다.\n계속할까요?'))return;
+  busy=true;btn.disabled=true;say('지우는 중…');
+  var jobs=[];
+  /* 1) 앱(서비스워커) 캐쉬 삭제 */
+  if(window.caches&&caches.keys)jobs.push(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}));
+  /* 2) 서비스워커 등록 해제 (새로 접속하면 최신 버전으로 다시 등록됩니다) */
+  if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)jobs.push(navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister()}))}));
+  /* 3) 브라우저에 남아 있는 파일 캐쉬 갱신 (cache:'reload' = 서버에서 새로 받아 덮어쓰기) */
+  jobs.push(Promise.all(urls().map(function(u){return fetch(u,{cache:'reload',credentials:'same-origin'}).catch(function(){})})));
+  Promise.all(jobs.map(function(p){return p.catch(function(){})})).then(function(){
+   say('완료! 새로 불러옵니다');
+   setTimeout(function(){location.reload()},700);
+  });
+ });
+})();
+</script>
+<script>
+/* 데이터삭제: 이 사이트에 쌓인 기록(설정·메모·저장파일·게임 세이브·토큰 등)을 모두 지우고, 처음 접속한 상태로 되돌립니다. (캐쉬지우기와 별개) */
+(function(){
+ if(window.__wipeBound)return;window.__wipeBound=true;
+ var busy=false;
+ var KNOWN_DB=['dosweb','EmulatorJS-roms','EmulatorJS-bios','EmulatorJS-core','EmulatorJS-states','/data/saves','/home/web_user/retroarch/userdata'];
+ function delDB(n){return new Promise(function(res){try{var q=indexedDB.deleteDatabase(n);q.onsuccess=q.onerror=q.onblocked=function(){res()};setTimeout(res,1500)}catch(e){res()}})}
+ function wipeDBs(){
+  if(!window.indexedDB)return Promise.resolve();
+  var names={};KNOWN_DB.forEach(function(n){names[n]=1});
+  var p=(indexedDB.databases?indexedDB.databases().catch(function(){return[]}):Promise.resolve([]));
+  return p.then(function(list){
+   (list||[]).forEach(function(d){if(d&&d.name)names[d.name]=1});
+   return Promise.all(Object.keys(names).map(delDB));
+  });
+ }
+ function wipeCookies(){
+  try{
+   var dir=location.pathname.replace(/[^\/]*$/,'');
+   document.cookie.split(';').forEach(function(c){
+    var n=c.split('=')[0].replace(/^\s+|\s+$/g,'');if(!n)return;
+    ['/',dir].forEach(function(p){document.cookie=n+'=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path='+p});
+   });
+  }catch(e){}
+ }
+ function run(b){
+  if(busy)return;
+  if(!confirm('이 사이트에 쌓인 기록을 모두 삭제합니다.\n\n지워지는 항목:\n- 설정·테마·화면 선택 기록\n- 메모·일기 등 저장된 내 데이터\n- 게임스크린샷 연결(토큰) 정보\n- 게임 저장·불러오기 데이터\n- 캐쉬(임시 파일)\n\n삭제 후 처음 접속한 것처럼 첫 화면으로 돌아가며,\n지운 데이터는 되돌릴 수 없습니다.\n\n정말 삭제할까요?'))return;
+  busy=true;b.disabled=true;
+  var lab=b.querySelector('span')||b;lab.textContent='삭제 중…';
+  try{localStorage.clear()}catch(e){}
+  try{sessionStorage.clear()}catch(e){}
+  wipeCookies();
+  var jobs=[wipeDBs()];
+  if(window.caches&&caches.keys)jobs.push(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}));
+  if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)jobs.push(navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister()}))}));
+  Promise.all(jobs.map(function(p){return p.catch(function(){})})).then(function(){
+   try{localStorage.clear();sessionStorage.clear()}catch(e){}
+   lab.textContent='완료! 처음 화면으로 이동';
+   setTimeout(function(){location.replace(new URL('index.html',location.href).href)},800);
+  });
+ }
+ document.addEventListener('click',function(e){
+  var t=e.target&&e.target.closest?e.target:null;if(!t)return;
+  var c=t.closest('.js-wipe');if(c)run(c);
+ });
+})();
+</script>
+<script>
+/* 방문자 수: 무료 카운터 서비스 사용(1순위 abacus, 안 되면 counterapi). 같은 기기는 하루 1회만 집계합니다. */
+(function(){
+ var NS='youngho1206-emulator';
+ var d=new Date(),day=d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2);
+ var counted=false;try{counted=localStorage.getItem('visitDay3')===day}catch(e){}
+ var P=[
+  function(k,up){return 'https://abacus.jasoncameron.dev/'+(up?'hit':'get')+'/'+NS+'/'+k},
+  function(k,up){return 'https://api.counterapi.dev/v1/'+NS+'/'+k+(up?'/up':'')}
+ ];
+ function num(j){var n=j&&(j.value!=null?j.value:(j.count!=null?j.count:null));return n==null?NaN:Number(n)}
+ function req(i,k,up){return fetch(P[i](k,up),{cache:'no-store'}).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(function(j){var n=num(j);if(isNaN(n))throw 'fmt';return n})}
+ function hit(k){
+  var seq=Promise.reject();
+  [0,1].forEach(function(i){
+   seq=seq.catch(function(){return counted?req(i,k,false).catch(function(){return req(i,k,true)}):req(i,k,true)});
+  });
+  return seq;
+ }
+ function show(id,p){p.then(function(n){document.getElementById(id).textContent=n.toLocaleString('ko-KR')}).catch(function(){document.getElementById(id).textContent='-'})}
+ var pt=hit('d'+day),pa=hit('total');
+ show('vToday',pt);show('vTotal',pa);
+ Promise.all([pt,pa]).then(function(){try{localStorage.setItem('visitDay3',day)}catch(e){}}).catch(function(){});
+})();
+</script>
+<!-- DEVSTATUS:START -->
+<script>
+(function(){
+'use strict';
+/* 장치 상태 바 + 절전 모드 */
+if(window.top!==window||window.__dsBar)return;
+window.__dsBar=1;
+var KEY='ds.saver';
+var isAndroid=/Android/i.test(navigator.userAgent||'');
+var S={bt:0,usb:0,otg:0,kb:0,ms:0,pad:0};
+var saver=false,autoSaver=false,batt=null,padIv=0;
+var origGP=navigator.getGamepads?navigator.getGamepads.bind(navigator):null;
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+
+var st=document.createElement('style');
+st.textContent=`
+#ds-bar{position:fixed;top:calc(env(safe-area-inset-top,0px) + var(--ds-top,3px));left:50%;transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:8px;padding:3px 10px;border-radius:12px;background:rgba(15,17,22,.8);color:#d8dde6;font:600 10.5px/1 system-ui,-apple-system,"Malgun Gothic",sans-serif;border:1px solid rgba(255,255,255,.14);-webkit-user-select:none;user-select:none;max-width:calc(100vw - 8px);white-space:nowrap;-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+#ds-bar .it{display:flex;align-items:center;gap:3px;padding:3px 0}
+#ds-bar .it[data-act]{cursor:pointer}
+#ds-bar i{width:7px;height:7px;border-radius:50%;background:#6b7280;display:block;flex:none}
+#ds-bar .off{opacity:.55}
+#ds-bar .on i{background:#2bdc5b;box-shadow:0 0 5px 1px rgba(43,220,91,.85)}
+#ds-sv{position:fixed;top:calc(env(safe-area-inset-top,0px) + var(--ds-sv-top,var(--ds-top,6px)));left:calc(env(safe-area-inset-left,0px) + 10px);z-index:2147483000;display:inline-flex;align-items:center;gap:7px;height:36px;margin:0;padding:0 16px 0 13px;border-radius:99px;border:2px solid #ffd0d6;background:linear-gradient(135deg,#ff8a96,#e8495b 70%);color:#fff;text-shadow:0 1px 2px rgba(120,20,40,.5);font:400 14.5px/1 Jua,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;letter-spacing:.03em;white-space:nowrap;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;box-sizing:border-box;box-shadow:0 4px 0 #a8263d,0 8px 18px rgba(232,73,91,.4);transition:transform .15s,box-shadow .15s,filter .2s}
+#ds-sv:hover{transform:translateY(-2px);filter:brightness(1.06);box-shadow:0 6px 0 #a8263d,0 12px 22px rgba(232,73,91,.45)}
+#ds-sv:active{transform:translateY(3px);box-shadow:0 1px 0 #a8263d}
+#ds-sv svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#ds-sv .st{font-size:12px;opacity:.9}
+#ds-sv.on{background:linear-gradient(135deg,#5fd3a0,#2f9e6e 70%);border-color:#c9f2de;text-shadow:0 1px 2px rgba(10,70,40,.5);box-shadow:0 4px 0 #1c6f4c,0 8px 18px rgba(47,158,110,.4)}
+#ds-sv.on:hover{box-shadow:0 6px 0 #1c6f4c,0 12px 22px rgba(47,158,110,.45)}
+#ds-sv.on:active{box-shadow:0 1px 0 #1c6f4c}
+#ds-sv:focus-visible{outline:3px solid #ffcf7d;outline-offset:3px}
+@media (max-width:560px){body{margin-top:42px}#ds-bar{top:calc(env(safe-area-inset-top,0px) + var(--ds-top,3px) + 9px);left:auto;right:4px;transform:none;max-width:calc(100vw - 134px);overflow-x:auto;scrollbar-width:none;gap:6px;padding:3px 8px}#ds-bar::-webkit-scrollbar{display:none}}
+html.ds-saver #ds-bar .on i{box-shadow:none}
+#ds-bar .bat{width:17px;height:9px;border:1px solid #9aa3b2;border-radius:2px;position:relative;display:block;padding:0;box-sizing:border-box}
+#ds-bar .bat::after{content:"";position:absolute;right:-3px;top:2px;width:2px;height:3px;background:#9aa3b2;border-radius:0 1px 1px 0}
+#ds-bar .bat b{display:block;height:100%;width:0;background:#2bdc5b}
+#ds-toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 32px);left:50%;transform:translateX(-50%);z-index:2147483001;display:none;background:rgba(15,17,22,.92);color:#fff;font:600 12px/1.3 system-ui,-apple-system,"Malgun Gothic",sans-serif;padding:7px 12px;border-radius:10px;max-width:90vw;text-align:center}
+html.ds-saver *,html.ds-saver *::before,html.ds-saver *::after{animation-duration:.001s!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;text-shadow:none!important;scroll-behavior:auto!important}
+`;
+document.head.appendChild(st);
+
+var items=[['bt','BT','블루투스','pair'],['usb','USB','USB','wired'],['otg','OTG','OTG','wired'],['kb','⌨','키보드'],['ms','🖱','마우스'],['pad','🎮','게임패드']];
+var bar=document.createElement('div');
+bar.id='ds-bar';
+bar.innerHTML='<span class="it bw" title="배터리"><span class="bat"><b></b></span><span class="bp">--</span></span>'
+ +items.map(function(a){return '<span class="it off" data-k="'+a[0]+'"'+(a[3]?' data-act="'+a[3]+'"':'')+'><i></i><span>'+a[1]+'</span></span>'}).join('');
+document.body.appendChild(bar);
+var svb=document.createElement('button');svb.type='button';svb.id='ds-sv';
+svb.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-8.500 5-14 14-14 0 9-5.500 14-14 14z"/><path d="M5 19l7-7"/></svg><span>절전</span><span class="st">꺼짐</span>';
+document.body.appendChild(svb);
+var tt=document.createElement('div');tt.id='ds-toast';document.body.appendChild(tt);
+var sv=svb;
+function toast(m){tt.textContent=m;tt.style.display='block';clearTimeout(tt._t);tt._t=setTimeout(function(){tt.style.display='none'},2600)}
+
+function render(){
+  items.forEach(function(a){
+    var el=bar.querySelector('[data-k="'+a[0]+'"]'),on=!!S[a[0]];
+    el.classList.toggle('on',on);el.classList.toggle('off',!on);
+    el.title=a[2]+(on?' · 연결됨':' · 미연결')+(a[3]?' (탭하여 연결)':'');
+  });
+  sv.classList.toggle('on',saver);sv.setAttribute('aria-pressed',saver?'true':'false');sv.querySelector('.st').textContent=saver?'켜짐':'꺼짐';
+  sv.title='절전 모드 '+(saver?'켜짐':'꺼짐')+' (탭하여 전환)';
+}
+
+/* ---------- 배터리 ---------- */
+function paintBatt(){
+  var f=bar.querySelector('.bat b'),p=bar.querySelector('.bp'),w=bar.querySelector('.bw');
+  if(!batt){p.textContent='--';f.style.width='0';w.title='이 브라우저는 배터리 정보를 제공하지 않습니다';return}
+  var l=Math.round(batt.level*100);
+  f.style.width=l+'%';f.style.background=l<=20?'#ef4444':l<=50?'#f5b301':'#2bdc5b';
+  p.textContent=(batt.charging?'⚡':'')+l+'%';
+  w.title='배터리 '+l+'%'+(batt.charging?' · 충전 중':'');
+}
+function onBatt(){
+  paintBatt();
+  if(ls(KEY)||!batt)return; /* 사용자가 직접 정했으면 자동 전환 안 함 */
+  var low=batt.level<=0.2&&!batt.charging;
+  if(low&&!saver){autoSaver=true;setSaver(true);toast('배터리 20% 이하 · 절전 모드 켜짐')}
+  else if(!low&&autoSaver&&saver){autoSaver=false;setSaver(false)}
+}
+if(navigator.getBattery){
+  navigator.getBattery().then(function(b){
+    batt=b;['levelchange','chargingchange'].forEach(function(e){b.addEventListener(e,onBatt)});onBatt();
+  }).catch(function(){});
+}
+
+/* ---------- 게임패드 ---------- */
+function scanPads(){
+  var c=0;
+  try{var g=origGP?origGP():[];for(var i=0;i<g.length;i++)if(g[i]&&g[i].connected)c++}catch(e){}
+  var v=c>0?1:0;if(S.pad!==v){S.pad=v;render()}
+}
+addEventListener('gamepadconnected',scanPads);
+addEventListener('gamepaddisconnected',function(){setTimeout(scanPads,50)});
+
+/* 절전 모드: 게임패드가 없으면 getGamepads()를 호출해도 장치 조회를 하지 않음 */
+function patchGP(w){
+  try{
+    var n=w.navigator;if(!n||!n.getGamepads||n.__dsP)return;
+    var o=(w===window&&origGP)?origGP:n.getGamepads.bind(n);
+    n.__dsP=1;
+    Object.defineProperty(n,'getGamepads',{configurable:true,writable:true,value:function(){
+      return (saver&&!S.pad)?[null,null,null,null]:o();
+    }});
+  }catch(e){}
+}
+function patchAll(){
+  patchGP(window);
+  var f=document.querySelectorAll('iframe');
+  for(var i=0;i<f.length;i++){try{patchGP(f[i].contentWindow)}catch(e){}}
+}
+document.addEventListener('load',function(e){
+  var t=e.target;if(t&&t.tagName==='IFRAME'){try{patchGP(t.contentWindow)}catch(x){}}
+},true);
+
+/* 절전 모드: 화면에 상호작용 없는 장식 캔버스(눈, 배경효과 등) 숨김 */
+function hideDeco(on){
+  var c=document.querySelectorAll('canvas');
+  for(var i=0;i<c.length;i++){
+    var el=c[i];
+    if(on){
+      if(el.dataset.dsH)continue;
+      var cs=getComputedStyle(el);
+      if(cs.position==='fixed'&&cs.pointerEvents==='none'){el.dataset.dsH=el.style.display||'-';el.style.display='none'}
+    }else if(el.dataset.dsH){
+      el.style.display=el.dataset.dsH==='-'?'':el.dataset.dsH;delete el.dataset.dsH;
+    }
+  }
+}
+function padPoll(){
+  if(!saver&&!padIv&&origGP){padIv=setInterval(scanPads,2500)}
+  else if(saver&&padIv){clearInterval(padIv);padIv=0}
+}
+function setSaver(v){
+  saver=!!v;
+  document.documentElement.classList.toggle('ds-saver',saver);
+  patchAll();hideDeco(saver);padPoll();render();
+}
+
+/* ---------- 마우스 / 키보드 ---------- */
+var mq=window.matchMedia?matchMedia('(any-pointer:fine) and (any-hover:hover)'):null;
+function msUpd(){S.ms=(mq&&mq.matches)||S.msSeen?1:0;render()}
+if(mq){if(mq.addEventListener)mq.addEventListener('change',msUpd);else if(mq.addListener)mq.addListener(msUpd)}
+function msSeen(e){
+  if(e.pointerType==='mouse'&&e.isTrusted){S.msSeen=1;removeEventListener('pointermove',msSeen,true);msUpd()}
+}
+addEventListener('pointermove',msSeen,true);
+
+var kbT=0,kbLast=0;
+addEventListener('keydown',function(e){
+  if(!e.isTrusted||!e.code||e.key==='Unidentified')return; /* 화면 키보드 제외 */
+  if(!S.kb){S.kb=1;render()}
+  var t=Date.now();
+  if(t-kbLast>1500){kbLast=t;clearTimeout(kbT);kbT=setTimeout(function(){S.kb=0;render()},300000)}
+},true);
+
+/* ---------- USB / OTG / HID ---------- */
+function refreshWired(){
+  var n=0,p=[];
+  try{if(navigator.usb)p.push(navigator.usb.getDevices().then(function(l){n+=l.length},function(){}))}catch(e){}
+  try{if(navigator.hid)p.push(navigator.hid.getDevices().then(function(l){n+=l.length},function(){}))}catch(e){}
+  Promise.all(p).then(function(){S.usb=(!isAndroid&&n>0)?1:0;S.otg=(isAndroid&&n>0)?1:0;render()});
+}
+['usb','hid'].forEach(function(k){
+  try{if(navigator[k]){navigator[k].addEventListener('connect',refreshWired);navigator[k].addEventListener('disconnect',refreshWired)}}catch(e){}
+});
+async function wiredPair(){
+  try{
+    if(navigator.usb)await navigator.usb.requestDevice({filters:[]});
+    else if(navigator.hid)await navigator.hid.requestDevice({filters:[]});
+    else{toast('이 브라우저는 USB/OTG 연결을 지원하지 않습니다');return}
+  }catch(e){if(!e||e.name!=='NotFoundError')toast('USB/OTG 연결 실패')}
+  refreshWired();
+}
+
+/* ---------- 블루투스 ---------- */
+var btDevs=[];
+function btRefresh(){
+  var c=0;btDevs.forEach(function(d){if(d.gatt&&d.gatt.connected)c++});
+  S.bt=c>0?1:0;render();
+}
+function btAdd(d){if(btDevs.indexOf(d)<0){btDevs.push(d);d.addEventListener('gattserverdisconnected',btRefresh)}}
+if(navigator.bluetooth&&navigator.bluetooth.getDevices){
+  navigator.bluetooth.getDevices().then(function(l){l.forEach(btAdd);btRefresh()}).catch(function(){});
+}
+async function btPair(){
+  if(!navigator.bluetooth){toast('이 브라우저는 블루투스 연결을 지원하지 않습니다');return}
+  try{
+    var d=await navigator.bluetooth.requestDevice({acceptAllDevices:true});
+    btAdd(d);if(d.gatt)await d.gatt.connect();
+    btRefresh();toast((d.name||'블루투스 장치')+' 연결됨');
+  }catch(e){if(!e||e.name!=='NotFoundError')toast('블루투스 연결 실패')}
+}
+
+/* ---------- 클릭 ---------- */
+bar.addEventListener('click',function(e){
+  var t=e.target.closest?e.target.closest('[data-act]'):null;if(!t)return;
+  var a=t.getAttribute('data-act');
+  if(a==='sv'){var v=!saver;ls(KEY,v?'on':'off');autoSaver=false;setSaver(v);toast(v?'절전 모드 켜짐 · 연결된 장치만 사용':'절전 모드 꺼짐')}
+  else if(a==='pair')btPair();
+  else if(a==='wired')wiredPair();
+});
+
+svb.addEventListener('click',function(){var v=!saver;ls(KEY,v?'on':'off');autoSaver=false;setSaver(v);toast(v?'절전 모드 켜짐 · 연결된 장치만 사용':'절전 모드 꺼짐')});
+
+/* ---------- 시작 ---------- */
+msUpd();refreshWired();scanPads();
+setSaver(ls(KEY)==='on');
+window.addEventListener('storage',function(e){if(e.key===KEY){autoSaver=false;setSaver(e.newValue==='on')}});
+})();
+</script>
+<!-- DEVSTATUS:END -->
+</body>
+</html>

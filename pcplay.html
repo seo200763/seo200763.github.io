@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05043d">
+<title>게임 실행 (PC · 태블릿)</title>
+<script src="auth.js"></script><script>Auth.guard()</script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#02021f;overflow:hidden;overscroll-behavior:none;font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;color:#fff}
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,#0d0b52,#02021f 75%);display:flex}
+#game{width:100%;height:100%}
+#top{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:99px;background:rgba(10,8,90,.82);border:1.5px solid #5865f0;backdrop-filter:blur(12px);box-shadow:0 6px 24px rgba(0,0,40,.6);transition:opacity .3s,transform .3s;max-width:calc(100vw - 20px)}
+#top.hide{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-14px)}
+#top button{height:36px;min-width:36px;padding:0 14px;border-radius:99px;border:0;background:rgba(80,80,220,.35);color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+#top button:hover{background:rgba(120,110,255,.6)}
+#top .t{padding:0 10px;font-size:14px;font-weight:700;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#top img{width:30px;height:30px;object-fit:contain}
+#ov{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:20px;background:url(assets/login-bg.jpg) center/cover}
+#ov::before{content:"";position:absolute;inset:0;background:rgba(3,3,40,.62)}
+#ov.off{display:none}
+.cd{position:relative;width:min(460px,100%);text-align:center;background:url(assets/panel-bg.jpg) center/cover;border:3px solid #6d6dff;border-radius:18px;box-shadow:0 0 34px rgba(110,100,255,.6);overflow:hidden}
+.cd .in{background:rgba(8,6,62,.82);padding:26px 22px}
+.cd img{width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 8px 12px rgba(0,0,30,.6))}.cd h2{margin:6px 0;font-size:20px}.cd p{margin:6px 0;font-size:14px;line-height:1.65;color:#d0d5ff;white-space:pre-line}
+.pb{height:14px;border-radius:9px;background:#0a0a50;border:1px solid #4a58f0;overflow:hidden;margin:14px 0 4px}.pb i{display:block;height:100%;width:0;background:linear-gradient(90deg,#a855f7,#3b82f6,#22d3ee);transition:width .2s}
+.b{display:inline-block;margin:10px 4px 0;padding:12px 24px;border-radius:99px;border:0;background:linear-gradient(90deg,#8b5cf6,#3b82f6);color:#fff;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.b.g{background:rgba(60,60,160,.7);border:1px solid #6b7bff}
+#keys{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;background:rgba(2,2,30,.7);backdrop-filter:blur(4px);padding:16px}
+#keys.on{display:flex}
+#keys .cd{text-align:left}#keys table{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}#keys td{padding:6px 4px;border-bottom:1px solid rgba(135,145,255,.25)}#keys td:last-child{color:#9ff0ff;font-family:ui-monospace,Consolas,monospace}
+#toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:rgba(8,6,80,.95);border:1px solid #6b7bff;border-radius:99px;padding:9px 18px;font-size:14px;z-index:60;display:none}
+@media(max-width:640px){#top .t,#top .hm{display:none}}
+</style>
+</head>
+<body>
+<div id="stage"><div id="game"></div></div>
+<div id="top">
+ <button id="back">‹ 목록</button><img id="si" alt=""><span class="t" id="ttl"></span>
+ <button id="bKeys">⌨ 키 안내</button><button id="bCore" style="display:none">🧩 코어</button><button id="bOpen" class="hm">📂 다른 파일</button><button id="bFs">⛶ 전체화면</button>
+</div>
+<div id="ov"><div class="cd"><div class="in"><img id="ovi" alt=""><h2 id="ovt">준비 중…</h2><div class="pb" id="pb"><i id="pi"></i></div><p id="ovm"></p><div id="ovb"></div></div></div></div>
+<div id="keys"><div class="cd"><div class="in"><h2>⌨ 기본 키보드 조작</h2>
+ <table><tr><td>방향키</td><td>↑ ↓ ← →</td></tr><tr><td>A 버튼 / B 버튼</td><td>Z / X</td></tr><tr><td>X 버튼 / Y 버튼</td><td>A / S</td></tr><tr><td>L / R</td><td>Q / E</td></tr><tr><td>시작(Start)</td><td>Enter</td></tr><tr><td>셀렉트(Select)</td><td>V</td></tr></table>
+ <p style="font-size:13px">USB·블루투스 게임패드는 연결하면 자동으로 인식돼요. 키 바꾸기·저장·불러오기·스크린샷·볼륨은 게임 화면 아래쪽 메뉴에서 할 수 있어요. 닌텐도 DS 는 마우스로 아래 화면을 눌러 조작합니다.</p>
+ <div style="text-align:center"><button class="b" id="kx">닫기</button></div></div></div></div>
+<input type="file" id="fi" hidden>
+<div id="toast"></div>
+<script src="gamehub.js"></script><script src="mamegame.js"></script><script src="loadgame.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(i){return document.getElementById(i)},H=Hub,q=new URLSearchParams(location.search);
+var sys=H.byId(q.get('sys')),started=false,watchT=0,idle=0,lastErr='';
+function toast(m){var t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display='none'},2200)}
+window.toast=toast;
+function back(){location.href='home.html#/'+(sys?'sys/'+sys.id:'')}
+$('back').onclick=back;
+if(!sys||sys.os){back();return}
+var list=[sys.core].concat(sys.alt||[]),ci=Math.max(0,Math.min(list.length-1,+q.get('ci')||0)),core=list[ci];
+$('si').src=$('ovi').src=sys.icon;$('ttl').textContent=sys.n;
+if(list.length>1)$('bCore').style.display='';
+function ov(t,m,pct,btns){
+ $('ov').classList.remove('off');$('ovt').textContent=t;$('ovm').textContent=m||'';
+ $('pb').style.display=pct==null?'none':'';if(pct!=null)$('pi').style.width=pct+'%';
+ var b=$('ovb');b.innerHTML='';(btns||[]).forEach(function(x){var e=document.createElement('button');e.className='b'+(x.g?' g':'');e.textContent=x.t;e.onclick=x.f;b.appendChild(e)});
+}
+function fail(msg,title){clearTimeout(watchT);ov(title||'게임을 시작하지 못했어요',msg,null,[{t:'다시 시도',f:function(){location.reload()}},{t:'목록으로',g:1,f:back}])}
+function pick(){ov('내 기기의 게임 파일','내 컴퓨터에 있는 '+sys.n+' 게임 파일을 선택하세요.\n형식: '+sys.ext,null,[{t:'📂 파일 선택',f:function(){$('fi').click()}},{t:'목록으로',g:1,f:back}])}
+$('fi').onchange=function(){var f=this.files[0];if(!f)return;if(started){location.reload();return}
+ ov('파일 준비 중…',f.name,40);(sys.id==='mame'?MG.prepare(f):Promise.resolve(f)).then(boot)};
+$('bOpen').onclick=function(){$('fi').click()};
+function nextCore(){var n=ci+1;if(n>=list.length)n=0;var u=new URL(location.href);u.searchParams.set('ci',n);location.replace(u.href)}
+$('bCore').onclick=function(){toast('다른 코어로 다시 시작합니다…');setTimeout(nextCore,300)};
+
+function boot(file){
+ var W=window,isPs=sys.id==='psx',name=file.name.replace(/\.[^.]+$/,'');
+ if(isPs){var bad=LoadGame.badFormat(file);if(bad){fail(bad,'파일 형식 확인');return}}
+ $('ttl').textContent=name;
+ ov('에뮬레이터 준비 중…',(isPs?'플레이스테이션은 시작까지 시간이 걸릴 수 있어요.\n':'')+name,65);
+ /* 아이패드 사파리(데스크톱 모드)는 '맥'으로 보여 터치 버튼이 안 뜸 → 아이패드로 알려줌 */
+ var UA=navigator.userAgent||'';
+ if(/Macintosh/.test(UA)&&(navigator.maxTouchPoints||0)>1){try{Object.defineProperty(navigator,'userAgent',{configurable:true,get:function(){return'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'}})}catch(e){}}
+ W.EJS_player='#game';W.EJS_core=core;W.EJS_gameName=name;W.EJS_gameUrl=file;W.EJS_pathtodata=H.EJS;
+ W.EJS_startOnLoaded=true;W.EJS_color=sys.a;W.EJS_language='ko-KR';
+ var opt={};
+ if(isPs)opt=LoadGame.psxOptions(0);                      /* PC: 고화질 쪽 기본 설정 */
+ if(/desmume|melonds/.test(core)){W.EJS_controlScheme='nds';opt={'desmume_pointer_type':'touch','melonds_touch_mode':'Touch'}}
+ W.EJS_defaultOptions=opt;
+ if(file.mgBios&&file.mgBios.length){W.EJS_biosUrl=file.mgBios[0].url;var ef={};file.mgBios.forEach(function(b){ef[b.name]=b.url});W.EJS_externalFiles=ef}
+ W.EJS_onGameStart=function(){started=true;clearTimeout(watchT);$('ov').classList.add('off');toast('게임 시작! 🎮  (⌨ 키 안내는 위쪽 버튼)');poke()};
+ if(typeof WebAssembly!=='object'){fail('이 브라우저는 WebAssembly 를 지원하지 않아요. 최신 Chrome / Edge / Safari 를 사용해 주세요.');return}
+ W.addEventListener('error',function(e){lastErr=(e&&e.message)||'';if(!started&&list.length>1&&/abort|wasm|WebAssembly|unreachable/i.test(lastErr)&&!/memory|RangeError/i.test(lastErr)){nextCore()}else if(!started&&/out of memory|RangeError|allocat/i.test(lastErr))fail('메모리가 부족해 이 게임을 열 수 없어요. 다른 탭을 닫고 다시 시도하거나 용량이 작은 게임을 선택해 보세요.\n('+lastErr.slice(0,80)+')','메모리 부족')});
+ LoadGame.watchError(W,function(){return!started},function(m){if(list.length>1&&ci+1<list.length)nextCore();else fail((isPs?LoadGame.explain():'게임 파일이 이 기종에 맞는지 확인해 주세요.')+'\n('+String(m).slice(0,80)+')','불러오기 실패')});
+ var s=document.createElement('script');s.src=H.EJS+'loader.js';
+ s.onerror=function(){fail('에뮬레이터 엔진을 불러오지 못했습니다. 인터넷 연결을 확인하세요.','연결 오류')};
+ document.body.appendChild(s);
+ watchT=setTimeout(function(){if(!started)fail((isPs?LoadGame.TOO_LONG+'\n':'게임 시작이 너무 오래 걸립니다.\n')+'게임 파일이 이 기종에 맞는지 확인하고, 용량이 작은 파일로 다시 시도해 보세요.'+(lastErr?'\n('+lastErr.slice(0,80)+')':''),'시작 지연')},isPs?LoadGame.waitMs(file.size):300000);
+}
+/* 상단 메뉴: 마우스를 움직이면 나타나고 3초 뒤 숨김 */
+function poke(){var t=$('top');t.classList.remove('hide');clearTimeout(idle);if(started)idle=setTimeout(function(){t.classList.add('hide')},3000)}
+['mousemove','touchstart','keydown'].forEach(function(e){document.addEventListener(e,function(ev){if(e==='mousemove'&&ev.clientY>90&&started&&$('top').classList.contains('hide'))return;poke()},{passive:true})});
+$('bKeys').onclick=function(){$('keys').classList.add('on')};$('kx').onclick=function(){$('keys').classList.remove('on')};
+$('bFs').onclick=function(){var d=document,e=d.documentElement;if(d.fullscreenElement){d.exitFullscreen()}else if(e.requestFullscreen){e.requestFullscreen()}else toast('이 브라우저는 전체화면을 지원하지 않아요')};
+function init(){
+ var f=q.get('f');
+ if(!f){pick();return}
+ $('ttl').textContent=f.replace(/\.[^.]+$/,'');
+ ov('게임 파일 내려받는 중…',f,0);
+ H.getRom(sys,q.get('d'),f,function(g,t){ov('게임 파일 내려받는 중…',H.fmtSize(g)+(t?' / '+H.fmtSize(t):''),t?Math.min(60,g/t*60):30)})
+  .then(boot).catch(function(e){fail(e.message+'\n파일 이름과 폴더('+sys.dir[0]+')를 확인해 주세요.','불러오기 실패')});
+}
+init();
+})();
+</script>
+</body>
+</html>
