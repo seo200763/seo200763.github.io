@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko" data-dev="pc">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#14185c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>게임 실행 · 영호의 게임에뮬레이터</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="ui/common.css">
+<link rel="stylesheet" href="ui/player.css">
+</head>
+<body>
+<div class="pl" id="pl">
+ <div class="pbar">
+  <button class="bk" id="bBack" aria-label="목록으로"><svg viewBox="0 0 24 24" class="ic"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <div class="t"><img id="tImg" alt=""><span id="tName"></span></div>
+  <button id="bKeys">⌨ 조작키 안내</button>
+  <button id="bSave" disabled>💾 상태저장</button>
+  <label>📥 상태불러오기<input type="file" id="bLoad" accept=".gsv,.state,.bin"></label>
+  <button id="bCore" style="display:none">🧩 코어</button>
+  <button id="bFs">⛶ 전체화면</button>
+ </div>
+ <div class="stage" id="stage">
+  <div id="game"></div>
+  <div class="ov" id="ovPick"><div class="ovc"><img id="pImg" alt=""><h2 id="pTitle"></h2><p>내 기기에 있는 게임 파일을 선택해 실행할 수 있어요.</p><div class="row"><label class="pick">📂 게임 파일 선택<input type="file" id="pFile"></label></div></div></div>
+  <div class="ov" id="ovLoad"><div class="ovc"><img id="lImg" alt=""><h2 id="lTitle">준비 중</h2><div class="pb"><i id="lBar"></i></div><p id="lLine">준비 중…</p><div class="row"><button class="gbtn" id="lCancel">취소</button></div></div></div>
+  <div class="ov" id="ovErr"><div class="ovc"><img id="eImg" alt=""><h2 id="eTitle">게임을 시작하지 못했어요</h2><p id="eMsg"></p><div class="row"><button class="pbtn" id="eRetry">다시 시도</button><button class="gbtn" id="eBack">목록으로</button></div></div></div>
+ </div>
+</div>
+<script src="ui/core.js"></script>
+<div class="modal" id="mKeys"><div class="mbox"><h3>PC · 태블릿 조작 안내</h3><ul>
+<li><b>키보드·게임패드</b> : 게임 화면 아래쪽 메뉴의 <b>⚙ 설정 → 컨트롤</b>에서 키 배치를 확인하고 바꿀 수 있어요. USB·블루투스 게임패드도 자동으로 인식돼요.</li>
+<li><b>태블릿(터치)</b> : 화면 위에 가상 버튼이 나타나요. 닌텐도 DS는 아래 화면을 직접 터치해 조작해요.</li>
+<li><b>상태저장/불러오기</b> : 위쪽 버튼으로 저장 파일(.GSV)을 내려받거나 불러올 수 있어요.</li>
+<li><b>전체화면</b> : 위쪽 ⛶ 버튼 또는 F11</li></ul><div class="row"><button class="pbtn" data-x>닫기</button></div></div></div>
+<script src="mamegame.js"></script>
+<script src="loadgame.js"></script>
+<script>
+(function(){
+'use strict';
+YH.guard();
+var $=function(i){return document.getElementById(i)},q=YH.qs;
+var S=YH.byId(q.get('sys')),P=q.get('p')||'',CI=+q.get('ci')||0;
+if(!S||S.kind){location.replace('home.html');return}
+var cores=[S.core].concat(S.alt||[]),isMame=!!S.mame,isPs=S.id==='psx';
+var started=false,cur=null,watchT=null,sfx=q.get('pc')==='1'?'&pc=1':'';
+['tImg','pImg','lImg','eImg'].forEach(function(i){$(i).src=S.img});
+$('tName').textContent=S.n;$('pTitle').textContent=S.n+' 게임 불러오기';
+document.documentElement.style.setProperty('--c',S.a);
+if(isMame||cores.length>1)$('bCore').style.display='';
+function back(){location.href='games.html?sys='+S.id+sfx}
+$('bBack').onclick=$('eBack').onclick=back;
+$('lCancel').onclick=back;
+$('bKeys').onclick=function(){$('mKeys').classList.add('on')};
+$('mKeys').onclick=function(e){if(e.target===this||e.target.closest('[data-x]'))this.classList.remove('on')};
+function show(id,on){$(id).classList.toggle('on',on!==false)}
+function setLoad(p,l,t){$('lBar').style.width=Math.max(2,Math.min(100,p))+'%';if(l)$('lLine').textContent=l;if(t)$('lTitle').textContent=t}
+function giveUp(msg,title){clearTimeout(watchT);try{LoadGame.stop()}catch(e){}show('ovLoad',false);$('eTitle').textContent=title||'게임을 시작하지 못했어요';$('eMsg').textContent=msg;show('ovErr')}
+$('eRetry').onclick=function(){location.reload()};
+$('bFs').onclick=function(){var e=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else(e.requestFullscreen||e.webkitRequestFullscreen||function(){}).call(e)};
+/* 태블릿(아이패드 데스크톱 모드)은 터치 조작버튼이 뜨도록 아이패드로 알려 줌 */
+var IPAD_UA='Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+function stamp(){var n=new Date(),p=function(v){return String(v).padStart(2,'0')};return p(n.getMonth()+1)+p(n.getDate())+p(n.getHours())+p(n.getMinutes())}
+$('bSave').onclick=function(){
+ try{
+  var st=EJS_emulator.gameManager.getState(),g=(document.title||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,14)||'GAME',name=S.s+g+'_'+stamp()+'.GSV';
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([st]));a.download=name;document.body.appendChild(a);a.click();a.remove();YH.toast('💾 저장됨: '+name);
+ }catch(e){YH.toast('게임이 시작된 뒤에 저장할 수 있어요')}
+};
+$('bLoad').onchange=function(){var f=this.files[0];this.value='';if(!f)return;f.arrayBuffer().then(function(b){try{EJS_emulator.gameManager.loadState(new Uint8Array(b));YH.toast('📥 불러옴: '+f.name)}catch(e){YH.toast('게임이 시작된 뒤에 불러올 수 있어요')}})};
+$('bCore').onclick=function(){var u=new URL(location.href);u.searchParams.set('ci',(CI+1)%cores.length);location.href=u.href};
+
+function launch(file){
+ cur=file;
+ if(isPs&&LoadGame.needUnzip(file)){setLoad(40,'압축 푸는 중…');show('ovLoad');LoadGame.unzip(file,function(p,l){try{setLoad(p,l)}catch(e){}}).then(launch);return}
+ if(isPs){var bad=LoadGame.badFormat(file);if(bad){giveUp(bad,'파일 형식 안내');return}}
+ var name=file.name.replace(/\.[^.]+$/,''),W=window,core=cores[CI%cores.length];
+ document.title=name+' · 영호의 게임에뮬레이터';$('tName').textContent=S.n+' · '+name;
+ setLoad(55,'에뮬레이터 엔진 다운로드 중…',S.n+' · '+name);show('ovLoad');show('ovPick',false);
+ if(isMame){$('bCore').textContent='🧩 '+MG.coreName(core);MG.hook(window)}
+ if(/iPad|Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1){try{Object.defineProperty(navigator,'userAgent',{configurable:true,get:function(){return IPAD_UA}})}catch(e){}}
+ W.EJS_player='#game';W.EJS_core=core;W.EJS_gameName=name;W.EJS_gameUrl=new File([file],file.name);
+ W.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';W.EJS_startOnLoaded=true;W.EJS_color=S.a;W.EJS_language='ko-KR';
+ if(/desmume|melonds/.test(core)){W.EJS_controlScheme='nds';W.EJS_defaultOptions={'desmume_pointer_type':'touch','melonds_touch_mode':'Touch'}}
+ if(file.mgBios&&file.mgBios.length){W.EJS_biosUrl=file.mgBios[0].url;var ef={};file.mgBios.forEach(function(b){ef[b.name]=b.url});W.EJS_externalFiles=ef}
+ /* PC 사양: PS1 은 다이나믹 리컴파일러 + 고음질 설정 */
+ if(core==='psx')W.EJS_defaultOptions={'pcsx_rearmed_drc':'enabled','pcsx_rearmed_frameskip_type':'disabled','pcsx_rearmed_show_bios_bootlogo':'disabled','pcsx_rearmed_spu_reverb':'enabled'};
+ W.EJS_onGameStart=function(){started=true;clearTimeout(watchT);try{LoadGame.stop()}catch(e){}$('bSave').disabled=false;setLoad(100,'게임 시작 완료');setTimeout(function(){show('ovLoad',false)},400);YH.toast('게임 시작! 🎮')};
+ var nextCore=function(m){
+  if(started)return;
+  if(CI+1<cores.length&&!/out of memory|RangeError/i.test(m)){var u=new URL(location.href);u.searchParams.set('ci',CI+1);sessionStorage.setItem('yh_cn','1');location.replace(u.href);return true}
+  giveUp('이 게임을 열 수 없어요. 게임 파일이 '+S.n+'용인지 확인해 주세요.\n('+String(m).slice(0,90)+')');
+ };
+ W.addEventListener('error',function(e){if(!started&&/abort|wasm|WebAssembly|runtime|unreachable|core|memory/i.test((e&&e.message)||''))nextCore(e.message)});
+ W.addEventListener('unhandledrejection',function(e){var r=e&&e.reason,m=(r&&(r.message||r))||'';if(!started&&/abort|wasm|WebAssembly|core|memory/i.test(m))nextCore(m)});
+ var s=document.createElement('script');s.src=W.EJS_pathtodata+'loader.js';
+ s.onload=function(){if(!started)setLoad(75,'게임 코어 준비 중…')};
+ s.onerror=function(){giveUp('에뮬레이터 엔진을 불러오지 못했어요. 인터넷 연결을 확인하세요.','연결 오류')};
+ document.body.appendChild(s);
+ try{if(LoadGame.has(S.id))LoadGame.start($('stage'))}catch(e){}
+ watchT=setTimeout(function(){if(!started)giveUp((isPs?LoadGame.TOO_LONG+'\n':'')+'게임 시작이 너무 오래 걸립니다. 게임 파일이 이 기종에 맞는지 확인해 주세요.','시작 지연')},isPs?LoadGame.waitMs(file.size):300000);
+}
+function prep(blob,name){var f=new File([blob],name,{type:blob.type||'application/octet-stream'});return isMame?MG.prepare(f):Promise.resolve(f)}
+if(P){
+ var name=decodeURIComponent(P.split('/').pop());
+ setLoad(5,'롬 내려받는 중…',S.n+' · '+YH.base(name));show('ovLoad');
+ YH.fetchBlob(P.split('/').map(function(x,i){return i?encodeURIComponent(decodeURIComponent(x)):x}).join('/'),function(g,t){setLoad(t?Math.min(50,g/t*50):20,'롬 내려받는 중… '+YH.fmt(g)+(t?' / '+YH.fmt(t):''))})
+  .then(function(b){return prep(b,name)}).then(launch)
+  .catch(function(e){giveUp((e&&e.message)||'롬을 불러오지 못했어요','롬 불러오기 실패')});
+}else show('ovPick');
+$('pFile').onchange=function(){var f=this.files[0];if(!f)return;setLoad(30,'파일 준비 중…');show('ovPick',false);show('ovLoad');prep(f,f.name).then(launch)};
+setInterval(function(){try{$('ovLoad').classList.toggle('mini',LoadGame.running())}catch(e){}},400);
+})();
+</script>
+</body>
+</html>

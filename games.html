@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko" data-dev="pc">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d33">
+<title>게임 목록 · 영호의 게임에뮬레이터</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="ui/common.css">
+<link rel="stylesheet" href="ui/pages.css">
+</head>
+<body>
+<header class="hd"><button class="back" onclick="history.length>1?history.back():location.href='home.html'" aria-label="뒤로"><svg viewBox="0 0 24 24" class="ic"><path d="M15 5l-7 7 7 7"/></svg></button><h1 id="ttl"></h1><span class="sp"></span><a class="gbtn loc" id="loc">📂 내 기기에서 열기</a><div class="sbox"><input id="q" type="search" placeholder="게임 검색" autocomplete="off"></div><button class="gbtn loc" id="ref" title="목록 새로고침">↻</button></header>
+<main class="pg"><p class="ct" id="ct">목록을 불러오는 중…</p><div class="gl" id="gl"></div><div class="tabpad"></div></main>
+<script src="ui/core.js"></script><script src="ui/shell.js"></script>
+<script>
+YH.guard();Shell.init('home');
+var s=YH.byId(YH.qs.get('sys'));
+if(!s||s.kind==='win'){location.replace('home.html');throw 0}
+var items=[],known=false,sfx=Shell.suffix().replace('?','&');
+document.getElementById('ttl').innerHTML='<img src="'+s.img+'" alt=""><span>'+YH.esc(s.n)+' <small>('+s.s+')</small></span>';
+document.title=s.n+' · 영호의 게임에뮬레이터';
+document.documentElement.style.setProperty('--c',s.a);
+var PL='<svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>';
+function render(){
+ var q=document.getElementById('q').value.trim().toLowerCase(),gl=document.getElementById('gl');
+ var rows=items.filter(function(g){return!q||(g.title+' '+g.file).toLowerCase().indexOf(q)>=0});
+ gl.innerHTML='';
+ document.getElementById('ct').textContent=items.length?('게임 '+rows.length+(rows.length!==items.length?' / '+items.length:'')+'개'):'';
+ if(!rows.length){
+  var e=document.createElement('div');e.className='empty';
+  e.innerHTML=items.length?'검색 결과가 없어요.':(known?'아직 올려 둔 게임이 없어요.<br>GitHub 저장소의 <code>ROMS/'+s.folders[0]+'/</code> 폴더에 게임 파일을 올리면 여기에 나타나요.<br>(올린 직후에는 몇 분 걸릴 수 있어요 · ↻ 로 새로고침)':'게임 목록을 불러오지 못했어요.<br>잠시 후 ↻ 를 눌러 다시 시도하거나, 위의 <b>내 기기에서 열기</b>를 이용하세요.');
+  gl.appendChild(e);return;
+ }
+ rows.forEach(function(g){
+  var key=s.id+'/'+g.p,d=document.createElement('div');d.className='gc';d.tabIndex=0;
+  d.innerHTML='<div class="th"><img src="'+s.img+'" alt=""></div><div class="tx"><b>'+YH.esc(g.title)+'</b><small>'+YH.esc(YH.ext(g.file).toUpperCase())+(g.size?' · '+YH.fmt(g.size):'')+'</small></div><button class="heart '+(YH.Fav.hasGame(key)?'on':'')+'" aria-label="즐겨찾기">'+YH.HEART+'</button><span class="pl">'+PL+'</span>';
+  function go(){location.href=YH.playUrl(s,g.p)}
+  d.onclick=function(e){if(e.target.closest('.heart'))return;go()};
+  d.onkeydown=function(e){if(e.key==='Enter')go()};
+  d.querySelector('.heart').onclick=function(e){e.stopPropagation();var on=YH.Fav.toggleGame({k:key,sys:s.id,p:g.p,t:g.title});this.classList.toggle('on',on);YH.toast(on?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요')};
+  gl.appendChild(d);
+ });
+}
+function load(force){
+ document.getElementById('ct').textContent='목록을 불러오는 중…';
+ YH.games(s,force).then(function(r){items=r.items;known=r.known;render()});
+}
+document.getElementById('q').oninput=render;
+document.getElementById('ref').onclick=function(){load(true)};
+document.getElementById('loc').onclick=function(){location.href=YH.playUrl(s,'')};
+load(false);
+</script>
+</body>
+</html>

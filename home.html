@@ -1,267 +1,74 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="purple">
+<html lang="ko" data-dev="pc">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#05043d">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/app-180.png">
+<meta name="theme-color" content="#0b0d33">
 <title>영호의 게임에뮬레이터</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
-<script src="auth.js"></script><script>Auth.guard()</script>
-<style>
-:root{--a1:#8b5cf6;--a2:#3b82f6;--a3:#22d3ee;--card:rgba(28,24,118,.58);--line:rgba(135,145,255,.38);--tx:#eef0ff;--mut:#aab2ee}
-html[data-theme=blue]{--a1:#3b82f6;--a2:#06b6d4;--a3:#67e8f9}
-html[data-theme=pink]{--a1:#ec4899;--a2:#8b5cf6;--a3:#f9a8d4}
-html[data-theme=green]{--a1:#10b981;--a2:#3b82f6;--a3:#6ee7b7}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{background:#02043a url(assets/bg-city.jpg) center bottom/100% auto no-repeat fixed}
-body{margin:0;min-height:100dvh;color:var(--tx);font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;display:flex;flex-direction:column;background:radial-gradient(1200px 500px at 50% -10%,rgba(90,70,230,.28),transparent 70%)}
-a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer}
-.grad{background:linear-gradient(90deg,var(--a1),var(--a2) 60%,var(--a3));-webkit-background-clip:text;background-clip:text;color:transparent}
-/* ---------- 상단 ---------- */
-.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:22px;padding:0 28px;height:66px;background:rgba(6,5,64,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.logo{display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;letter-spacing:-.5px;white-space:nowrap}
-.logo svg{width:44px;height:32px;flex:none}.logo b{background:linear-gradient(90deg,#a78bfa,#60a5fa 60%,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}
-.t-m{display:none}
-.nav{display:flex;gap:6px;margin-left:18px}
-.nav a,.nav button{display:flex;align-items:center;gap:7px;padding:10px 18px;border-radius:12px;border:0;background:none;font-weight:700;font-size:15px;color:#dfe3ff;transition:.18s}
-.nav a:hover,.nav button:hover{background:rgba(120,120,255,.18)}
-.nav a.on{background:linear-gradient(180deg,var(--a1),var(--a2));box-shadow:0 4px 18px rgba(100,90,255,.45);color:#fff}
-.sbox{margin-left:auto;display:flex;align-items:center;width:min(300px,28vw);height:42px;border:1.5px solid var(--line);border-radius:99px;background:rgba(10,8,80,.6);padding:0 6px 0 18px}
-.sbox input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font-weight:500;font-size:14px;font-family:inherit}
-.sbox input::placeholder{color:#8f99e6}.sbox button{border:0;background:none;padding:6px 10px;font-size:16px}
-.out{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);background:rgba(10,8,80,.6);font-size:16px}
-/* ---------- 본문 ---------- */
-main{flex:1;width:100%;max-width:1500px;margin:0 auto;padding:0 28px 40px}
-.hero{margin:0 -28px;position:relative;border-bottom:1px solid var(--line)}
-.hero img{display:block;width:100%;height:auto}
-.hero .hot{position:absolute;left:4%;top:74%;width:17%;height:21%;border-radius:99px}
-.hero .hot:focus-visible{outline:3px solid #fff}
-.sec{display:flex;align-items:center;gap:12px;margin:26px 0 16px;font-size:19px;font-weight:900}
-.sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
-.sec .more{order:3;font-size:13px;font-weight:500;color:var(--mut)}
-.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
-.c{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;aspect-ratio:1/.92;padding:14px 10px 12px;border-radius:18px;background:linear-gradient(160deg,rgba(60,50,190,.6),rgba(18,14,96,.7));border:1.5px solid var(--line);text-align:center;transition:.22s;overflow:hidden}
-.c::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--c) 38%,transparent),transparent 65%);opacity:.55;transition:.22s}
-.c:hover{transform:translateY(-5px);border-color:#a9b4ff;box-shadow:0 10px 30px rgba(90,80,255,.45)}.c:hover::before{opacity:1}
-.c img{position:relative;width:62%;height:auto;aspect-ratio:1;object-fit:contain;margin-bottom:auto;filter:drop-shadow(0 8px 10px rgba(0,0,30,.55));transition:.22s}.c:hover img{transform:scale(1.08) rotate(-2deg)}
-.c b{position:relative;font-size:15px;line-height:1.25}.c small{position:relative;color:var(--mut);font-size:12.5px}
-.c .hb{position:absolute;right:8px;bottom:8px;z-index:2;width:30px;height:30px;border:0;background:none;font-size:19px;color:#a9b2ff;transition:.15s}
-.c .hb.on{color:#ff5d8f}.c .hb:hover{transform:scale(1.2)}
-.c .go{display:none}
-.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
-.q{display:flex;align-items:center;gap:16px;padding:18px 22px;border-radius:16px;background:var(--card);border:1.5px solid var(--line);transition:.2s}
-.q:hover{border-color:#a9b4ff;transform:translateY(-3px)}.q i{font-style:normal;font-size:30px}.q div{flex:1}.q b{display:block;font-size:17px}.q small{color:var(--mut)}.q em{font-style:normal;font-size:12px;color:var(--mut)}
-.q span{font-size:20px;color:var(--a3)}
-/* ---------- 공통 화면 ---------- */
-.pg{padding-top:24px}.pg h1{font-size:24px;margin:0 0 6px}.pg>p{color:var(--mut);margin:0 0 18px}
-.box{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:14px;line-height:1.75}
-.box h3{margin:0 0 8px;font-size:16px}.box code{background:rgba(0,0,40,.55);padding:2px 7px;border-radius:6px;font-size:13px;color:#b8f0ff}
-.box table{width:100%;border-collapse:collapse;font-size:14px}.box td,.box th{padding:8px 6px;border-bottom:1px solid rgba(135,145,255,.2);text-align:left}
-.bigin{display:flex;align-items:center;gap:12px;height:56px;padding:0 20px;border-radius:99px;background:rgba(10,8,80,.7);border:2px solid var(--line);margin-bottom:16px}
-.bigin:focus-within{border-color:#a9b4ff;box-shadow:0 0 0 4px rgba(120,130,255,.25)}
-.bigin input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font-weight:500;font-size:17px;font-family:inherit}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.chips button{padding:7px 15px;border-radius:99px;border:1.5px solid var(--line);background:rgba(20,18,100,.6)}.chips button:hover{border-color:#a9b4ff}
-.msg{text-align:center;color:var(--mut);padding:36px 10px;line-height:1.8}
-.lh{display:flex;align-items:center;gap:14px;margin:6px 0 16px;flex-wrap:wrap}
-.lh>img{width:64px;height:64px;object-fit:contain}.lh h1{margin:0;font-size:23px}.lh small{color:var(--mut)}.lh .sp{flex:1}
-.pill{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border-radius:99px;border:1.5px solid var(--line);background:rgba(20,18,100,.62);font-weight:700;font-size:14px}
-.pill:hover{border-color:#a9b4ff}.pill.pr{background:linear-gradient(90deg,var(--a1),var(--a2));border-color:transparent}
-.gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
-.g{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:var(--card);border:1.5px solid var(--line);transition:.18s}
-.g:hover{border-color:#a9b4ff;transform:translateY(-2px);background:rgba(50,44,160,.6)}
-.g .gi{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:linear-gradient(135deg,var(--a1),var(--a2));flex:none}
-.g .gt{flex:1;min-width:0}.g b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.g small{color:var(--mut);font-size:12px}
-.g .st{border:0;background:none;font-size:20px;color:#8f99e6}.g .st.on{color:#ffd34d}
-.g .pl{height:36px;padding:0 16px;border-radius:99px;background:linear-gradient(90deg,var(--a1),var(--a2));font-weight:700;font-size:14px;display:flex;align-items:center}
-.sw{display:flex;gap:10px;margin-top:6px}.sw button{width:42px;height:42px;border-radius:50%;border:3px solid transparent}.sw button.on{border-color:#fff}
-.set select{height:42px;padding:0 12px;border-radius:10px;background:rgba(10,8,80,.7);color:#fff;border:1.5px solid var(--line);font:inherit;margin-top:6px}
-.foot{height:74px;display:flex;align-items:center;gap:14px;padding:0 28px;background:linear-gradient(180deg,rgba(2,4,58,0),rgba(2,4,58,.72));font-size:14px;color:#dfe3ff}
-.foot b{font-size:16px}.foot i{font-style:normal;color:var(--mut)}.foot .rg{margin-left:auto;font:900 14px ui-monospace,Consolas,monospace;color:#8b7bff;letter-spacing:1px}
-.tabs{display:none}
-@media(max-width:1100px){.grid{grid-template-columns:repeat(4,1fr)}.nav a,.nav button{padding:9px 12px}.logo{font-size:19px}}
-@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}.quick{grid-template-columns:1fr}.sbox{display:none}.nav{margin-left:auto}}
-/* ---------- 모바일 (스마트폰) ---------- */
-@media(max-width:699px){
- html{background:linear-gradient(180deg,#07054f,#0a0a6e 55%,#08064a)}
- body{background:none}
- .top{height:60px;padding:0 16px;background:rgba(6,5,64,.92)}
- .t-pc,.nav,.sbox,.out,.logo b.t-pc{display:none}.t-m{display:inline}
- .logo{font-size:21px}.logo svg{width:40px;height:30px}
- main{padding:14px 14px 104px}
- .hero,.quick,.sec,.foot{display:none}
- .grid{grid-template-columns:1fr 1fr;gap:14px}
- .c{aspect-ratio:1/1.05;border-radius:24px;border:2px solid #7d8bff;background:linear-gradient(150deg,#5b34e8,#2a2aa8 55%,#1d1a7a);padding:12px 10px 14px;box-shadow:0 0 18px rgba(120,100,255,.35)}
- .c:nth-child(4n+2),.c:nth-child(4n+3){background:linear-gradient(150deg,#2b64f0,#2a2fb0 55%,#16145f)}
- .c:nth-child(odd){border-color:#c35bff}.c img{width:74%}.c b{font-size:14.5px;margin-top:4px;padding:0 4px}.c small{font-size:12.5px;color:#d6dbff;padding-bottom:2px}
- .c .hb{right:auto;left:6px;top:4px;bottom:auto}
- .c .go{display:grid;place-items:center;position:absolute;right:8px;top:8px;width:30px;height:30px;border-radius:50%;background:rgba(45,43,208,.9);font-size:20px;font-weight:900;line-height:1}
- .gl{grid-template-columns:1fr}.pg{padding-top:12px}.bigin{height:52px}
- .tabs{display:flex;position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:30;height:68px;border-radius:26px;background:rgba(10,8,86,.94);border:2px solid #4a58f0;backdrop-filter:blur(12px);box-shadow:0 0 22px rgba(80,90,255,.45)}
- .tabs a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12.5px;font-weight:700;color:#cfd4ff;position:relative}
- .tabs svg{width:28px;height:28px;fill:currentColor}.tabs a.on{color:#fff}.tabs a.on svg{filter:drop-shadow(0 0 7px #a78bfa)}
- .tabs a.on::after{content:"";position:absolute;bottom:5px;width:44px;height:3px;border-radius:3px;background:linear-gradient(90deg,#c35bff,#5b8cff)}
-}
-#toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:rgba(8,6,80,.95);border:1.5px solid var(--line);padding:10px 18px;border-radius:99px;font-size:14px;z-index:60;display:none}
-</style>
-<link rel="stylesheet" href="pixel.css">
+<link rel="stylesheet" href="ui/common.css">
+<link rel="stylesheet" href="ui/home.css">
 </head>
 <body>
-<header class="top">
- <a class="logo" href="#/">
-  <svg viewBox="0 0 44 32" fill="none"><rect x="1.5" y="3" width="41" height="26" rx="13" fill="#e9e5ff" stroke="#fff" stroke-width="1.5"/><path d="M10 16h9M14.5 11.5v9" stroke="#4a3bd0" stroke-width="3.2" stroke-linecap="round"/><circle cx="31" cy="12" r="2.6" fill="#ff5a5a"/><circle cx="36" cy="16" r="2.6" fill="#37c871"/><circle cx="31" cy="20" r="2.6" fill="#3a8bff"/><circle cx="26" cy="16" r="2.6" fill="#ffc83a"/></svg>
-  <span>영호의 <b class="t-pc">게임에뮬레이터</b><b class="t-m">게임세상</b></span>
- </a>
- <nav class="nav" id="nav">
-  <a href="#/" data-r="home">🏠 홈</a><a href="#/help" data-r="help">🕹 실행방법</a><a href="#/notice" data-r="notice">ⓘ 공지사항</a><a href="#/set" data-r="set">⚙ 설정</a><button id="themeBtn" type="button">🎨 테마</button>
+<svg width="0" height="0" style="position:absolute"><defs>
+ <symbol id="gp" viewBox="0 0 56 36"><path d="M10 4h36c5 0 8 4 9 12l1 11c.4 5-4 8-8 5l-6-5H14l-6 5c-4 3-8 0-8-5l1-11C2 8 5 4 10 4z" fill="#d9ccff" stroke="#fff" stroke-width="1.5"/><path d="M15 12v10M10 17h10" stroke="#5b3df5" stroke-width="3.500" stroke-linecap="round"/><circle cx="38" cy="14" r="2.500" fill="#ff5a8a"/><circle cx="44" cy="18" r="2.500" fill="#38bdf8"/><circle cx="38" cy="22" r="2.500" fill="#4ade80"/><circle cx="32" cy="18" r="2.500" fill="#fbbf24"/></symbol>
+</defs></svg>
+
+<!-- PC · 태블릿 헤더 -->
+<header class="top pc-only">
+ <a class="logo" href="home.html"><svg><use href="#gp"/></svg><b>영호의 <span class="grad">게임에뮬레이터</span></b></a>
+ <nav class="nav">
+  <a href="home.html" class="on"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>홈</span></a>
+  <button data-m="mHelp"><svg class="ic" viewBox="0 0 24 24"><path d="M5 19l5-14 5 14M7 14h6M17 8l3 3-3 3"/></svg><span>실행방법</span></button>
+  <button data-m="mNotice"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M12 11v5"/></svg><span>공지사항</span></button>
+  <button data-m="mSet"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><span>설정</span></button>
+  <button id="nTheme"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.500 0 2-1 1.500-2s-.5-2 1-2H17a4 4 0 0 0 4-4c0-5-4-10-9-10z"/><circle cx="7.500" cy="11" r="1"/><circle cx="11" cy="7" r="1"/><circle cx="16" cy="8" r="1"/></svg><span>테마</span></button>
  </nav>
- <form class="sbox" id="hs"><input id="hq" placeholder="게임기 검색..." autocomplete="off"><button aria-label="검색">🔍</button></form>
- <button class="out" id="logout" title="로그아웃" aria-label="로그아웃">⏻</button>
+ <div class="sbox"><input id="q" type="search" placeholder="게임기 검색…" autocomplete="off"><button class="sgo" id="qgo" aria-label="검색"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.300-4.300"/></svg></button></div>
 </header>
-<main id="app"></main>
-<div class="foot"><span>🎮 <b>영호의 게임에뮬레이터</b></span><i>|</i><i>웹에서 즐기는 레트로 게임의 추억</i><span class="rg">RETRO GAME EMULATOR <span style="color:#ff5d8f">♥</span></span></div>
-<nav class="tabs" id="tabs">
- <a href="#/" data-r="home"><svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg>홈</a>
- <a href="#/search" data-r="search"><svg viewBox="0 0 24 24"><path d="M7 7h10a5 5 0 0 1 4.9 6l-.9 4.2a2.6 2.6 0 0 1-4.5 1.2L14.8 16H9.2l-1.7 2.4A2.6 2.6 0 0 1 3 17.2l-.9-4.2A5 5 0 0 1 7 7zm.2 3v1.6H5.6v1.8h1.6V15H9v-1.6h1.6v-1.8H9V10zm8.6 1a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2zm2.4 1.8a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2z"/></svg>게임찾기</a>
- <a href="#/fav" data-r="fav"><svg viewBox="0 0 24 24"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>즐겨찾기</a>
- <a href="#/set" data-r="set"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.100.7 1.700 1l.4 2.600h4l.4-2.600c.6-.3 1.200-.6 1.700-1l2.500 1 2-3.500zM12 15.500a3.500 3.500 0 1 1 0-7 3.500 3.500 0 0 1 0 7z"/></svg>설정</a>
-</nav>
-<div id="toast"></div>
-<script src="gamehub.js"></script>
+
+<!-- 모바일 제목 -->
+<div class="mtitle"><svg><use href="#gp"/></svg><span>영호의 <span class="grad">게임세상</span></span></div>
+
+<a class="banner pc-only" id="banner" aria-label="영호의 게임에뮬레이터"><img src="ui/img/banner.jpg" alt="영호의 게임에뮬레이터 — 추억의 게임을 이제, 웹에서 즐겨보세요!"><button class="cta" id="cta" aria-label="지금 바로 시작하기"></button></a>
+
+<main class="wrap" id="list">
+ <h2 class="sec"><svg><use href="#gp"/></svg>지원하는 게임기 목록<i></i><a href="fav.html" class="pc-only">즐겨찾기 ›</a></h2>
+ <div class="grid" id="grid"></div>
+ <section class="infos pc-only">
+  <div class="ib" onclick="location.href='fav.html'"><span class="e">⭐</span><div><b>즐겨찾기</b><span>자주 사용하는 게임을 여기에서 확인하세요!</span></div><em>›</em></div>
+  <div class="ib" data-m="mNotice"><span class="e">📢</span><div><b>공지사항</b><span>최신 소식을 확인해보세요.</span></div><em id="today"></em></div>
+  <div class="ib" data-m="mHelp"><span class="e">ℹ️</span><div><b>이용안내</b><span>이 사이트의 사용 방법을 알려드립니다.</span></div><em>›</em></div>
+ </section>
+</main>
+
+<footer class="foot pc-only">
+ <div class="l"><svg><use href="#gp"/></svg>영호의 게임에뮬레이터<small>웹에서 즐기는 레트로 게임의 추억</small></div>
+ <div class="r">RETRO GAME EMULATOR <i>♥</i></div>
+</footer>
+
+<script src="ui/core.js"></script>
+<script src="ui/shell.js"></script>
 <script>
-(function(){
-'use strict';
-var $=function(s,r){return(r||document).querySelector(s)},$$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
-var app=$('#app'),H=Hub,TH=['purple','blue','pink','green'],THN={purple:'보라',blue:'파랑',pink:'핑크',green:'그린'},THC={purple:'#8b5cf6',blue:'#3b82f6',pink:'#ec4899',green:'#10b981'};
-function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function toast(m){var t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display='none'},1800)}
-function applyTheme(){document.documentElement.dataset.theme=H.set.get().theme}
-applyTheme();
-
-/* ---------- 카드 ---------- */
-function card(s){
- var href=s.os?s.href:'#/sys/'+s.id,on=H.fav.has('sys',s.id);
- return'<a class="c" href="'+href+'" style="--c:'+s.a+'" data-id="'+s.id+'"><button type="button" class="hb'+(on?' on':'')+'" data-fav="'+s.id+'" aria-label="즐겨찾기">'+(on?'♥':'♡')+'</button><img src="'+s.icon+'" alt="" loading="lazy"><b>'+esc(s.n)+'</b><small>('+esc(s.s)+')</small><span class="go">›</span></a>';
-}
-function cards(a){return a.map(card).join('')}
-
-/* ---------- 화면들 ---------- */
-var V={
- home:function(){
-  var f=H.fav.all().sys.length;
-  return'<section class="hero"><img src="assets/banner.jpg" alt="영호의 게임에뮬레이터 - 추억의 게임을 이제, 웹에서 즐겨보세요!"><a class="hot" href="#list" id="start" aria-label="지금 바로 시작하기"></a></section>'
-  +'<h2 class="sec" id="list">🎮 지원하는 게임기 목록</h2><div class="grid">'+cards(H.SYS)+'</div>'
-  +'<div class="quick"><a class="q" href="#/fav"><i>⭐</i><div><b>즐겨찾기</b><small>자주 사용하는 게임기를 여기에서 확인하세요!</small></div><span>→</span></a>'
-  +'<a class="q" href="#/notice"><i>📢</i><div><b>공지사항</b><small>최신 소식을 확인해보세요.</small></div><em>2026.11.02</em><span>→</span></a>'
-  +'<a class="q" href="#/help"><i>ℹ️</i><div><b>이용안내</b><small>이 사이트의 사용 방법을 알려드립니다.</small></div><span>→</span></a></div>';
- },
- search:function(q){
-  return'<div class="pg"><h1>🔍 게임찾기</h1><p>게임기 이름을 <b>2글자 이상</b> 입력하면 해당 게임기 아이콘이 나타나요.</p>'
-  +'<label class="bigin">🔍<input id="sq" placeholder="예) 닌텐도, 플스, 윈도우, 오락실…" value="'+esc(q||'')+'" autocomplete="off" enterkeyhint="search"></label>'
-  +'<div class="chips">'+['닌텐도','세가','소니','윈도우','도스','오락실','패미컴'].map(function(w){return'<button type="button" data-q="'+w+'">'+w+'</button>'}).join('')+'</div>'
-  +'<div id="sr"></div></div>';
- },
- fav:function(){
-  var f=H.fav.all(),ss=f.sys.map(H.byId).filter(Boolean);
-  var gs=f.games.map(function(k){var p=k.split('|');return{s:H.byId(p[0]),file:p[1],di:+p[2]||0}}).filter(function(g){return g.s});
-  return'<div class="pg"><h1>⭐ 즐겨찾기</h1><p>하트(♡)를 누른 게임기와 별(☆)을 누른 게임이 여기에 모여요.</p>'
-  +'<h2 class="sec">게임기</h2>'+(ss.length?'<div class="grid">'+cards(ss)+'</div>':'<div class="msg">아직 즐겨찾기한 게임기가 없어요.<br>홈 화면에서 카드의 ♡ 를 눌러 보세요.</div>')
-  +'<h2 class="sec">게임</h2>'+(gs.length?'<div class="gl">'+gs.map(function(g){return row({file:g.file,title:g.file.replace(/\.[^.]+$/,''),di:g.di,size:0},g.s,true)}).join('')+'</div>':'<div class="msg">게임 목록에서 ☆ 를 누르면 여기에 표시돼요.</div>')+'</div>';
- },
- set:function(){
-  var s=H.set.get();
-  return'<div class="pg set"><h1>⚙ 설정</h1><p>이 기기에만 저장되는 설정이에요.</p>'
-  +'<div class="box"><h3>🎨 테마 색상</h3><div class="sw">'+TH.map(function(t){return'<button type="button" data-th="'+t+'" class="'+(s.theme===t?'on':'')+'" style="background:'+THC[t]+'" aria-label="'+THN[t]+'"></button>'}).join('')+'</div></div>'
-  +'<div class="box"><h3>🕹 게임 화면 방식</h3><div style="color:var(--mut);font-size:14px">현재 기기: <b style="color:#fff">'+{phone:'스마트폰',tablet:'태블릿',pc:'PC'}[H.device()]+'</b> — 스마트폰은 모바일 에뮬레이터(터치 버튼), PC·태블릿은 PC용 에뮬레이터로 열려요.</div>'
-  +'<select id="pm"><option value="auto">자동 (기기에 맞게)</option><option value="phone">항상 모바일용</option><option value="pc">항상 PC용</option></select></div>'
-  +'<div class="box"><h3>🔄 게임 목록</h3>ROMS 폴더에 게임을 올렸는데 안 보이면 새로고침하세요.<br><button class="pill" id="rf" type="button" style="margin-top:8px">목록 새로고침</button></div>'
-  +'<div class="box"><h3>🔒 계정</h3><button class="pill" id="lo" type="button">로그아웃</button></div></div>';
- },
- help:function(){
-  var rows=H.SYS.filter(function(s){return!s.os}).map(function(s){return'<tr><td>'+esc(s.n)+'</td><td><code>'+s.dir[0]+'</code></td><td>'+esc(s.ext)+'</td></tr>'}).join('');
-  return'<div class="pg"><h1>🕹 실행방법</h1><p>3단계면 끝!</p>'
-  +'<div class="box"><h3>① 게임 파일 올리기</h3>GitHub 저장소에 기종별 폴더를 만들고 게임 파일을 넣으세요. (파일 1개 100MB 이하)<table><tr><th>게임기</th><th>폴더</th><th>파일 형식</th></tr>'+rows+'</table>파일 이름이 그대로 게임 제목이 됩니다. (예: <code>ROMS/GBA/포켓몬스터.gba</code>)</div>'
-  +'<div class="box"><h3>② 아이콘 → 게임 선택</h3>홈에서 게임기 아이콘을 누르면 그 폴더의 게임 목록이 나와요. 게임을 누르면 바로 실행됩니다. 목록이 안 나오면 <code>ROMS/기종/games.json</code> 에 <code>{"games":[{"file":"a.gba","title":"제목"}]}</code> 형태로 적어 주세요.</div>'
-  +'<div class="box"><h3>③ 조작</h3>스마트폰: 화면의 가상 버튼 · PC: 키보드(방향키, Z/X/A/S, Q/E, Enter=시작, V=셀렉트) 또는 USB/블루투스 게임패드 · 키는 하단 메뉴의 컨트롤 설정에서 바꿀 수 있어요.</div>'
-  +'<div class="box"><h3>💾 PS1 · 아케이드 · 윈도우</h3>PS1은 <code>.chd .pbp .iso</code> 한 파일이 가장 안정적이고, bin+cue 는 zip 으로 묶어 주세요. 마메는 롬(zip) 그대로 올리고 네오지오 바이오스는 <code>MAME/_bios/neogeo.zip</code> 에 둡니다. DOS 는 아이콘을 누르면 바로 열리고, Windows 3.1·95 는 <b>고전게임런처</b>가 열려요. 런처에서 게임 이미지(<code>.iso .img .zip</code>)를 고르면 서버의 윈도우에 자동으로 들어갑니다. 이미지는 <code>ROMS/WIN95/</code> (3.1 은 <code>ROMS/WIN31/</code>) 폴더에 올리세요.</div></div>';
- },
- notice:function(){
-  return'<div class="pg"><h1>📢 공지사항</h1><p>최신 소식</p>'
-  +'<div class="box"><h3>2026.11.02 · 새 디자인 적용</h3>로그인 화면, 기종별 게임 목록, 게임찾기, 즐겨찾기가 추가되었어요. 스마트폰과 PC·태블릿에 맞춰 화면과 에뮬레이터가 따로 열립니다.</div>'
-  +'<div class="box"><h3>지원 게임기</h3>GBA · NDS · PS1 · NES · MAME · SEGA Master System · PC엔진 · MS-DOS · Windows 3.1 · Windows 95</div></div>';
- },
- sys:function(id){
-  var s=H.byId(id);if(!s||s.os){location.replace('#/');return''}
-  return'<div class="pg"><div class="lh"><img src="'+s.icon+'" alt=""><div><h1>'+esc(s.n)+'</h1><small>폴더 <code>'+s.dir.join(' · ')+'</code></small></div><span class="sp"></span>'
-  +'<a class="pill" href="#/">‹ 뒤로</a><button class="pill" id="rf" type="button">↻ 새로고침</button><a class="pill pr" href="'+H.playUrl(s)+'">📂 내 기기 파일 열기</a></div>'
-  +'<label class="bigin">🔍<input id="gq" placeholder="게임 이름 검색…" autocomplete="off"></label><div id="gl" class="gl"><div class="msg" style="grid-column:1/-1">게임 목록을 불러오는 중…</div></div></div>';
- }
-};
-function row(g,s,showSys){
- var k=s.id+'|'+g.file+'|'+(g.di||0),on=H.fav.has('games',k);
- return'<a class="g" href="'+H.playUrl(s,g)+'"><div class="gi">🎮</div><div class="gt"><b>'+esc(g.title)+'</b><small>'+(showSys?esc(s.n)+' · ':'')+(g.size?H.fmtSize(g.size)+' · ':'')+esc(g.file)+'</small></div>'
-  +'<button type="button" class="st'+(on?' on':'')+'" data-gfav="'+esc(k)+'" aria-label="즐겨찾기">'+(on?'★':'☆')+'</button><span class="pl">▶ 플레이</span></a>';
-}
-
-/* ---------- 라우터 ---------- */
-var cur=null;
-function route(){
- var h=decodeURIComponent((location.hash||'#/').slice(2)),p=h.split('/'),r=p[0]||'home',arg=p.slice(1).join('/');
- if(location.hash==='#list'){return}
- if(!V[r])r='home';
- cur={r:r,arg:arg};
- $$('[data-r]').forEach(function(a){a.classList.toggle('on',a.dataset.r===(r==='sys'?'home':r))});
- app.innerHTML=V[r](arg);window.scrollTo(0,0);
- if(r==='sys')loadList(arg);
- if(r==='search'){var i=$('#sq');showSearch(arg);i.oninput=function(){showSearch(i.value)};if(!arg&&matchMedia('(min-width:700px)').matches)i.focus()}
- var st=$('#start');if(st)st.onclick=function(e){e.preventDefault();$('#list').scrollIntoView({behavior:'smooth'})};
- var pm=$('#pm');if(pm){pm.value=H.set.get().player;pm.onchange=function(){H.set.put({player:pm.value});toast('저장했어요')}}
- var rf=$('#rf');if(rf)rf.onclick=function(){if(cur.r==='sys')loadList(cur.arg,true);else{H.listRoms(H.byId('gba'),true);toast('목록 캐시를 지웠어요')}};
- var lo=$('#lo');if(lo)lo.onclick=doLogout;
-}
-function showSearch(q){
- var box=$('#sr'),t=String(q||'').trim();
- if(t.replace(/\s/g,'').length<2){box.innerHTML='<div class="msg">🎮<br>게임기 이름을 2글자 이상 입력하면<br>아이콘이 나타나요.</div>';return}
- var r=H.search(t);
- box.innerHTML=r.length?'<div class="grid">'+cards(r)+'</div>':'<div class="msg">😢<br>“'+esc(t)+'” 와 맞는 게임기를 찾지 못했어요.<br>다른 이름으로 검색해 보세요.</div>';
-}
-var listSeq=0;
-function loadList(id,force){
- var s=H.byId(id),seq=++listSeq,box=$('#gl'),all=[];if(!s)return;
- box.innerHTML='<div class="msg" style="grid-column:1/-1">게임 목록을 불러오는 중…</div>';
- H.listRoms(s,force).then(function(r){
-  if(seq!==listSeq)return;all=r.items;draw('');
-  var q=$('#gq');if(q)q.oninput=function(){draw(q.value)};
- }).catch(function(){if(seq===listSeq)box.innerHTML='<div class="msg" style="grid-column:1/-1">목록을 불러오지 못했어요. ↻ 를 눌러 다시 시도해 주세요.</div>'});
- function draw(q){
-  q=q.trim().toLowerCase();
-  var a=all.filter(function(g){return!q||(g.title+' '+g.file).toLowerCase().indexOf(q)>=0});
-  box.innerHTML=a.length?a.map(function(g){return row(g,s)}).join(''):
-   '<div class="msg" style="grid-column:1/-1">'+(all.length?'검색 결과가 없어요.':'📂 아직 게임이 없어요.<br><code>'+s.dir[0]+'</code> 폴더에 게임 파일을 올려 주세요.<br><small>(올린 직후엔 몇 분 걸릴 수 있어요 · 형식: '+esc(s.ext)+')</small>')+'</div>';
- }
-}
-
-/* ---------- 이벤트 ---------- */
-document.addEventListener('click',function(e){
- var f=e.target.closest('[data-fav]');
- if(f){e.preventDefault();e.stopPropagation();var on=H.fav.toggle('sys',f.dataset.fav);f.classList.toggle('on',on);f.textContent=on?'♥':'♡';if(cur&&cur.r==='fav')route();return}
- var g=e.target.closest('[data-gfav]');
- if(g){e.preventDefault();e.stopPropagation();var o=H.fav.toggle('games',g.dataset.gfav);g.classList.toggle('on',o);g.textContent=o?'★':'☆';if(cur&&cur.r==='fav')route();return}
- var t=e.target.closest('[data-th]');
- if(t){H.set.put({theme:t.dataset.th});applyTheme();$$('[data-th]').forEach(function(b){b.classList.toggle('on',b===t)});return}
- var c=e.target.closest('[data-q]');
- if(c){var i=$('#sq');i.value=c.dataset.q;showSearch(i.value);i.focus()}
+YH.guard();
+Shell.init('home');
+var CHEV='<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
+var grid=document.getElementById('grid');
+YH.SYS.forEach(function(s){
+ var d=document.createElement('div');d.className='cd';d.tabIndex=0;d.setAttribute('role','button');d.setAttribute('aria-label',s.n);
+ d.innerHTML='<div class="im"><img src="'+s.img+'" alt="'+YH.esc(s.n)+'" loading="lazy"></div><b>'+YH.esc(s.n)+'<small>('+YH.esc(s.s)+')</small></b>'+
+  '<button class="heart '+(YH.Fav.hasSys(s.id)?'on':'')+'" aria-label="즐겨찾기">'+YH.HEART+'</button><span class="chev">'+CHEV+'</span>';
+ d.onclick=function(e){if(e.target.closest('.heart'))return;YH.openSys(s)};
+ d.onkeydown=function(e){if(e.key==='Enter')YH.openSys(s)};
+ d.querySelector('.heart').onclick=function(e){e.stopPropagation();var on=YH.Fav.toggleSys(s.id);this.classList.toggle('on',on);YH.toast(on?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요')};
+ grid.appendChild(d);
 });
-$('#themeBtn').onclick=function(){var s=H.set.get(),n=TH[(TH.indexOf(s.theme)+1)%TH.length];H.set.put({theme:n});applyTheme();toast('테마: '+THN[n])};
-$('#hs').onsubmit=function(e){e.preventDefault();location.hash='#/search/'+encodeURIComponent($('#hq').value.trim())};
-$('#hq').oninput=function(){var v=this.value.trim();if(cur&&cur.r==='search'){var i=$('#sq');i.value=v;showSearch(v)}else if(v.length>=2)location.hash='#/search/'+encodeURIComponent(v)};
-function doLogout(){Auth.logout();location.replace('index.html?logout')}
-$('#logout').onclick=doLogout;
-window.addEventListener('hashchange',route);route();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
-})();
+document.querySelectorAll('[data-m]').forEach(function(b){b.onclick=function(){Shell.open(b.dataset.m)}});
+document.getElementById('nTheme').onclick=Shell.theme;
+document.getElementById('cta').onclick=function(e){e.preventDefault();document.getElementById('list').scrollIntoView({behavior:'smooth'})};
+var t=new Date();document.getElementById('today').textContent=t.getFullYear()+'.'+String(t.getMonth()+1).padStart(2,'0')+'.'+String(t.getDate()).padStart(2,'0');
+Shell.searchBox(document.getElementById('q'),document.getElementById('qgo'),function(v){location.href='find.html?q='+encodeURIComponent(v)+Shell.suffix().replace('?','&')});
 </script>
 </body>
 </html>

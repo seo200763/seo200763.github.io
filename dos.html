@@ -103,7 +103,6 @@ body.ctl-on #ctl{display:flex}
 #kb{position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:0;border:0;padding:0;font-size:16px;-webkit-user-select:text;user-select:text}
 body.pfs #menu{display:none}
 </style>
-<script src="auth.js"></script><script>if(window.top===window)Auth.guard()</script>
 </head>
 <body>
 <div id="app">
@@ -405,7 +404,7 @@ body.pfs #menu{display:none}
     const bb = $('d-btn'); if (bb) bb.onclick = btnDlg;
     const jb = $('d-jc'); if (jb) jb.onclick = () => { clearJC(); closeDlg(); toast('JSON 설정을 해제했어요 (게임다시시작하면 기본 설정)'); if (G) setLaunch().catch(() => {}); };
     $('d-log').onclick = () => { dlg('<h2>📋 로그</h2><pre>' + esc(logs.join('\n') || '(로그 없음)') + '</pre>'); };
-    $('d-exit').onclick = () => { if(window.top!==window){try{parent.postMessage('sky-close','*')}catch(_){}return} if (history.length > 1 && document.referrer) history.back(); else location.href = 'home.html'; };
+    $('d-exit').onclick = () => { if(window.top!==window){try{parent.postMessage('sky-close','*')}catch(_){}return} if (history.length > 1 && document.referrer) history.back(); else location.href = 'index.html'; };
   };
 
   /* ---- 실행 파일 고르기 ---- */
