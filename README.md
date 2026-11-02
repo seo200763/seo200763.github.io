@@ -36,3 +36,11 @@
 - emudata.js 항목의 pc:1 = PC용 안내·PC 옵션 적용, soon:1 = 준비중. (공통 코드: pcnotice.js)
 - BIOS/ 폴더에 바이오스를 올려 두면 자동으로 사용합니다. (BIOS/README.txt)
 - 저사양 전용 화면(lowend.html)에는 PC용·준비중 기종이 나오지 않습니다.
+
+[레트로 스킨 / 고전게임런처] (11월 2일)
+- pixel.css : 로그인(index.html)·홈(home.html)·런처 공용 레트로 아케이드 스킨 (CRT 주사선, 도트 테두리, 네온 색). 각 html 의 pixel.css 링크를 지우면 원래 디자인으로 돌아갑니다.
+- winemu-luxe.css : 윈도우 에뮬레이터(winemu.html) 레트로 스킨
+- winlauncher.html : 두기의 고전게임런처 방식 — Windows 95 / 3.1 아이콘을 누르면 윈도우가 바로 켜지지 않고 이 화면이 열립니다.
+  게임 이미지를 고른 뒤 [게임 실행]을 누르면 서버의 윈도우 이미지(os/win95/win95.zip)를 받아 부팅하면서, 고른 이미지를 CD-ROM 또는 플로피(A:)에 자동으로 넣습니다.
+- 게임 이미지 폴더 : ROMS/WIN95/ , ROMS/WIN31/  (자세한 방법은 폴더 안 README.txt)
+- 한글 도트 폰트(Galmuri11 등)를 쓰려면 fonts/Galmuri11.woff2 파일을 넣으세요.

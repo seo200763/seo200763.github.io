@@ -214,6 +214,7 @@ const OSES={
 const qs=new URLSearchParams(location.search);
 let OSID=qs.get('os');if(!OSES[OSID])OSID='win95';
 const OS=OSES[OSID];
+const GAME=qs.get('game')||'',GDIR=qs.get('gdir')||('ROMS/'+OSID.toUpperCase()+'/');let gameMsg='';   /* 고전게임런처(winlauncher.html)에서 고른 게임 이미지 */
 document.title=OS.n+' 웹 에뮬레이터';
 
 const $=id=>document.getElementById(id);
@@ -226,7 +227,8 @@ let _tt;function toast(m,ms){const t=$('toast');t.textContent=m;t.style.display=
 let emu=null,L=null,disk=null,diskName='',booting=0,zoom=1,stateBuf=null,skipAuto=false;   /* skipAuto: ZIP 바로실행 때 자동 부팅 입력/패치 생략 */
 $('osSel').value=OSID;
 $('osSel').onchange=e=>{location.search='?os='+e.target.value};
-$('exitBtn').onclick=e=>{e.preventDefault();if(window.top!==window){try{parent.postMessage('sky-close','*')}catch(_){}return}location.href='home.html'};   /* 나가기: 홈으로 이동 */
+$('exitBtn').onclick=e=>{e.preventDefault();if(window.top!==window){try{parent.postMessage('sky-close','*')}catch(_){}return}location.href=(OSID==='win95'||OSID==='win31')?'winlauncher.html?os='+OSID:'home.html'};   /* 나가기: 게임 런처(또는 홈)로 이동 */
+if(OSID==='win95'||OSID==='win31')$('exitBtn').textContent='← 게임 런처';
 document.querySelectorAll('.toolbar button').forEach(b=>b.addEventListener('click',()=>b.blur()));
 
 /* ---------- 안내창 ---------- */
@@ -576,6 +578,29 @@ async function makeEmulator(d){
   $('pause').textContent='⏸ 일시정지';
 }
 
+/* ---------- 런처에서 고른 게임 이미지 → 서버 이미지(ROMS/WIN95/ 등)를 받아 CD-ROM 또는 플로피(A:)에 미리 넣어 둠 ---------- */
+async function loadGame(){
+  if(!GAME)return;
+  const base=GDIR.endsWith('/')?GDIR:GDIR+'/';
+  try{
+    ov(OS.n,'게임 이미지를 찾는 중…',{pct:4});
+    const f=await probeUrl(base+encodeURIComponent(GAME));
+    if(!f){toast('서버에 게임 이미지가 없습니다: '+base+GAME,9000);return}
+    const blob=await getServerBlob(f,'게임 이미지를 받는 중: '+GAME);
+    let buf=await blob.arrayBuffer(),name=GAME,slot=null;
+    if(/\.zip$/i.test(GAME)){
+      let r;
+      try{r=await unzipDisk(buf,null,/\.iso$/i,'CD 이미지(iso)');slot='cd'}
+      catch(_){r=await unzipDisk(buf,null,/\.(img|ima|vfd|flp|dsk)$/i,'게임 이미지(iso/img)')}
+      buf=r.buf;name=r.name;
+    }
+    if(!slot)slot=(/\.iso$/i.test(name)||buf.byteLength>2949120)?'cd':'fda';
+    if(!MEDIA_OS[slot].includes(OSID)){toast(MEDIA_NAME[slot]+' 이미지는 '+OS.n+'에서 지원하지 않습니다',8000);return}
+    media[slot]=slot==='fda'?padFloppy(buf,'fda'):buf;media.names[slot]=GAME;refreshMedia();
+    gameMsg='📀 '+GAME+' 을(를) '+(slot==='cd'?'CD-ROM 드라이브':'플로피(A:)')+'에 넣었어요. 바탕화면 \'내 컴퓨터\'에서 열어 실행하세요';
+  }catch(e){console.error(e);toast('게임 이미지 불러오기 실패: '+(e&&e.message||e),9000)}
+}
+
 /* 서버 이미지(또는 이미 읽어둔 이미지)로 시작 */
 async function start(force){
   const my=++booting;
@@ -595,7 +620,9 @@ async function start(force){
     disk=d;diskName=f.u.split('/').pop();
     if(my!==booting)return;
     stateBuf=null;   /* 서버 상태 파일(.v86state)은 찾지 않고 항상 일반 부팅 */
+    await loadGame();
     await makeEmulator(d);
+    if(gameMsg)setTimeout(()=>toast(gameMsg,10000),6000);
   }catch(e){
     console.error(e);status('오류');
     ov(OS.n,'오류: '+(e&&e.message||e),{btns:[['다시 시도',()=>start(true)],['💾 이미지 불러오기',pickLocal]]});
@@ -638,7 +665,7 @@ $('zipRunFile').onchange=e=>{const f=e.target.files[0];e.target.value='';loadZip
    · 윈도우 1.0 / 2.0 / 3.0 : 3.5" 플로피(A:) + 5.25" 플로피(B:)
    · 윈도우 95 / 98          : 3.5" 플로피(A:) + CD-ROM
    에뮬레이터가 켜져 있으면 바로 바꿔 끼우고, 꺼져 있으면 다음 시작 때 자동으로 들어갑니다. */
-const MEDIA_OS={fda:['win10','win20','win30','win95','win98'],fdb:['win10','win20','win30'],cd:['win95','win98'],hdb:['win10','win20','win30','win31','win95','win98']};
+const MEDIA_OS={fda:['win10','win20','win30','win31','win95','win98'],fdb:['win10','win20','win30'],cd:['win95','win98'],hdb:['win10','win20','win30','win31','win95','win98']};
 const MEDIA_NAME={fda:'3.5" 플로피',fdb:'5.25" 플로피',cd:'CD-ROM',hdb:'공유 폴더'};
 const MEDIA_API={fda:'fda',fdb:'fdb',cd:'cdrom',hdb:'hdb'};
 const media={fda:null,fdb:null,cd:null,hdb:null,names:{}};

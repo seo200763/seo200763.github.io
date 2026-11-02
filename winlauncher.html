@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="purple">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0226">
+<title>고전게임런처 · 영호의 게임에뮬레이터</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<script src="auth.js"></script><script>Auth.guard()</script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:#02043a url(assets/bg-city.jpg) center bottom/cover no-repeat fixed}
+body{margin:0;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:14px}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer}
+.lw{width:min(1040px,100%);height:min(720px,calc(100dvh - 28px));display:flex;flex-direction:column;background:#0a0226;border:4px solid var(--a3);box-shadow:8px 8px 0 #000,0 0 0 4px var(--a1)}
+.tt{display:flex;align-items:center;gap:10px;padding:9px 12px;background:linear-gradient(90deg,var(--a2),var(--a1));border-bottom:4px solid var(--a3);font:12px var(--px);text-shadow:2px 2px 0 #000}
+.tt i{font-style:normal;margin-left:auto;font:10px var(--px);color:var(--a3);background:#000;padding:5px 8px}
+.mn{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:3px solid #1d0a5e;flex-wrap:wrap}
+.tab{padding:9px 14px;border:3px solid var(--a3);background:var(--card);font-family:var(--bd);font-weight:700;box-shadow:3px 3px 0 #000}
+.tab.on{background:var(--a1);border-color:#fff}
+.sp{flex:1}
+.pill{display:inline-flex;align-items:center;justify-content:center;height:42px;padding:0 14px;font-weight:700;color:#fff}
+.mid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(280px,38%) 1fr}
+.lst{display:flex;flex-direction:column;min-height:0;border-right:3px solid #1d0a5e;padding:12px}
+.lst input{width:100%;height:42px;padding:0 12px;border:3px solid var(--a3);background:#000;color:#fff;font:15px var(--bd);outline:0;margin-bottom:10px}
+.lst input:focus{border-color:var(--a1)}
+#gl{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px}
+.it{display:flex;align-items:center;gap:10px;padding:9px 10px;border:3px solid transparent;background:#14073f;text-align:left;width:100%}
+.it:hover{border-color:var(--a3)}.it.on{border-color:var(--a1);background:#2a0d6e;box-shadow:inset 0 0 0 2px #000}
+.it .ic{font-size:22px;width:30px;text-align:center}.it b{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it small{color:var(--mut);font-size:12px}.it .tx{min-width:0;flex:1}
+.inf{padding:16px 18px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.cv{aspect-ratio:16/9;max-height:230px;width:100%;border:3px solid var(--a3);background:repeating-conic-gradient(#14073f 0 25%,#0d0430 0 50%) 0 0/16px 16px;display:grid;place-items:center;overflow:hidden;box-shadow:5px 5px 0 #000}
+.cv img{width:100%;height:100%;object-fit:cover}.cv span{font:11px var(--px);color:var(--a3);text-shadow:2px 2px 0 #000;text-align:center;line-height:1.8}
+.inf h2{margin:0;font:15px/1.6 var(--px);color:var(--a3);text-shadow:2px 2px 0 #000;word-break:break-all}
+.inf dl{display:grid;grid-template-columns:90px 1fr;gap:6px 10px;margin:0;font-size:14px}.inf dt{color:var(--mut)}.inf dd{margin:0;word-break:break-all}
+.inf p{margin:0;line-height:1.7;color:#e6e1ff;font-size:14px}
+.how{border:3px dashed var(--a1);padding:10px 12px;font-size:13px;line-height:1.7;color:#ffd6ec}
+.bt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:4px solid var(--a3);background:#07021f;flex-wrap:wrap}
+.bt #msg{flex:1;min-width:140px;font-size:13px;color:var(--mut)}
+.go{height:50px;padding:0 24px;border:3px solid #fff;background:var(--a1);font:13px var(--px);box-shadow:0 5px 0 #000;text-shadow:2px 2px 0 #000}
+.go:active{transform:translateY(4px);box-shadow:0 1px 0 #000}.go:disabled{background:#3a2a6a;border-color:#6a5aa0;color:#9c92d0;box-shadow:none;cursor:not-allowed;text-shadow:none}
+.msg{text-align:center;color:var(--mut);padding:30px 8px;line-height:1.9;font-size:14px}.msg code{background:#000;color:var(--a3);padding:2px 6px}
+@media(max-width:760px){body{padding:0;align-items:stretch}.lw{height:100dvh;border-width:3px;box-shadow:none}.mid{grid-template-columns:1fr;grid-template-rows:minmax(150px,40%) 1fr;overflow:auto}.lst{border-right:0;border-bottom:3px solid #1d0a5e}.go{flex:1}.cv{max-height:150px}}
+</style>
+<link rel="stylesheet" href="pixel.css">
+</head>
+<body>
+<div class="lw">
+ <div class="tt"><span>💾 두기의 고전게임런처</span><i id="osn">WINDOWS 95</i></div>
+ <div class="mn">
+  <button class="tab on" data-os="win95" type="button">Windows 95</button>
+  <button class="tab" data-os="win31" type="button">Windows 3.1</button>
+  <span class="sp"></span>
+  <button class="pill" id="rf" type="button">↻ 새로고침</button>
+  <a class="pill" href="home.html">‹ 홈</a>
+ </div>
+ <div class="mid">
+  <aside class="lst"><input id="q" placeholder="🔍 게임 이름 검색…" autocomplete="off"><div id="gl"></div></aside>
+  <section class="inf" id="inf"></section>
+ </div>
+ <div class="bt"><span id="msg">게임 이미지를 고른 뒤 ▶ 게임 실행을 누르세요.</span><button class="pill" id="plain" type="button">윈도우만 실행</button><button class="go" id="goBtn" type="button" disabled>▶ 게임 실행</button></div>
+</div>
+<script src="gamehub.js"></script>
+<script>
+(function(){
+'use strict';
+var H=Hub,$=function(i){return document.getElementById(i)};
+var DIR={win95:'ROMS/WIN95/',win31:'ROMS/WIN31/'},NAME={win95:'WINDOWS 95',win31:'WINDOWS 3.1'};
+var IMG=/\.(iso|img|ima|vfd|flp|dsk|zip)$/i;
+var os=new URLSearchParams(location.search).get('os')==='win31'?'win31':'win95',items=[],meta={},sel=null;
+try{document.documentElement.dataset.theme=H.set.get().theme}catch(e){}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function kind(g){
+ var f=g.file;
+ if(/\.iso$/i.test(f))return{n:'CD-ROM',d:'CD-ROM 드라이브 (보통 D:)',i:'💿'};
+ if(/\.(ima|vfd|flp|dsk)$/i.test(f))return{n:'플로피',d:'A: 드라이브',i:'💾'};
+ if(/\.img$/i.test(f))return g.size>2949120?{n:'CD-ROM',d:'CD-ROM 드라이브 (보통 D:)',i:'💿'}:{n:'플로피',d:'A: 드라이브',i:'💾'};
+ return{n:'ZIP 압축',d:'자동 판별 (iso → CD, img → 플로피)',i:'📦'};
+}
+function info(g){return meta[g.file.toLowerCase()]||{}}
+function ttl(g){return info(g).title||g.title}
+function setOs(o,keep){
+ os=o;sel=null;$('osn').textContent=NAME[o];
+ document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',b.dataset.os===o)});
+ if(!keep)history.replaceState(null,'','?os='+o);
+ draw();load();
+}
+function load(force){
+ $('gl').innerHTML='<div class="msg">게임 목록을 불러오는 중…</div>';
+ var d=DIR[os],my=os;
+ Promise.all([H.listRoms({dir:[d]},force),fetch(d+'games.json?t='+Date.now()).then(function(r){return r.ok?r.json():null}).catch(function(){return null})]).then(function(r){
+  if(my!==os)return;
+  items=r[0].items.filter(function(g){return IMG.test(g.file)});
+  var j=r[1],a=Array.isArray(j)?j:(j&&j.games)||[];meta={};
+  a.forEach(function(g){if(g&&g.file)meta[g.file.toLowerCase()]=g});
+  var last='';try{last=localStorage.getItem('yh.lastgame.'+os)||''}catch(e){}
+  sel=items.filter(function(g){return g.file===last})[0]||null;
+  list();show();
+ }).catch(function(){$('gl').innerHTML='<div class="msg">목록을 불러오지 못했어요.<br>↻ 를 눌러 다시 시도해 주세요.</div>'});
+}
+function list(){
+ var q=$('q').value.trim().toLowerCase();
+ var a=items.filter(function(g){return!q||(ttl(g)+' '+g.file).toLowerCase().indexOf(q)>=0});
+ $('gl').innerHTML=a.length?a.map(function(g){var k=kind(g);
+  return'<button type="button" class="it'+(sel&&sel.file===g.file?' on':'')+'" data-f="'+esc(g.file)+'"><span class="ic">'+k.i+'</span><span class="tx"><b>'+esc(ttl(g))+'</b><small>'+k.n+(g.size?' · '+H.fmtSize(g.size):'')+'</small></span></button>'}).join('')
+  :'<div class="msg">'+(items.length?'검색 결과가 없어요.':'📂 아직 게임 이미지가 없어요.<br><code>'+DIR[os]+'</code> 폴더에<br>게임 이미지(.iso .img .zip)를 올려 주세요.')+'</div>';
+}
+function show(){
+ var box=$('inf'),b=$('goBtn');
+ if(!sel){
+  box.innerHTML='<div class="cv"><span>SELECT<br>GAME</span></div><div class="how">① 왼쪽 목록에서 게임 이미지를 고르세요.<br>② <b>▶ 게임 실행</b> 을 누르면 서버의 '+NAME[os].replace('WINDOWS','Windows')+'가 켜지면서 선택한 이미지가 자동으로 들어갑니다.<br>③ 바탕화면의 <b>내 컴퓨터</b>에서 해당 드라이브를 열어 설치·실행하세요. (CD 자동실행이 되면 바로 시작돼요)</div>';
+  b.disabled=true;$('msg').textContent='게임 이미지를 고른 뒤 ▶ 게임 실행을 누르세요.';return;
+ }
+ var k=kind(sel),m=info(sel);
+ box.innerHTML='<div class="cv">'+(m.cover?'<img src="'+esc(m.cover)+'" alt="" onerror="this.parentNode.innerHTML=\'<span>NO IMAGE</span>\'">':'<span>'+k.i+'<br>NO IMAGE</span>')+'</div>'
+  +'<h2>'+esc(ttl(sel))+'</h2><dl><dt>파일</dt><dd>'+esc(sel.file)+'</dd><dt>형식</dt><dd>'+k.n+'</dd><dt>들어가는 곳</dt><dd>'+k.d+'</dd>'
+  +(sel.size?'<dt>크기</dt><dd>'+H.fmtSize(sel.size)+'</dd>':'')+(m.year?'<dt>출시</dt><dd>'+esc(m.year)+'</dd>':'')+(m.genre?'<dt>장르</dt><dd>'+esc(m.genre)+'</dd>':'')+'</dl>'
+  +(m.desc?'<p>'+esc(m.desc)+'</p>':'')
+  +'<div class="how">▶ 게임 실행을 누르면 <b>'+NAME[os].replace('WINDOWS','Windows')+'</b> 를 서버에서 받아 부팅하고, 이 이미지를 <b>'+k.d+'</b>에 넣어 줍니다. 처음 한 번은 윈도우 이미지를 받느라 시간이 걸려요.</div>';
+ b.disabled=false;$('msg').textContent='선택: '+ttl(sel);
+}
+function go(g){
+ var u='winemu.html?os='+os;
+ if(g){u+='&game='+encodeURIComponent(g.file)+'&gdir='+encodeURIComponent(DIR[os]);try{localStorage.setItem('yh.lastgame.'+os,g.file)}catch(e){}}
+ location.href=u;
+}
+$('gl').onclick=function(e){
+ var b=e.target.closest('.it');if(!b)return;
+ var g=items.filter(function(x){return x.file===b.dataset.f})[0];if(!g)return;
+ if(sel&&sel.file===g.file&&e.detail>1){go(g);return}
+ sel=g;list();show();
+};
+$('q').oninput=list;
+$('goBtn').onclick=function(){if(sel)go(sel)};
+$('plain').onclick=function(){go(null)};
+$('rf').onclick=function(){load(true)};
+document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){setOs(b.dataset.os)}});
+function draw(){list();show()}
+setOs(os,true);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+})();
+</script>
+</body>
+</html>

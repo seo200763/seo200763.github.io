@@ -14,8 +14,8 @@ var SYS=[
  {id:'sms',n:'세가 마스터 시스템',s:'SMS',dir:['ROMS/SMS/'],core:'segaMS',fn:'SEGAMS',a:'#2f6bff',ext:'.sms .zip',kw:'세가 마스터 시스템 마스터시스템 sega master system sms'},
  {id:'pce',n:'PC 엔진',s:'PCE',dir:['ROMS/PCE/'],core:'pce',fn:'PCENGINE',a:'#ffb020',ext:'.pce .zip',kw:'피씨엔진 pc엔진 엔진 nec pce pcengine'},
  {id:'dos',n:'MS-DOS',s:'DOS',os:1,href:'dos.html',a:'#9ca3af',kw:'도스 엠에스도스 마이크로소프트 dos msdos ms-dos 컴퓨터 pc'},
- {id:'win31',n:'Windows 3.1',s:'WIN3.1',os:1,href:'winemu.html?os=win31',a:'#3b82f6',kw:'윈도우 윈도우즈 윈도 윈도우3.1 마이크로소프트 windows win31 3.1 microsoft'},
- {id:'win95',n:'Windows 95',s:'WIN95',os:1,href:'winemu.html?os=win95',a:'#14b8a6',kw:'윈도우 윈도우즈 윈도 윈도우95 마이크로소프트 windows win95 95 microsoft'}
+ {id:'win31',n:'Windows 3.1',s:'WIN3.1',os:1,dir:['ROMS/WIN31/'],href:'winlauncher.html?os=win31',a:'#3b82f6',kw:'윈도우 윈도우즈 윈도 윈도우3.1 마이크로소프트 windows win31 3.1 microsoft'},
+ {id:'win95',n:'Windows 95',s:'WIN95',os:1,dir:['ROMS/WIN95/'],href:'winlauncher.html?os=win95',a:'#14b8a6',kw:'윈도우 윈도우즈 윈도 윈도우95 마이크로소프트 windows win95 95 microsoft'}
 ];
 SYS.forEach(function(s){s.icon='assets/sys/'+s.id+'.png'});
 function byId(id){for(var i=0;i<SYS.length;i++)if(SYS[i].id===id)return SYS[i];return null}
