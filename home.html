@@ -34,8 +34,11 @@
 <a class="banner pc-only" id="banner" aria-label="영호의 게임에뮬레이터"><img src="ui/img/banner.jpg" alt="영호의 게임에뮬레이터 — 추억의 게임을 이제, 웹에서 즐겨보세요!"><button class="cta" id="cta" aria-label="지금 바로 시작하기"></button></a>
 
 <main class="wrap" id="list">
- <h2 class="sec"><svg><use href="#gp"/></svg>지원하는 게임기 목록<i></i><a href="fav.html" class="pc-only">즐겨찾기 ›</a></h2>
+ <h2 class="sec"><svg><use href="#gp"/></svg>지원하는 게임기 목록<small>📱 스마트폰 · 태블릿 · PC 모두 원활</small><i></i><a href="fav.html" class="pc-only">즐겨찾기 ›</a></h2>
  <div class="grid" id="grid"></div>
+ <h2 class="sec pc-only" id="secPc"><svg><use href="#gp"/></svg>PC 전용 게임기<small>🖥️ 고사양 · PC 인터넷(크롬·엣지) 권장</small><i></i></h2>
+ <p class="pcnote pc-only" id="pcNote">이 기종들은 용량이 크거나 계산량이 많아서 스마트폰에서는 튕기거나 느릴 수 있어요. 태블릿에서도 기기 사양에 따라 안 돌아갈 수 있어요.</p>
+ <div class="grid pc-only" id="gridPc"></div>
  <section class="infos pc-only">
   <div class="ib" onclick="location.href='fav.html'"><span class="e">⭐</span><div><b>즐겨찾기</b><span>자주 사용하는 게임을 여기에서 확인하세요!</span></div><em>›</em></div>
   <div class="ib" data-m="mNotice"><span class="e">📢</span><div><b>공지사항</b><span>최신 소식을 확인해보세요.</span></div><em id="today"></em></div>
@@ -54,16 +57,23 @@
 YH.guard();
 Shell.init('home');
 var CHEV='<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
-var grid=document.getElementById('grid');
-YH.SYS.forEach(function(s){
- var d=document.createElement('div');d.className='cd';d.tabIndex=0;d.setAttribute('role','button');d.setAttribute('aria-label',s.n);
- d.innerHTML='<div class="im"><img src="'+s.img+'" alt="'+YH.esc(s.n)+'" loading="lazy"></div><b>'+YH.esc(s.n)+'<small>('+YH.esc(s.s)+')</small></b>'+
-  '<button class="heart '+(YH.Fav.hasSys(s.id)?'on':'')+'" aria-label="즐겨찾기">'+YH.HEART+'</button><span class="chev">'+CHEV+'</span>';
- d.onclick=function(e){if(e.target.closest('.heart'))return;YH.openSys(s)};
- d.onkeydown=function(e){if(e.key==='Enter')YH.openSys(s)};
- d.querySelector('.heart').onclick=function(e){e.stopPropagation();var on=YH.Fav.toggleSys(s.id);this.classList.toggle('on',on);YH.toast(on?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요')};
- grid.appendChild(d);
-});
+function build(items,grid,pcTag){
+ items.forEach(function(s){
+  var d=document.createElement('div');d.className='cd';d.tabIndex=0;d.setAttribute('role','button');d.setAttribute('aria-label',s.n);
+  d.innerHTML='<div class="im"><img src="'+s.img+'" alt="'+YH.esc(s.n)+'" loading="lazy"></div><b>'+YH.esc(s.n)+'<small>('+YH.esc(s.s)+')</small></b>'+
+   (pcTag?'<span class="tag">PC</span>':'')+
+   '<button class="heart '+(YH.Fav.hasSys(s.id)?'on':'')+'" aria-label="즐겨찾기">'+YH.HEART+'</button><span class="chev">'+CHEV+'</span>';
+  d.onclick=function(e){if(e.target.closest('.heart'))return;YH.openSys(s)};
+  d.onkeydown=function(e){if(e.key==='Enter')YH.openSys(s)};
+  d.querySelector('.heart').onclick=function(e){e.stopPropagation();var on=YH.Fav.toggleSys(s.id);this.classList.toggle('on',on);YH.toast(on?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요')};
+  grid.appendChild(d);
+ });
+}
+/* 스마트폰 : 가벼운 기종만 / PC·태블릿 : 가벼운 기종 + PC 전용(고사양) 기종을 따로 보여줌 */
+build(YH.list('m'),document.getElementById('grid'),false);
+var pcList=YH.list('pc');
+if(pcList.length)build(pcList,document.getElementById('gridPc'),true);
+else['secPc','pcNote','gridPc'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='none'});
 document.querySelectorAll('[data-m]').forEach(function(b){b.onclick=function(){Shell.open(b.dataset.m)}});
 document.getElementById('nTheme').onclick=Shell.theme;
 document.getElementById('cta').onclick=function(e){e.preventDefault();document.getElementById('list').scrollIntoView({behavior:'smooth'})};

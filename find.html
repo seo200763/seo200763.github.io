@@ -24,7 +24,7 @@ YH.guard();Shell.init('find');
 function norm(s){return String(s).toLowerCase().replace(/\s+/g,'')}
 function renderSys(q){
  var sg=document.getElementById('sg'),n=norm(q),words=String(q).toLowerCase().split(/\s+/).filter(Boolean);
- var list=YH.SYS.filter(function(s){
+ var list=YH.list().filter(function(s){
   if(!n)return true;var hay=norm(s.n+' '+s.s+' '+s.kw);
   return words.every(function(w){return hay.indexOf(w)>=0})||hay.indexOf(n)>=0;
  });
@@ -32,7 +32,7 @@ function renderSys(q){
  document.getElementById('h1').textContent=n?('게임기 검색 결과 '+list.length+'개'):'게임기 종류';
  list.forEach(function(s){
   var d=document.createElement('div');d.className='cd';
-  d.innerHTML='<div class="im"><img src="'+s.img+'" alt=""></div><b>'+YH.esc(s.n)+'<small>('+YH.esc(s.s)+')</small></b><button class="heart '+(YH.Fav.hasSys(s.id)?'on':'')+'">'+YH.HEART+'</button>';
+  d.innerHTML='<div class="im"><img src="'+s.img+'" alt=""></div><b>'+YH.esc(s.n)+'<small>('+YH.esc(s.s)+')</small></b>'+(s.tier==='pc'?'<span class="tag">PC</span>':'')+'<button class="heart '+(YH.Fav.hasSys(s.id)?'on':'')+'">'+YH.HEART+'</button>';
   d.onclick=function(e){if(e.target.closest('.heart'))return;YH.openSys(s)};
   d.querySelector('.heart').onclick=function(e){e.stopPropagation();this.classList.toggle('on',YH.Fav.toggleSys(s.id))};
   sg.appendChild(d);
@@ -43,7 +43,7 @@ var seq=0;
 function renderGames(q){
  var box=document.getElementById('gr'),gl=document.getElementById('gl'),my=++seq;
  if(norm(q).length<2){box.style.display='none';return}
- Promise.all(YH.SYS.filter(function(s){return s.kind!=='win'}).map(function(s){return YH.games(s).then(function(r){return{s:s,items:r.items}}).catch(function(){return{s:s,items:[]}})})).then(function(all){
+ Promise.all(YH.list().filter(function(s){return s.kind!=='win'}).map(function(s){return YH.games(s).then(function(r){return{s:s,items:r.items}}).catch(function(){return{s:s,items:[]}})})).then(function(all){
   if(my!==seq)return;
   var n=q.toLowerCase().split(/\s+/).filter(Boolean),hits=[];
   all.forEach(function(a){a.items.forEach(function(g){var h=(g.title+' '+g.file).toLowerCase();if(n.every(function(w){return h.indexOf(w)>=0}))hits.push({s:a.s,g:g})})});

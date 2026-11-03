@@ -17,7 +17,7 @@
 YH.guard();Shell.init('fav');
 function draw(){
  var sg=document.getElementById('sg'),gl=document.getElementById('gl');sg.innerHTML='';gl.innerHTML='';
- var fs=YH.Fav.sys().map(YH.byId).filter(Boolean);
+ var fs=YH.Fav.sys().map(YH.byId).filter(Boolean).filter(YH.visible);
  fs.forEach(function(s){
   var d=document.createElement('div');d.className='cd';
   d.innerHTML='<div class="im"><img src="'+s.img+'" alt=""></div><b>'+YH.esc(s.n)+'<small>('+YH.esc(s.s)+')</small></b><button class="heart on">'+YH.HEART+'</button>';
@@ -28,7 +28,7 @@ function draw(){
  if(!fs.length)sg.innerHTML='<div class="empty" style="grid-column:1/-1">홈에서 게임기의 ♡ 를 눌러 담아 보세요.</div>';
  var fg=YH.Fav.games();
  fg.forEach(function(g){
-  var s=YH.byId(g.sys);if(!s)return;
+  var s=YH.byId(g.sys);if(!s||!YH.visible(s))return;
   var d=document.createElement('div');d.className='gc';d.style.setProperty('--c',s.a);
   d.innerHTML='<div class="th"><img src="'+s.img+'" alt=""></div><div class="tx"><b>'+YH.esc(g.t)+'</b><small>'+YH.esc(s.n)+'</small></div><button class="heart on">'+YH.HEART+'</button><span class="pl"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span>';
   d.onclick=function(e){if(e.target.closest('.heart'))return;location.href=YH.playUrl(s,g.p)};

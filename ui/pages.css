@@ -50,3 +50,7 @@ html[data-dev=m] .tabbar{display:flex;position:fixed;left:10px;right:10px;bottom
 .cd b{text-align:center;font:600 15px/1.35 var(--kr)}.cd b small{display:block;color:#c3c8ff;font-weight:400}
 .cd .heart{position:absolute;right:6px;bottom:6px}
 html[data-dev=m] .sg{grid-template-columns:1fr 1fr}html[data-dev=m] .sg .cd{min-height:170px}
+
+/* PC 전용 표시 · 안내 상자 */
+.cd .tag{position:absolute;left:10px;top:10px;padding:3px 9px;border-radius:99px;font:800 11px var(--kr);letter-spacing:.06em;color:#fff;background:linear-gradient(135deg,#ff7a1a,#ff4fd8);box-shadow:0 3px 10px rgba(255,90,160,.45)}
+.hintbox{margin:0 0 16px;padding:13px 16px;border-radius:14px;border:1px solid rgba(255,160,90,.45);background:rgba(255,140,60,.1);color:#ffd9bd;font:500 14px/1.7 var(--kr);white-space:pre-line;word-break:keep-all}

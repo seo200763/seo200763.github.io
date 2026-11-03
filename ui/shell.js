@@ -24,7 +24,8 @@ function help(){
  '<li>해당 기종 폴더(<b>ROMS/기종/</b>)에 올려 둔 게임 목록이 나와요. 게임을 누르면 바로 실행됩니다.</li>'+
  '<li>윈도우 3.1 · 윈도우 95 는 아이콘을 누르면 윈도우 에뮬레이터가 열립니다.</li>'+
  '<li>하트(♡)를 누르면 즐겨찾기에 담겨요.</li>'+
- '<li>롬 파일은 GitHub 저장소의 <b>ROMS/GBA, ROMS/NDS, ROMS/PSX, ROMS/NES, ROMS/MAME, ROMS/SMS, ROMS/PCE, ROMS/DOS</b> 폴더에 올리면 목록에 자동으로 나타나요.</li></ol>'+
+ '<li>롬 파일은 GitHub 저장소의 <b>ROMS/기종폴더</b>(예: ROMS/SNES, ROMS/GBA, ROMS/MD …)에 올리면 목록에 자동으로 나타나요. 폴더 이름은 ROMS/README.txt 를 보세요.</li>'+
+ '<li>📱 스마트폰 화면에는 가벼운 기종만, 🖥️ PC 화면에는 <b>PC 전용(고사양)</b> 기종(N64·새턴·세가CD·32X·3DO·재규어·윈도우XP)이 따로 더 나와요.</li></ol>'+
  '<div class="row"><button class="pbtn" data-x>닫기</button></div>');
 }
 function notice(){

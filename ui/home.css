@@ -88,3 +88,10 @@ html[data-dev=m] .cd .im{flex:1;min-height:0;display:flex;align-items:center;jus
 html[data-dev=m] .cd img{width:auto;height:auto;max-width:78%;max-height:100%;aspect-ratio:auto}
 html[data-dev=m] .cd b{flex:none;padding:0 4px;font-size:15px}
 html[data-dev=m] .cd .chev{right:10px;top:10px;bottom:auto;width:30px;height:30px}
+
+/* PC 전용 기종 구분 */
+.sec small{font:500 13px var(--kr);color:#aeb4ee;margin-left:2px;white-space:nowrap}
+.grid+.sec{margin-top:38px}
+.pcnote{margin:-6px 0 14px;font:400 13.5px/1.6 var(--kr);color:#aeb4ee}
+.cd .tag{position:absolute;left:10px;top:10px;padding:3px 9px;border-radius:99px;font:800 11px var(--kr);letter-spacing:.06em;color:#fff;background:linear-gradient(135deg,#ff7a1a,#ff4fd8);box-shadow:0 3px 10px rgba(255,90,160,.45)}
+@media (max-width:900px){html[data-dev=pc] .sec small{display:none}}

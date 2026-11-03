@@ -11,15 +11,16 @@
 </head>
 <body>
 <header class="hd"><button class="back" onclick="history.length>1?history.back():location.href='home.html'" aria-label="뒤로"><svg viewBox="0 0 24 24" class="ic"><path d="M15 5l-7 7 7 7"/></svg></button><h1 id="ttl"></h1><span class="sp"></span><a class="gbtn loc" id="loc">📂 내 기기에서 열기</a><div class="sbox"><input id="q" type="search" placeholder="게임 검색" autocomplete="off"></div><button class="gbtn loc" id="ref" title="목록 새로고침">↻</button></header>
-<main class="pg"><p class="ct" id="ct">목록을 불러오는 중…</p><div class="gl" id="gl"></div><div class="tabpad"></div></main>
+<main class="pg"><div class="hintbox" id="hb" style="display:none"></div><p class="ct" id="ct">목록을 불러오는 중…</p><div class="gl" id="gl"></div><div class="tabpad"></div></main>
 <script src="ui/core.js"></script><script src="ui/shell.js"></script>
 <script>
 YH.guard();Shell.init('home');
 var s=YH.byId(YH.qs.get('sys'));
-if(!s||s.kind==='win'){location.replace('home.html');throw 0}
+if(!s||s.kind==='win'||!YH.visible(s)){location.replace('home.html'+Shell.suffix());throw 0}
 var items=[],known=false,sfx=Shell.suffix().replace('?','&');
 document.getElementById('ttl').innerHTML='<img src="'+s.img+'" alt=""><span>'+YH.esc(s.n)+' <small>('+s.s+')</small></span>';
 document.title=s.n+' · 영호의 게임에뮬레이터';
+if(s.hint||s.tier==='pc'){var hb=document.getElementById('hb');hb.textContent=(s.tier==='pc'?'🖥️ PC 전용 기종 — PC 인터넷(크롬·엣지)에서 가장 잘 돌아가요.\n':'')+(s.hint||'');hb.style.display=''}
 document.documentElement.style.setProperty('--c',s.a);
 var PL='<svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>';
 function render(){
