@@ -5,52 +5,335 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0d33">
 <title>게임 목록 · 영호의 게임에뮬레이터</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Orbitron:wght@700;900&display=swap">
 <link rel="stylesheet" href="ui/common.css">
-<link rel="stylesheet" href="ui/pages.css">
+<link rel="stylesheet" href="ui/gamelist.css">
 </head>
-<body>
-<header class="hd"><button class="back" onclick="history.length>1?history.back():location.href='home.html'" aria-label="뒤로"><svg viewBox="0 0 24 24" class="ic"><path d="M15 5l-7 7 7 7"/></svg></button><h1 id="ttl"></h1><span class="sp"></span><a class="gbtn loc" id="loc">📂 내 기기에서 열기</a><div class="sbox"><input id="q" type="search" placeholder="게임 검색" autocomplete="off"></div><button class="gbtn loc" id="ref" title="목록 새로고침">↻</button></header>
-<main class="pg"><div class="hintbox" id="hb" style="display:none"></div><p class="ct" id="ct">목록을 불러오는 중…</p><div class="gl" id="gl"></div><div class="tabpad"></div></main>
+<body class="gx">
+<svg width="0" height="0" style="position:absolute"><defs>
+ <symbol id="gp" viewBox="0 0 56 36"><path d="M10 4h36c5 0 8 4 9 12l1 11c.4 5-4 8-8 5l-6-5H14l-6 5c-4 3-8 0-8-5l1-11C2 8 5 4 10 4z" fill="#d9ccff" stroke="#fff" stroke-width="1.5"/><path d="M15 12v10M10 17h10" stroke="#5b3df5" stroke-width="3.500" stroke-linecap="round"/><circle cx="38" cy="14" r="2.500" fill="#ff5a8a"/><circle cx="44" cy="18" r="2.500" fill="#38bdf8"/><circle cx="38" cy="22" r="2.500" fill="#4ade80"/><circle cx="32" cy="18" r="2.500" fill="#fbbf24"/></symbol>
+</defs></svg>
+<div class="stars"></div><div class="floor"></div>
+
+<div class="app" id="app">
+ <header class="gh">
+  <svg class="pad"><use href="#gp"/></svg>
+  <div class="tt"><h1 id="en"></h1><p id="jp"></p></div>
+  <span class="sp"></span>
+  <div class="rt">
+   <span class="cnt" id="ct"></span>
+   <div class="sbox"><input id="q" type="search" placeholder="게임 검색  ( / )" autocomplete="off"></div>
+   <p class="say">게임을 선택하세요!</p>
+   <img class="mas" id="mas" alt="">
+  </div>
+ </header>
+
+ <div class="gbody">
+  <nav class="side panel" id="side" aria-label="게임기 선택">
+   <button class="chv" id="sUp" tabindex="-1" aria-label="위 게임기"><svg viewBox="0 0 26 18"><path d="M13 2l11 14H2z"/></svg></button>
+   <div class="slist" id="slist"></div>
+   <button class="chv" id="sDn" tabindex="-1" aria-label="아래 게임기"><svg viewBox="0 0 26 18"><path d="M13 16L2 2h22z"/></svg></button>
+  </nav>
+
+  <section class="main" id="main">
+   <div class="hintbox" id="hb" style="display:none"></div>
+   <div class="gw" id="gw"><div class="grid" id="gl"></div></div>
+   <div class="info panel none" id="info">
+    <div class="ith" id="ith" title="사진 넣기 / 바꾸기"></div>
+    <div class="itx"><h2 id="ittl"></h2><div id="imeta"></div></div>
+    <div class="idesc" id="idesc"></div>
+    <div class="iact">
+     <button class="ibtn hrt" id="ifav" tabindex="-1" aria-label="즐겨찾기"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+     <button class="ibtn go" id="igo" tabindex="-1"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg><span class="lb">시작</span></button>
+    </div>
+   </div>
+  </section>
+ </div>
+
+ <footer class="gbar">
+  <div class="kb dpd" id="kSel"><svg class="dp" viewBox="0 0 44 44"><path d="M17 3h10v12h12v10H27v12H17V25H5V15h12z" fill="#fff" stroke="#1e3bd0" stroke-width="1.5"/><circle cx="22" cy="20" r="3" fill="#1e3bd0"/></svg><span>선택</span></div>
+  <div class="kb" id="kA"><span class="kk">A</span><span>결정</span></div>
+  <div class="kb" id="kB"><span class="kk">B</span><span>돌아가기</span></div>
+  <span class="sp"></span>
+  <span class="hk">F 즐겨찾기 · P 사진 넣기 · / 검색</span>
+  <div class="kb" id="kM"><span class="mn"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span><span>메뉴</span></div>
+ </footer>
+</div>
+
+<div class="gmenu" id="menu"><div class="mbx"><h3 id="mttl"></h3><div id="mlist"></div><p class="mnote" id="mnote"></p></div></div>
+<input type="file" id="pick" accept="image/*" hidden>
+
 <script src="ui/core.js"></script><script src="ui/shell.js"></script>
 <script>
-YH.guard();Shell.init('home');
-var s=YH.byId(YH.qs.get('sys'));
-if(!s||s.kind==='win'||!YH.visible(s)){location.replace('home.html'+Shell.suffix());throw 0}
-var items=[],known=false,sfx=Shell.suffix().replace('?','&');
-document.getElementById('ttl').innerHTML='<img src="'+s.img+'" alt=""><span>'+YH.esc(s.n)+' <small>('+s.s+')</small></span>';
-document.title=s.n+' · 영호의 게임에뮬레이터';
-if(s.hint||s.tier==='pc'){var hb=document.getElementById('hb');hb.textContent=(s.tier==='pc'?'🖥️ PC 전용 기종 — PC 인터넷(크롬·엣지)에서 가장 잘 돌아가요.\n':'')+(s.hint||'');hb.style.display=''}
-document.documentElement.style.setProperty('--c',s.a);
-var PL='<svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>';
-function render(){
- var q=document.getElementById('q').value.trim().toLowerCase(),gl=document.getElementById('gl');
- var rows=items.filter(function(g){return!q||(g.title+' '+g.file).toLowerCase().indexOf(q)>=0});
- gl.innerHTML='';
- document.getElementById('ct').textContent=items.length?('게임 '+rows.length+(rows.length!==items.length?' / '+items.length:'')+'개'):'';
- if(!rows.length){
-  var e=document.createElement('div');e.className='empty';
-  e.innerHTML=items.length?'검색 결과가 없어요.':(known?'아직 올려 둔 게임이 없어요.<br>GitHub 저장소의 <code>ROMS/'+s.folders[0]+'/</code> 폴더에 게임 파일을 올리면 여기에 나타나요.<br>(올린 직후에는 몇 분 걸릴 수 있어요 · ↻ 로 새로고침)':'게임 목록을 불러오지 못했어요.<br>잠시 후 ↻ 를 눌러 다시 시도하거나, 위의 <b>내 기기에서 열기</b>를 이용하세요.');
-  gl.appendChild(e);return;
+(function(){
+'use strict';
+YH.guard();
+var $=function(i){return document.getElementById(i)};
+var SUF=Shell.suffix().replace('?','&');
+var cur=YH.byId(YH.qs.get('sys'));
+if(!cur||cur.kind==='win'||!YH.visible(cur)){location.replace('home.html'+Shell.suffix());return}
+var SIDE=YH.list().filter(function(x){return x.kind!=='win'});
+
+/* 화면 위쪽 큰 이름 (영문 / 일본어) */
+var NAMES={gba:['GAME BOY ADVANCE','ゲームボーイアドバンス'],nds:['NINTENDO DS','ニンテンドーDS'],psx:['PLAYSTATION','プレイステーション'],nes:['FAMILY COMPUTER','ファミリーコンピュータ'],
+snes:['SUPER FAMICOM','スーパーファミコン'],md:['MEGA DRIVE','メガドライブ'],sms:['MASTER SYSTEM','セガ・マークIII'],gb:['GAME BOY','ゲームボーイ'],gbc:['GAME BOY COLOR','ゲームボーイカラー'],
+gg:['GAME GEAR','ゲームギア'],pce:['PC ENGINE','PCエンジン'],ngp:['NEO GEO POCKET','ネオジオポケット'],ws:['WONDERSWAN','ワンダースワン'],lynx:['ATARI LYNX',''],vb:['VIRTUAL BOY','バーチャルボーイ'],
+a2600:['ATARI 2600',''],a7800:['ATARI 7800',''],coleco:['COLECOVISION',''],mame:['ARCADE','アーケード'],dos:['MS-DOS',''],n64:['NINTENDO 64','ニンテンドウ64'],
+saturn:['SEGA SATURN','セガサターン'],segacd:['SEGA CD','メガCD'],s32x:['SEGA 32X','スーパー32X'],'3do':['3DO','3DO リアル'],jaguar:['ATARI JAGUAR','']};
+
+var S={sys:cur,items:[],rows:[],sel:0,pane:'grid',token:0,timer:0,known:false};
+var gl=$('gl'),gw=$('gw'),mainEl=$('main'),sideEl=$('side');
+var isSm=function(){return document.documentElement.classList.contains('sm')};
+function lay(){document.documentElement.classList.toggle('sm',!!YH.phone||innerWidth<=860)}
+lay();addEventListener('resize',lay);
+
+/* ── 이 브라우저에만 저장하는 사진 ── */
+var CV={
+ get:function(k){try{return localStorage.getItem('yh.cv.'+k)}catch(e){return null}},
+ set:function(k,v){try{localStorage.setItem('yh.cv.'+k,v);return true}catch(e){return false}},
+ del:function(k){try{localStorage.removeItem('yh.cv.'+k)}catch(e){}}
+};
+function shrink(file,cb){
+ var fr=new FileReader();
+ fr.onerror=function(){cb(null)};
+ fr.onload=function(){
+  var im=new Image();
+  im.onerror=function(){cb(null)};
+  im.onload=function(){
+   var m=480,w=im.naturalWidth,h=im.naturalHeight,r=Math.min(1,m/Math.max(w,h));
+   var c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*r));c.height=Math.max(1,Math.round(h*r));
+   var x=c.getContext('2d');x.fillStyle='#0b0d33';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+   cb(c.toDataURL('image/jpeg',.82));
+  };
+  im.src=fr.result;
+ };
+ fr.readAsDataURL(file);
+}
+function keyOf(g){return S.sys.id+'/'+g.p}
+function coverOf(g){return CV.get(keyOf(g))||g.cover||''}
+
+/* ── 그리기 ── */
+var CAM='<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.7"/><path d="M3 17l5.500-5.500 4 4 3-3L21 18"/></svg>';
+function nopic(extra){return '<div class="nop"><img class="gho" src="'+S.sys.img+'" alt="">'+CAM+'<b>사진없음</b><em>NO IMAGE</em></div>'+(extra||'')}
+function tileHTML(g,i){
+ var c=coverOf(g);
+ return '<div class="tile'+(YH.Fav.hasGame(keyOf(g))?' f':'')+'" data-i="'+i+'">'+(c?'<img class="pic" src="'+YH.esc(c)+'" alt="" loading="lazy" decoding="async">':nopic())+
+  '<span class="fv">♥</span><div class="nm"><span>'+YH.esc(g.title)+'</span></div></div>';
+}
+gl.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='IMG'&&t.classList.contains('pic')){var d=document.createElement('div');d.innerHTML=nopic();t.replaceWith(d.firstChild)}},true);
+
+function head(){
+ var s=S.sys,n=NAMES[s.id]||[s.n.toUpperCase(),''];
+ $('en').textContent=n[0];$('jp').textContent=n[1]||s.n;
+ $('mas').src=s.img;
+ document.title=s.n+' · 영호의 게임에뮬레이터';
+ document.documentElement.style.setProperty('--c',s.a);
+ var hb=$('hb');
+ if(s.hint||s.tier==='pc'){hb.textContent=(s.tier==='pc'?'🖥️ PC 전용 기종 — PC 인터넷(크롬·엣지)에서 가장 잘 돌아가요.\n':'')+(s.hint||'');hb.style.display=''}else hb.style.display='none';
+}
+function buildSide(){
+ $('slist').innerHTML=SIDE.map(function(x){
+  return '<div class="si" role="button" data-id="'+x.id+'"><img src="'+x.img+'" alt="" loading="lazy"><span><b>'+YH.esc(x.n)+'</b><small>('+YH.esc(x.s)+')</small></span><i><svg viewBox="0 0 24 24"><path d="M8 5l9 7-9 7z"/></svg></i></div>';
+ }).join('');
+}
+function markSide(){
+ var k=$('slist').children;
+ for(var i=0;i<k.length;i++)k[i].classList.toggle('on',SIDE[i]===S.sys);
+ var on=$('slist').querySelector('.on');if(on)on.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+function setPane(p){S.pane=p;mainEl.classList.toggle('foc',p==='grid');sideEl.classList.toggle('foc',p==='side')}
+function cols(){var n=getComputedStyle(gl).gridTemplateColumns.split(' ').length;return n>0?n:1}
+
+function render(restore){
+ var q=$('q').value.trim().toLowerCase(),prev=null;
+ if(restore){try{prev=sessionStorage.getItem('yh.gsel.'+S.sys.id)}catch(e){}}
+ else if(S.rows[S.sel])prev=S.rows[S.sel].p;
+ S.rows=S.items.filter(function(g){return!q||(g.title+' '+g.file).toLowerCase().indexOf(q)>=0});
+ $('ct').textContent=S.items.length?('게임 '+S.rows.length+(S.rows.length!==S.items.length?' / '+S.items.length:'')+'개'):'';
+ if(!S.rows.length){
+  gl.innerHTML='<div class="empty">'+(S.items.length?'검색 결과가 없어요.':(S.known?'아직 올려 둔 게임이 없어요.<br>GitHub 저장소의 <code>ROMS/'+S.sys.folders[0]+'/</code> 폴더에 게임 파일을 올리면 여기에 나타나요.<br>(올린 직후에는 몇 분 걸릴 수 있어요 · 메뉴에서 새로고침)':'게임 목록을 불러오지 못했어요.<br>잠시 후 메뉴의 <b>새로고침</b>을 눌러 다시 시도하거나, <b>내 기기에서 열기</b>를 이용하세요.'))+'</div>';
+  S.sel=0;updateInfo();if(S.pane==='grid')setPane('side');return;
  }
- rows.forEach(function(g){
-  var key=s.id+'/'+g.p,d=document.createElement('div');d.className='gc';d.tabIndex=0;
-  d.innerHTML='<div class="th"><img src="'+s.img+'" alt=""></div><div class="tx"><b>'+YH.esc(g.title)+'</b><small>'+YH.esc(YH.ext(g.file).toUpperCase())+(g.size?' · '+YH.fmt(g.size):'')+'</small></div><button class="heart '+(YH.Fav.hasGame(key)?'on':'')+'" aria-label="즐겨찾기">'+YH.HEART+'</button><span class="pl">'+PL+'</span>';
-  function go(){location.href=YH.playUrl(s,g.p)}
-  d.onclick=function(e){if(e.target.closest('.heart'))return;go()};
-  d.onkeydown=function(e){if(e.key==='Enter')go()};
-  d.querySelector('.heart').onclick=function(e){e.stopPropagation();var on=YH.Fav.toggleGame({k:key,sys:s.id,p:g.p,t:g.title});this.classList.toggle('on',on);YH.toast(on?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요')};
-  gl.appendChild(d);
- });
+ gl.innerHTML=S.rows.map(tileHTML).join('');
+ var i=0;if(prev)for(var j=0;j<S.rows.length;j++)if(S.rows[j].p===prev){i=j;break}
+ S.sel=i;paint(true);
 }
+function paint(scroll){
+ var o=gl.querySelector('.tile.on');if(o)o.classList.remove('on');
+ var t=gl.children[S.sel];
+ if(t&&t.classList.contains('tile')){t.classList.add('on');if(scroll!==false)t.scrollIntoView({block:'nearest',inline:'nearest'})}
+ var g=S.rows[S.sel];
+ if(g){try{sessionStorage.setItem('yh.gsel.'+S.sys.id,g.p)}catch(e){}}
+ updateInfo();
+}
+function updateInfo(){
+ var g=S.rows[S.sel],inf=$('info');
+ if(!g){inf.classList.add('none');return}
+ inf.classList.remove('none');
+ var c=coverOf(g);
+ $('ith').innerHTML=c?'<img class="pic" src="'+YH.esc(c)+'" alt="">':nopic('<span class="add">＋ 사진 넣기</span>');
+ var im=$('ith').querySelector('.pic');if(im)im.onerror=function(){$('ith').innerHTML=nopic('<span class="add">＋ 사진 넣기</span>')};
+ $('ittl').textContent=g.title;
+ var L=[];
+ if(g.genre)L.push(['장르',g.genre]);if(g.year)L.push(['발매일',g.year]);if(g.maker)L.push(['제작사',g.maker]);
+ if(L.length<3)L.push(['기종',S.sys.n]);
+ if(L.length<3)L.push(['형식',YH.ext(g.file).toUpperCase()+(g.size?' · '+YH.fmt(g.size):'')]);
+ $('imeta').innerHTML=L.slice(0,3).map(function(r){return '<p><i>'+r[0]+'</i> : '+YH.esc(String(r[1]))+'</p>'}).join('');
+ $('idesc').textContent=g.desc||'Enter(A) 키를 누르면 이 게임을 바로 시작해요!';
+ $('ifav').classList.toggle('on',YH.Fav.hasGame(keyOf(g)));
+}
+function drawTile(i){
+ var t=gl.children[i],g=S.rows[i];if(!t||!g)return;
+ var d=document.createElement('div');d.innerHTML=tileHTML(g,i);gl.replaceChild(d.firstChild,t);paint(false);
+}
+
+/* ── 기종 바꾸기 / 불러오기 ── */
 function load(force){
- document.getElementById('ct').textContent='목록을 불러오는 중…';
- YH.games(s,force).then(function(r){items=r.items;known=r.known;render()});
+ var t=++S.token,sys=S.sys;
+ $('ct').textContent='불러오는 중…';
+ gl.innerHTML='<div class="empty">목록을 불러오는 중…</div>';
+ S.rows=[];S.items=[];$('info').classList.add('none');
+ YH.games(sys,force).then(function(r){if(t!==S.token)return;S.items=r.items;S.known=r.known;render(true)});
 }
-document.getElementById('q').oninput=render;
-document.getElementById('ref').onclick=function(){load(true)};
-document.getElementById('loc').onclick=function(){location.href=YH.playUrl(s,'')};
-load(false);
+function goSys(x,now){
+ if(x===S.sys)return;
+ S.sys=x;head();markSide();
+ try{history.replaceState(null,'','games.html?sys='+x.id+SUF)}catch(e){}
+ $('ct').textContent='';gl.innerHTML='<div class="empty">목록을 불러오는 중…</div>';$('info').classList.add('none');S.rows=[];S.items=[];S.token++;
+ clearTimeout(S.timer);S.timer=setTimeout(function(){load(false)},now?0:220);
+}
+function moveSys(d){
+ var i=SIDE.indexOf(S.sys),j=Math.max(0,Math.min(SIDE.length-1,i+d));
+ if(j!==i)goSys(SIDE[j],false);
+}
+
+/* ── 동작 ── */
+function play(){var g=S.rows[S.sel];if(!g)return;location.href=YH.playUrl(S.sys,g.p)}
+function back(){if(history.length>1)history.back();else location.href='home.html'+Shell.suffix()}
+function toggleFav(){
+ var g=S.rows[S.sel];if(!g)return;
+ var on=YH.Fav.toggleGame({k:keyOf(g),sys:S.sys.id,p:g.p,t:g.title});
+ var t=gl.children[S.sel];if(t)t.classList.toggle('f',on);
+ $('ifav').classList.toggle('on',on);
+ YH.toast(on?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요');
+}
+function pickPhoto(){
+ var g=S.rows[S.sel];if(!g){YH.toast('먼저 게임을 골라 주세요');return}
+ var pk=$('pick'),i=S.sel,key=keyOf(g);
+ pk.value='';
+ pk.onchange=function(){
+  var f=pk.files&&pk.files[0];if(!f)return;
+  shrink(f,function(d){
+   if(!d){YH.toast('사진을 읽지 못했어요');return}
+   if(!CV.set(key,d)){YH.toast('저장 공간이 부족해요 (다른 사진을 지워 주세요)');return}
+   if(S.rows[i]&&keyOf(S.rows[i])===key)drawTile(i);
+   YH.toast('사진을 넣었어요 · 이 브라우저에 저장돼요');
+  });
+ };
+ pk.click();
+}
+function delPhoto(){var g=S.rows[S.sel];if(!g)return;CV.del(keyOf(g));drawTile(S.sel);YH.toast('넣어 둔 사진을 지웠어요')}
+
+function nav(dx,dy){
+ var sm=isSm(),n=S.rows.length,c=cols();
+ if(S.pane==='side'){
+  var step=sm?dx:dy,enter=sm?dy>0:dx>0;
+  if(step)moveSys(step);else if(enter&&n)setPane('grid');
+  return;
+ }
+ if(!n){setPane('side');return}
+ if(dx<0){if(!sm&&S.sel%c===0)setPane('side');else if(S.sel>0){S.sel--;paint()}}
+ if(dx>0&&S.sel<n-1){S.sel++;paint()}
+ if(dy<0){if(S.sel-c>=0){S.sel-=c;paint()}else if(sm)setPane('side')}
+ if(dy>0){if(S.sel+c<n){S.sel+=c;paint()}else if(Math.floor(S.sel/c)<Math.floor((n-1)/c)){S.sel=n-1;paint()}}
+}
+
+/* ── 메뉴 ── */
+var MI=[],mi=0,menuOn=false;
+function openMenu(){
+ var g=S.rows[S.sel],a=[];
+ if(g){
+  a.push({ic:'♥',t:YH.Fav.hasGame(keyOf(g))?'즐겨찾기에서 빼기':'즐겨찾기에 담기',k:'F',f:toggleFav});
+  a.push({ic:'🖼️',t:CV.get(keyOf(g))?'이 게임 사진 바꾸기':'이 게임 사진 넣기',k:'P',f:pickPhoto});
+  if(CV.get(keyOf(g)))a.push({ic:'🗑️',t:'넣어 둔 사진 지우기',f:delPhoto});
+ }
+ a.push({ic:'↻',t:'게임 목록 새로고침',f:function(){load(true)}});
+ a.push({ic:'📂',t:'내 기기에서 열기',f:function(){location.href=YH.playUrl(S.sys,'')}});
+ a.push({ic:'⭐',t:'즐겨찾기 모음',f:function(){location.href='fav.html'+Shell.suffix()}});
+ a.push({ic:'🏠',t:'홈으로',f:function(){location.href='home.html'+Shell.suffix()}});
+ MI=a;mi=0;
+ $('mttl').textContent=g?g.title:S.sys.n;
+ $('mlist').innerHTML=a.map(function(x,i){return '<div class="mi'+(i===0?' on':'')+'" data-i="'+i+'"><span class="ic2">'+x.ic+'</span>'+YH.esc(x.t)+(x.k?'<kbd>'+x.k+'</kbd>':'')+'</div>'}).join('');
+ $('mnote').innerHTML='모든 방문자에게 사진이 보이게 하려면 GitHub의 <code>ROMS/'+S.sys.folders[0]+'/</code> 에 게임 파일과 <b>같은 이름</b>의 사진(jpg·png·webp)을 올려 주세요. 여기서 넣은 사진은 <b>이 브라우저에만</b> 저장돼요.';
+ $('menu').classList.add('on');menuOn=true;
+}
+function closeMenu(){$('menu').classList.remove('on');menuOn=false}
+function menuMark(){var k=$('mlist').children;for(var i=0;i<k.length;i++)k[i].classList.toggle('on',i===mi)}
+function runMenu(i){var x=MI[i];closeMenu();if(x)setTimeout(x.f,0)}
+$('mlist').addEventListener('click',function(e){var el=e.target.closest('.mi');if(el)runMenu(+el.dataset.i)});
+$('menu').addEventListener('click',function(e){if(e.target===$('menu'))closeMenu()});
+
+/* ── 키보드 ── */
+document.addEventListener('keydown',function(e){
+ if(e.ctrlKey||e.metaKey||e.altKey)return;
+ var k=e.key,tg=e.target,typing=tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA');
+ if(menuOn){
+  if(k==='ArrowUp'){mi=(mi+MI.length-1)%MI.length;menuMark()}
+  else if(k==='ArrowDown'){mi=(mi+1)%MI.length;menuMark()}
+  else if(k==='Enter'||k===' '){runMenu(mi)}
+  else if(k==='Escape'||k==='Backspace'||k==='m'||k==='M'){closeMenu()}
+  else return;
+  e.preventDefault();return;
+ }
+ if(typing){
+  if(k==='Escape'){if(tg.value){tg.value='';render(false)}tg.blur();e.preventDefault()}
+  else if(k==='ArrowDown'||k==='Enter'){tg.blur();if(S.rows.length)setPane('grid');e.preventDefault()}
+  return;
+ }
+ switch(k){
+  case'ArrowLeft':nav(-1,0);break;
+  case'ArrowRight':nav(1,0);break;
+  case'ArrowUp':nav(0,-1);break;
+  case'ArrowDown':nav(0,1);break;
+  case'Enter':case' ':if(S.pane==='grid')play();else if(S.rows.length)setPane('grid');break;
+  case'Escape':case'Backspace':back();break;
+  case'Home':if(S.pane==='grid'&&S.rows.length){S.sel=0;paint()}break;
+  case'End':if(S.pane==='grid'&&S.rows.length){S.sel=S.rows.length-1;paint()}break;
+  case'PageUp':if(S.pane==='grid'&&S.rows.length){S.sel=Math.max(0,S.sel-cols()*2);paint()}break;
+  case'PageDown':if(S.pane==='grid'&&S.rows.length){S.sel=Math.min(S.rows.length-1,S.sel+cols()*2);paint()}break;
+  case'f':case'F':toggleFav();break;
+  case'p':case'P':pickPhoto();break;
+  case'm':case'M':case'ContextMenu':case'F2':openMenu();break;
+  case'/':$('q').focus();$('q').select();break;
+  default:return;
+ }
+ e.preventDefault();
+});
+
+/* ── 마우스 · 터치 ── */
+gl.addEventListener('click',function(e){
+ var t=e.target.closest('.tile');if(!t)return;
+ var i=+t.dataset.i;setPane('grid');
+ if(i===S.sel)play();else{S.sel=i;paint(false)}
+});
+$('slist').addEventListener('click',function(e){
+ var el=e.target.closest('.si');if(!el)return;
+ setPane('side');goSys(YH.byId(el.dataset.id),true);
+});
+$('sUp').onclick=function(){setPane('side');moveSys(-1)};
+$('sDn').onclick=function(){setPane('side');moveSys(1)};
+$('ith').onclick=pickPhoto;
+$('ifav').onclick=toggleFav;
+$('igo').onclick=play;
+$('kA').onclick=function(){if(S.pane==='grid'||S.rows.length)play()};
+$('kB').onclick=back;
+$('kM').onclick=openMenu;
+$('kSel').onclick=function(){setPane(S.pane==='grid'?'side':'grid')};
+$('q').addEventListener('input',function(){render(false)});
+document.addEventListener('click',function(e){var b=e.target.closest('button');if(b)b.blur()});
+
+buildSide();head();markSide();setPane('grid');load(false);
+})();
 </script>
 </body>
 </html>

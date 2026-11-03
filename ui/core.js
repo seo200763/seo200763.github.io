@@ -101,16 +101,35 @@ function api(path){
   .then(function(v){try{sessionStorage.setItem(key,JSON.stringify({t:Date.now(),v:v}))}catch(e){}return v});
 }
 function titleOf(f){return base(f).replace(/[_]+/g,' ').trim()}
+/* 게임 사진(커버) : 게임 파일과 같은 이름의 그림 파일 (예: 슈퍼마리오.gba + 슈퍼마리오.jpg) */
+var PICX=['jpg','jpeg','png','webp','gif','avif'];
 function listDir(dir,exts){
  return api(dir).then(function(a){
   if(!Array.isArray(a))throw 0;
-  return a.filter(function(f){return f.type==='file'&&exts.indexOf(ext(f.name))>=0}).map(function(f){return{file:f.name,size:f.size||0,dir:dir}});
+  var pics={};
+  a.forEach(function(f){
+   if(f.type!=='file'||PICX.indexOf(ext(f.name))<0)return;
+   var b=base(f.name).toLowerCase();
+   if(!pics[b]||ext(f.name)==='jpg')pics[b]=f.name;
+  });
+  return a.filter(function(f){return f.type==='file'&&exts.indexOf(ext(f.name))>=0}).map(function(f){
+   var pn=pics[base(f.name).toLowerCase()]||pics[f.name.toLowerCase()];   /* 슈퍼마리오.jpg  또는  슈퍼마리오.gba.jpg */
+   return{file:f.name,size:f.size||0,dir:dir,cover:pn?dir+'/'+encodeURIComponent(pn):''};
+  });
  });
+}
+/* games.json 의 cover 값 : 파일 이름만 쓰면 같은 폴더, / 가 들어 있거나 http 로 시작하면 그 주소 그대로 */
+function coverUrl(dir,c){
+ if(!c)return'';
+ if(/^(https?:|data:|\/)/i.test(c)||c.indexOf('/')>=0)return c;
+ return dir+'/'+encodeURIComponent(c);
 }
 function viaJson(dir,exts){
  return fetch(dir+'/games.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
   var a=Array.isArray(j)?j:(j&&j.games)||[];
-  return a.map(function(g){return typeof g==='string'?{file:g}:g}).filter(function(g){return g&&g.file&&(exts.indexOf(ext(g.file))>=0)}).map(function(g){return{file:g.file,size:g.size||0,title:g.title,dir:dir}});
+  return a.map(function(g){return typeof g==='string'?{file:g}:g}).filter(function(g){return g&&g.file&&(exts.indexOf(ext(g.file))>=0)}).map(function(g){
+   return{file:g.file,size:g.size||0,title:g.title,dir:dir,cover:coverUrl(dir,g.cover),genre:g.genre,year:g.year,maker:g.maker,desc:g.desc};
+  });
  });
 }
 var memo={};
@@ -138,7 +157,7 @@ function games(sys,force){
     (b||[]).forEach(function(g){
      var key=g.file.toLowerCase();if(seen[key])return;seen[key]=1;
      var j=given[key]||{};
-     items.push({file:g.file,size:g.size||j.size||0,title:j.title||titleOf(g.file),dir:g.dir,p:g.dir+'/'+g.file});
+     items.push({file:g.file,size:g.size||j.size||0,title:j.title||titleOf(g.file),dir:g.dir,p:g.dir+'/'+g.file,cover:g.cover||j.cover||'',genre:j.genre||g.genre,year:j.year||g.year,maker:j.maker||g.maker,desc:j.desc||g.desc});
     });
    });
    if(sys.mame)items=items.filter(function(g){return g.file.charAt(0)!=='_'});
