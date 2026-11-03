@@ -61,6 +61,17 @@
 </div>
 
 <div class="gmenu" id="menu"><div class="mbx"><h3 id="mttl"></h3><div id="mlist"></div><p class="mnote" id="mnote"></p></div></div>
+<div class="gmenu" id="pdlg"><div class="mbx">
+ <h3 id="ptt"></h3>
+ <div class="pprev" id="pprev"></div>
+ <div class="prow"><button class="ibtn" id="pchoose" type="button">🖼️ 사진 고르기</button></div>
+ <label class="plb" for="ptok">GitHub 토큰</label>
+ <input id="ptok" class="fld" type="password" placeholder="github_pat_… 또는 ghp_…" autocomplete="off" spellcheck="false">
+ <label class="chk"><input type="checkbox" id="psave" checked> 이 브라우저에 토큰 저장 (다음부터 입력 생략)</label>
+ <p class="mnote" id="pnote"></p>
+ <div class="prow"><button class="ibtn go" id="pup" type="button">GitHub에 올리기</button><button class="ibtn" id="ploc" type="button">이 브라우저에만</button><button class="ibtn" id="pcl" type="button">닫기</button></div>
+ <p class="mnote pst" id="pst"></p>
+</div></div>
 <input type="file" id="pick" accept="image/*" hidden>
 
 <script src="ui/core.js"></script><script src="ui/shell.js"></script>
@@ -110,11 +121,16 @@ function shrink(file,cb){
  fr.readAsDataURL(file);
 }
 function keyOf(g){return S.sys.id+'/'+g.p}
-function coverOf(g){return CV.get(keyOf(g))||g.cover||''}
+function coverOf(g){
+ var k=keyOf(g),l=CV.get(k);
+ try{var up=+localStorage.getItem('yh.cvup.'+k)||0;
+  if(l&&up&&g.cover&&Date.now()-up>300000){CV.del(k);localStorage.removeItem('yh.cvup.'+k);l=null}}catch(e){}
+ return l||g.cover||'';
+}
 
 /* ── 그리기 ── */
 var CAM='<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.7"/><path d="M3 17l5.500-5.500 4 4 3-3L21 18"/></svg>';
-function nopic(extra){return '<div class="nop"><img class="gho" src="'+S.sys.img+'" alt="">'+CAM+'<b>사진없음</b><em>NO IMAGE</em></div>'+(extra||'')}
+function nopic(extra){return '<div class="nop" title="눌러서 사진 넣기"><img class="gho" src="'+S.sys.img+'" alt="">'+CAM+'<b>사진없음</b><em>NO IMAGE</em></div>'+(extra||'')}
 function tileHTML(g,i){
  var c=coverOf(g);
  return '<div class="tile'+(YH.Fav.hasGame(keyOf(g))?' f':'')+'" data-i="'+i+'">'+(c?'<img class="pic" src="'+YH.esc(c)+'" alt="" loading="lazy" decoding="async">':nopic())+
@@ -217,21 +233,70 @@ function toggleFav(){
  $('ifav').classList.toggle('on',on);
  YH.toast(on?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요');
 }
+/* ── 사진 넣기 대화상자 (GitHub 토큰으로 저장소에 올리기 / 이 브라우저에만 저장) ── */
+var PD={g:null,i:0,data:null,on:false,busy:false};
+function tokGet(){try{return localStorage.getItem('yh.ghtok')||''}catch(e){return''}}
 function pickPhoto(){
  var g=S.rows[S.sel];if(!g){YH.toast('먼저 게임을 골라 주세요');return}
- var pk=$('pick'),i=S.sel,key=keyOf(g);
- pk.value='';
+ PD.g=g;PD.i=S.sel;PD.data=null;PD.busy=false;
+ $('ptt').textContent='사진 넣기 · '+g.title;
+ $('pprev').innerHTML=coverOf(g)?'<img src="'+YH.esc(coverOf(g))+'" alt="">':'<span>사진을 고르면 여기에 미리 보여요</span>';
+ $('ptok').value=tokGet();
+ var path=g.dir+'/'+YH.base(g.file)+'.jpg';
+ $('pnote').innerHTML='<b>GitHub에 올리기</b>: <code>'+YH.esc(path)+'</code> 로 저장소에 올려요. 올린 뒤 1~2분이면 모든 방문자에게 보여요.<br>토큰은 GitHub → Settings → Developer settings → Fine-grained token 에서 이 저장소(<code>'+YH.REPO.r+'</code>)의 <b>Contents: Read and write</b> 권한으로 만드세요.';
+ $('pst').textContent='';$('pup').disabled=true;
+ $('pdlg').classList.add('on');PD.on=true;
+ if(!$('ptok').value)setTimeout(function(){},0);
+}
+function closePhoto(){$('pdlg').classList.remove('on');PD.on=false}
+$('pchoose').onclick=function(){
+ var pk=$('pick');pk.value='';
  pk.onchange=function(){
   var f=pk.files&&pk.files[0];if(!f)return;
   shrink(f,function(d){
-   if(!d){YH.toast('사진을 읽지 못했어요');return}
-   if(!CV.set(key,d)){YH.toast('저장 공간이 부족해요 (다른 사진을 지워 주세요)');return}
-   if(S.rows[i]&&keyOf(S.rows[i])===key)drawTile(i);
-   YH.toast('사진을 넣었어요 · 이 브라우저에 저장돼요');
+   if(!d){$('pst').textContent='사진을 읽지 못했어요.';return}
+   PD.data=d;$('pprev').innerHTML='<img src="'+d+'" alt="">';$('pup').disabled=false;$('pst').textContent='';
   });
  };
  pk.click();
-}
+};
+$('ploc').onclick=function(){
+ if(!PD.data){$('pst').textContent='먼저 사진을 골라 주세요.';return}
+ var g=PD.g;
+ if(!CV.set(keyOf(g),PD.data)){$('pst').textContent='저장 공간이 부족해요.';return}
+ try{localStorage.removeItem('yh.cvup.'+keyOf(g))}catch(e){}
+ closePhoto();if(S.rows[PD.i]===g)drawTile(PD.i);
+ YH.toast('사진을 넣었어요 · 이 브라우저에만 저장돼요');
+};
+$('pup').onclick=function(){
+ if(PD.busy)return;
+ if(!PD.data){$('pst').textContent='먼저 사진을 골라 주세요.';return}
+ var tok=$('ptok').value.trim();
+ if(!tok){$('pst').textContent='GitHub 토큰을 입력해 주세요.';$('ptok').focus();return}
+ var g=PD.g,path=g.dir+'/'+YH.base(g.file)+'.jpg',data=PD.data;
+ var url='https://api.github.com/repos/'+YH.REPO.o+'/'+YH.REPO.r+'/contents/'+path.split('/').map(encodeURIComponent).join('/');
+ var H={Accept:'application/vnd.github+json',Authorization:'Bearer '+tok};
+ PD.busy=true;$('pup').disabled=true;$('pst').textContent='GitHub에 올리는 중…';
+ fetch(url,{headers:H}).then(function(r){
+  if(r.ok)return r.json();if(r.status===404)return null;
+  throw new Error(r.status===401?'토큰이 올바르지 않아요 (401)':'저장소를 확인하지 못했어요 ('+r.status+')');
+ }).then(function(ex){
+  var body={message:'게임 사진 추가: '+g.title,content:data.split(',')[1]};if(ex&&ex.sha)body.sha=ex.sha;
+  return fetch(url,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify(body)});
+ }).then(function(r){
+  if(r.ok)return;
+  return r.json().catch(function(){return{}}).then(function(j){
+   throw new Error(r.status===401?'토큰이 올바르지 않아요 (401)':(r.status===403||r.status===404)?'권한이 없어요 — 토큰에 이 저장소의 Contents 쓰기 권한이 필요해요 ('+r.status+')':(j.message||'오류 ('+r.status+')'));
+  });
+ }).then(function(){
+  try{if($('psave').checked)localStorage.setItem('yh.ghtok',tok);else localStorage.removeItem('yh.ghtok')}catch(e){}
+  CV.set(keyOf(g),data);try{localStorage.setItem('yh.cvup.'+keyOf(g),String(Date.now()))}catch(e){}
+  PD.busy=false;closePhoto();if(S.rows[PD.i]===g)drawTile(PD.i);
+  YH.toast('GitHub에 올렸어요 · 1~2분 뒤 모두에게 보여요');
+ }).catch(function(e){PD.busy=false;$('pup').disabled=false;$('pst').textContent='⚠️ '+(e&&e.message?e.message:'올리지 못했어요')});
+};
+$('pcl').onclick=closePhoto;
+$('pdlg').addEventListener('click',function(e){if(e.target===$('pdlg'))closePhoto()});
 function delPhoto(){var g=S.rows[S.sel];if(!g)return;CV.del(keyOf(g));drawTile(S.sel);YH.toast('넣어 둔 사진을 지웠어요')}
 
 function nav(dx,dy){
@@ -264,7 +329,7 @@ function openMenu(){
  MI=a;mi=0;
  $('mttl').textContent=g?g.title:S.sys.n;
  $('mlist').innerHTML=a.map(function(x,i){return '<div class="mi'+(i===0?' on':'')+'" data-i="'+i+'"><span class="ic2">'+x.ic+'</span>'+YH.esc(x.t)+(x.k?'<kbd>'+x.k+'</kbd>':'')+'</div>'}).join('');
- $('mnote').innerHTML='모든 방문자에게 사진이 보이게 하려면 GitHub의 <code>ROMS/'+S.sys.folders[0]+'/</code> 에 게임 파일과 <b>같은 이름</b>의 사진(jpg·png·webp)을 올려 주세요. 여기서 넣은 사진은 <b>이 브라우저에만</b> 저장돼요.';
+ $('mnote').innerHTML=''+'사진없음 칸을 누르면(또는 P) GitHub 토큰으로 <code>ROMS/'+S.sys.folders[0]+'/</code> 에 사진을 바로 올릴 수 있어요. 직접 올릴 땐 게임 파일과 <b>같은 이름</b>의 jpg·png를 넣어 주세요.';
  $('menu').classList.add('on');menuOn=true;
 }
 function closeMenu(){$('menu').classList.remove('on');menuOn=false}
@@ -277,6 +342,7 @@ $('menu').addEventListener('click',function(e){if(e.target===$('menu'))closeMenu
 document.addEventListener('keydown',function(e){
  if(e.ctrlKey||e.metaKey||e.altKey)return;
  var k=e.key,tg=e.target,typing=tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA');
+ if(PD.on){if(k==='Escape'&&!PD.busy)closePhoto();return}
  if(menuOn){
   if(k==='ArrowUp'){mi=(mi+MI.length-1)%MI.length;menuMark()}
   else if(k==='ArrowDown'){mi=(mi+1)%MI.length;menuMark()}
@@ -314,6 +380,7 @@ document.addEventListener('keydown',function(e){
 gl.addEventListener('click',function(e){
  var t=e.target.closest('.tile');if(!t)return;
  var i=+t.dataset.i;setPane('grid');
+ if(e.target.closest('.nop')){S.sel=i;paint(false);pickPhoto();return}
  if(i===S.sel)play();else{S.sel=i;paint(false)}
 });
 $('slist').addEventListener('click',function(e){
