@@ -103,17 +103,24 @@ function api(path){
 function titleOf(f){return base(f).replace(/[_]+/g,' ').trim()}
 /* 게임 사진(커버) : 게임 파일과 같은 이름의 그림 파일 (예: 슈퍼마리오.gba + 슈퍼마리오.jpg) */
 var PICX=['jpg','jpeg','png','webp','gif','avif'];
+/* 이름 비교용: 한글 조합 방식(NFC/NFD)·대소문자·공백·기호 차이를 무시 */
+function nkey(n){
+ n=String(n||'');
+ try{n=n.normalize('NFC')}catch(e){}
+ return n.toLowerCase().replace(/[\s_\-.,·・'’"“”!?:;()\[\]{}&+~]+/g,'');
+}
 function listDir(dir,exts){
  return api(dir).then(function(a){
   if(!Array.isArray(a))throw 0;
   var pics={};
   a.forEach(function(f){
    if(f.type!=='file'||PICX.indexOf(ext(f.name))<0)return;
-   var b=base(f.name).toLowerCase();
-   if(!pics[b]||ext(f.name)==='jpg')pics[b]=f.name;
+   var k=nkey(base(f.name));
+   if(!pics[k]||ext(f.name)==='jpg')pics[k]=f.name;
   });
   return a.filter(function(f){return f.type==='file'&&exts.indexOf(ext(f.name))>=0}).map(function(f){
-   var pn=pics[base(f.name).toLowerCase()]||pics[f.name.toLowerCase()];   /* 슈퍼마리오.jpg  또는  슈퍼마리오.gba.jpg */
+   var b=base(f.name),pn=pics[nkey(b)]||pics[nkey(f.name)];      /* 게임.gba+게임.jpg  /  게임.zip+게임.zip.jpg */
+   if(!pn&&exts.indexOf(ext(b))>=0)pn=pics[nkey(base(b))];       /* 게임.gba.zip + 게임.jpg */
    return{file:f.name,size:f.size||0,dir:dir,cover:pn?dir+'/'+encodeURIComponent(pn):''};
   });
  });
