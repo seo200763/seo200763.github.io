@@ -1,1 +1,23 @@
-{}
+{
+ "3DO": [],
+ "ATARI2600": [],
+ "GAMEBOY": [],
+ "GAMEBOYADVANCE": [],
+ "GAMEBOYCOLOR": [],
+ "GAMEGEAR": [],
+ "JAGUAR": [],
+ "LYNX": [],
+ "MASTERSYSTEM": [],
+ "MEGADRIVE": [],
+ "NEOGEOPOCKET": [],
+ "NES": [],
+ "NINTENDO64": [],
+ "NINTENDODS": [],
+ "PCENGINE": [],
+ "PLAYSTATION": [],
+ "SEGA32X": [],
+ "SEGACD": [],
+ "SEGASATURN": [],
+ "SNES": [],
+ "VIRTUALBOY": []
+}
