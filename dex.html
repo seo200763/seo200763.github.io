@@ -276,6 +276,18 @@ html.ds-saver .sp{border-top-color:#ddd}
 .emd .ext{font-size:12px;opacity:.6;white-space:pre-line}
 .emd .go,.emdlg .bx .ok{border:0;border-radius:99px;padding:12px 30px;background:#fff;color:#4326c4;font:700 15px system-ui,sans-serif;cursor:pointer}
 .emd.over{outline:2px dashed rgba(255,255,255,.6);outline-offset:-14px}
+.emd.srv{overflow-y:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch}.emd.srv>:first-child{margin-top:auto}.emd.srv>:last-child{margin-bottom:auto}.emd.srv>*{flex:none}
+.emsl{width:min(100%,440px);display:flex;flex-direction:column;gap:8px;text-align:left}
+.emsl .slh{display:flex;align-items:center;gap:8px;font:600 14px system-ui,sans-serif}
+.emsl .slh span{opacity:.6;font-weight:400;font-size:12px}
+.emsl .slh button{border:0;border-radius:14px;padding:5px 12px;background:rgba(255,255,255,.16);color:#fff;font:inherit;font-size:13px;cursor:pointer}
+.emsl .slh .slr{margin-left:auto}.emsl .slx{display:none}.emd.live .emsl .slx{display:inline-block}
+.emsl input{width:100%;box-sizing:border-box;height:38px;border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:0 14px;background:rgba(0,0,0,.25);color:#fff;font:400 14px system-ui,sans-serif;outline:0}
+.emsl .sll{max-height:min(34vh,260px);overflow-y:auto;border-radius:14px;background:rgba(0,0,0,.28);-webkit-overflow-scrolling:touch}
+.emsl .slg{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:11px 14px;border:0;border-bottom:1px solid rgba(255,255,255,.1);background:none;color:#fff;font:500 14px system-ui,sans-serif;text-align:left;cursor:pointer}
+.emsl .slg:last-child{border-bottom:0}.emsl .slg:hover,.emsl .slg:active{background:rgba(255,255,255,.14)}
+.emsl .slg b{flex:1;font-weight:500;word-break:keep-all;overflow-wrap:anywhere}.emsl .slg small{opacity:.6;font-size:12px;flex:none}.emsl .slg i{font-style:normal;flex:none}
+.emsl .sln{padding:16px 14px;opacity:.75;font-size:13px;line-height:1.7;text-align:center;white-space:pre-line}
 .eml{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,8,20,.82);text-align:center;padding:20px}
 .eml.on{display:flex}
 .eml .lt{font:700 17px system-ui,sans-serif}
@@ -360,7 +372,7 @@ html.ds-saver .sp{border-top-color:#ddd}
 </div>
 
 <script src="emudata.js?v=mg1"></script>
-<script src="mamegame.js?v=1"></script>
+<script src="mamegame.js?v=2"></script>
 <script src="loadgame.js?v=2"></script>
 <script>
 (function(){'use strict';
@@ -623,7 +635,7 @@ function buildEmu(w,body,a,id){
 
  /* 상단 메뉴 */
  function eb(label,fn){var b=h('button',null,label);b.type='button';b.addEventListener('pointerdown',function(e){e.stopPropagation()});b.onclick=function(e){e.stopPropagation();fn()};bar.append(b);return b}
- eb('🎮 기종선택',goSelect);eb('🔄 다시시작',restart);eb('💾 세이브',openSave);
+ eb('🎮 기종선택',goSelect);eb('📂 게임목록',showList);eb('🔄 다시시작',restart);eb('💾 세이브',openSave);
  var bFs=eb('⛶ 전체화면',toggleFs),bCtl=eb('🎛 버튼숨김',toggleCtl);eb('📷 화면캡처',capture);
 
  /* ROM 안내 화면 */
@@ -633,6 +645,37 @@ function buildEmu(w,body,a,id){
  var goBtn=h('button','go','파일 열기');goBtn.type='button';
  drop.append(h('h2',null,a.n),h('p',null,'게임을 플레이 하시려면 ROM파일이 필요합니다.'),goBtn,h('p','ext','지원 형식: '+c.x+(MG.is(c)?'\n네오지오 바이오스(neogeo.zip)는 자동으로 적용됩니다.':'')),inp);
  stage.append(drop);
+ /* 서버 롬 목록 — ROMS/<기종폴더>/ (마메게임은 MAME/) 에 올린 롬이 자동으로 나타남 */
+ function fz(n){return n>=1048576?(n/1048576).toFixed(n>=10485760?0:1)+'MB':n>=1024?Math.round(n/1024)+'KB':''}
+ function showList(){
+  if(!MG.hasList(c)){inp.value='';inp.click();return}
+  if(drop.classList.contains('hidden'))drop.classList.add('live');
+  drop.classList.remove('hidden');
+ }
+ if(MG.hasList(c)){
+  drop.classList.add('srv');
+  var sv=h('div','emsl'),sh=h('div','slh'),sq=h('input'),sl=h('div','sll'),sc=h('span'),sr=h('button','slr','↻'),sx=h('button','slx','✕ 닫기'),sd=null;
+  sq.type='search';sq.placeholder='게임 검색';sq.autocomplete='off';sr.type=sx.type='button';sr.title='목록 새로고침';
+  sh.append(h('b',null,'🕹️ '+(MG.is(c)?'마메게임':c.n)+' 게임 목록'),sc,sr,sx);sv.append(sh,sq,sl);
+  drop.insertBefore(sv,goBtn);goBtn.textContent='📂 내 기기의 롬 불러오기';
+  var sMsg=function(t){sl.replaceChildren();sl.append(h('div','sln',t))};
+  var sRender=function(){
+   if(!sd)return;var q=sq.value.trim().toLowerCase();
+   var rows=sd.items.filter(function(g){return!q||(g.title+' '+g.file).toLowerCase().indexOf(q)>=0});
+   sc.textContent='('+sd.items.length+')';
+   if(!rows.length){sMsg(sd.items.length?'검색 결과가 없어요':(sd.known?sd.dir.replace(/\/$/,'')+' 폴더에 롬을 올리면 여기에 나타나요.\n또는 아래 버튼으로 내 기기의 롬을 불러오세요.':'게임 목록을 불러오지 못했어요.\n아래 버튼으로 내 기기의 롬을 불러오세요.'));return}
+   sl.replaceChildren();
+   rows.forEach(function(g){var b=h('button','slg');b.type='button';b.append(h('b',null,g.title),h('small',null,fz(g.size)),h('i',null,'▶'));b.onclick=function(){playSrv(g)};sl.append(b)});
+  };
+  var sLoad=function(force){sMsg('목록을 불러오는 중…');MG.list(c,force).then(function(r){sd=r;sRender()})};
+  sq.oninput=sRender;sr.onclick=function(){sLoad(true)};sx.onclick=function(){drop.classList.add('hidden')};
+  sLoad(false);
+ }
+ function playSrv(g){
+  if(S.sbusy)return;S.sbusy=true;showLoad(g.title+' · 롬 내려받는 중',20);
+  MG.download(c,g,function(got,tot){prog(tot?Math.min(55,got/tot*55):20,'롬 내려받는 중… '+fz(got)+(tot?' / '+fz(tot):''))})
+   .then(function(f){S.sbusy=false;drop.classList.remove('live');go(f)},function(e){S.sbusy=false;hideLoad();alertBox((e&&e.message)||'롬을 불러오지 못했어요','롬 불러오기 실패')});
+ }
  goBtn.onclick=function(){inp.value='';inp.click()};
  inp.onchange=function(){onPick(inp.files)};
  ['dragover','dragenter'].forEach(function(v){drop.addEventListener(v,function(e){e.preventDefault();drop.classList.add('over')})});

@@ -383,7 +383,7 @@ footer{border-top:1px solid #363c4a!important;color:var(--mut)}
  for(var j=P.length-1;j>=0;j--)if(DROP_P[P[j].id])P.splice(j,1);
 })();
 </script>
-<script src="mamegame.js?v=1"></script>
+<script src="mamegame.js?v=2"></script>
 <script src="loadgame.js?v=2"></script>
 <script>
 /* 저사양 전용: 로딩 미니게임(애니메이션) 끄고, PS1 은 항상 가벼운 설정(1단계)으로 시작 */
@@ -502,7 +502,7 @@ async function onPick(fs){
  if(fs.length>1)toast('롬은 한 번에 한 개만 실행돼요 (첫 번째 zip 사용)');
  try{startGame(await MG.prepare(g))}catch(e){toast('롬 준비 실패: '+e.message)}
 }
-$('#bLoad').onclick=pick;$('#dBtn').onclick=pick;
+$('#bLoad').onclick=()=>{MG.show()||pick()};$('#dBtn').onclick=pick;
 $('#romIn').onchange=e=>onPick(e.target.files);
 const dr=$('#drop');
 ['dragover','dragenter'].forEach(v=>dr.addEventListener(v,e=>{e.preventDefault();dr.classList.add('over')}));

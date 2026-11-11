@@ -363,7 +363,7 @@ html.emuopen,html.emuopen body{overflow:hidden;overscroll-behavior:none}
 <input type="file" id="gsvIn" hidden accept=".gsv,.GSV,.state">
 
 <script src="emudata.js?v=mg2"></script>
-<script src="mamegame.js?v=1"></script>
+<script src="mamegame.js?v=2"></script>
 <script src="loadgame.js?v=2"></script>
 <script>
 /* ---------- 콘솔 목록 ---------- */
@@ -478,7 +478,7 @@ async function onPick(fs){
  if(fs.length>1)toast('롬은 한 번에 한 개만 실행돼요 (첫 번째 zip 사용)');
  try{startGame(await MG.prepare(g))}catch(e){toast('롬 준비 실패: '+e.message)}
 }
-$('#bLoad').onclick=pick;$('#dBtn').onclick=pick;
+$('#bLoad').onclick=()=>{MG.show()||pick()};$('#dBtn').onclick=pick;
 $('#romIn').onchange=e=>onPick(e.target.files);
 const dr=$('#drop');
 ['dragover','dragenter'].forEach(v=>dr.addEventListener(v,e=>{e.preventDefault();dr.classList.add('over')}));
