@@ -33,8 +33,9 @@
 - 공통 코드: mamegame.js (모든 기종 공통 목록 · 다운로드)
 
 
-[서버 PC 게임 (GAMESTART/)]
-- GAMESTART/<게임이름>/ 폴더에 본인 소유 게임 파일을 올리면 Actions가 GAMESTART/list.json을 자동 생성합니다.
-- PC게임 실행기(pcgameemulator.html) → 게임불러오기 → 서버 GAMESTART에서 게임 선택으로 브라우저에 불러옵니다.
-- DOS 게임은 js-dos, 32비트 Windows 게임은 v86 + 준비된 Windows 이미지로 실행합니다.
-- 사용법과 제한 사항은 GAMESTART/README.txt를 참고하세요.
+[웹 포팅 PC 게임 (GAMESTART/)]
+- 메인 화면의 WEB GAMES에서 웹 포팅 게임 전용 런처로 이동합니다.
+- Windows OS 에뮬레이터를 실행하지 않고 HTML5/WebAssembly로 포팅된 게임을 직접 엽니다.
+- 예제: OpenTTD 커뮤니티 WebAssembly 포트 연결.
+- 새 게임은 GAMESTART/<게임폴더>/game.json 및 웹 실행 파일을 추가하고, 자동 생성되는 GAMESTART/games.json에 등록합니다.
+- 일반 EXE/ISO를 복사하는 것만으로 웹 포팅되지는 않습니다. 상세 내용은 GAMESTART/README.txt 참고.

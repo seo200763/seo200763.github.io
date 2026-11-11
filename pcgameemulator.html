@@ -228,8 +228,7 @@ body.dos-run.dctl-on #dctl{display:flex}
 <dialog id="dlg">
   <h3>게임 불러오기</h3>
   <p class="s">파일은 서버로 올라가지 않고 이 브라우저 안에서만 읽어요.</p>
-  <button class="opt" id="oServer"><b>서버 GAMESTART에서 게임 선택</b><span>사이트 서버에 올려 둔 게임을 목록에서 골라 브라우저로 불러와요.</span></button>
-  <button class="opt" id="oDir"><b>내 기기에서 폴더 불러오기</b><span>게임이 들어 있는 폴더 전체를 선택해요. 폴더 구성으로 게임을 알아봐요.</span></button>
+  <button class="opt" id="oDir"><b>폴더 불러오기</b><span>게임이 들어 있는 폴더 전체를 선택해요. 폴더 구성으로 게임을 알아봐요.</span></button>
   <button class="opt" id="oExe"><b>실행파일만 불러오기</b><span>.exe .com .bat 파일, .jsdos 번들, 디스크 이미지를 선택해요. (.cue 와 .bin 처럼 여러 개를 한 번에 선택할 수 있어요)</span></button>
   <button class="opt" id="oJson"><b>JSON 불러오기</b><span>zip 형식의 JSON 파일은 압축을 열어 내부 파일을 고르고 게임 시작을 누르면 실행돼요. 일반 JSON은 게임 번들(.jsdos/.zip)과 연결해요.</span></button>
   <button class="close" id="oClose">닫기</button>
@@ -283,73 +282,6 @@ const dlg = $('dlg');
 function openDialog() { dlg.showModal(); }
 $('mLoad').onclick = openDialog;
 $('oClose').onclick = () => dlg.close();
-
-/* ---------- 서버 GAMESTART 폴더 ----------
-   GAMESTART/list.json 은 GitHub Actions가 게임 폴더를 읽어 자동 생성합니다.
-   게임 파일 자체는 서버에서 브라우저로 내려받고, 기존 DOS/v86 실행 경로를 그대로 사용합니다. */
-let serverCatalog = null;
-$('oServer').onclick = async () => {
-  dlg.close();
-  try {
-    msg('서버 게임 목록 확인 중…');
-    if (!serverCatalog) {
-      const r = await fetch('GAMESTART/list.json?v=' + Date.now(), { cache: 'no-store' });
-      if (!r.ok) throw new Error('GAMESTART/list.json을 찾지 못했어요. GitHub Actions의 GAMESTART 목록 갱신 작업이 완료됐는지 확인해 주세요.');
-      serverCatalog = await r.json();
-    }
-    showServerCatalog();
-  } catch (e) {
-    log('서버 목록 오류: ' + e.message);
-    notice('서버 게임 목록을 열 수 없어요', esc(e.message));
-  }
-};
-function showServerCatalog() {
-  const items = Array.isArray(serverCatalog) ? serverCatalog : [];
-  const html = '<div class="lp"><div class="lh"><div><b>서버 GAMESTART</b><span>서버에 등록된 게임을 선택하세요</span></div><button id="sRefresh">새로고침</button></div>' +
-    '<div class="lf"><input id="sQuery" type="search" placeholder="게임 이름 검색"></div><div class="ll" id="sList"></div><p class="warn" id="sWarn"></p><div class="lb"><span id="sCount"></span><button class="sec" id="sBack">뒤로</button></div></div>';
-  overlay(html, () => {
-    const draw = () => {
-      const q = $('sQuery').value.trim().toLowerCase();
-      const list = items.filter(x => (x.name || x.id || '').toLowerCase().includes(q));
-      $('sList').innerHTML = list.length ? list.map(x => '<div class="it" data-id="' + esc(x.id) + '"><span class="bd dir">PC 게임</span><span class="nm">' + esc(x.name || x.id) + '</span><span class="sz">' + (x.files || []).length + '개 파일</span></div>').join('') : '<p style="padding:14px;color:#aab2d3">등록된 게임이 없어요. GAMESTART/게임이름/ 폴더에 파일을 올려 주세요.</p>';
-      $('sCount').textContent = list.length + '개 게임';
-      $('sList').querySelectorAll('[data-id]').forEach(el => el.onclick = () => loadServerGame(el.dataset.id));
-    };
-    $('sQuery').oninput = draw;
-    $('sRefresh').onclick = async () => { serverCatalog = null; $('sWarn').textContent = '목록을 새로 확인하는 중…'; try { const r = await fetch('GAMESTART/list.json?v=' + Date.now(), { cache: 'no-store' }); if (!r.ok) throw new Error('목록 파일을 읽지 못했어요'); serverCatalog = await r.json(); showServerCatalog(); } catch (e) { $('sWarn').textContent = e.message; } };
-    $('sBack').onclick = openDialog;
-    draw();
-  }, true);
-}
-async function loadServerGame(id) {
-  const item = (Array.isArray(serverCatalog) ? serverCatalog : []).find(x => x.id === id);
-  if (!item || !Array.isArray(item.files) || !item.files.length) return;
-  await stopGame();
-  files = new Map();
-  const base = 'GAMESTART/' + encodeURIComponent(item.id) + '/';
-  try {
-    $('overlay').hidden = true; $('prog').hidden = false; $('prog').value = 0;
-    let got = 0;
-    for (let i = 0; i < item.files.length; i++) {
-      const entry = item.files[i];
-      const parts = String(entry.path || '').split('/');
-      if (!parts.length || parts.some(x => !x || x === '.' || x === '..')) continue;
-      const url = base + parts.map(encodeURIComponent).join('/');
-      msg('서버 게임 다운로드 중… ' + (i + 1) + '/' + item.files.length + ' · ' + (entry.path || ''));
-      const r = await fetch(url, { cache: 'no-cache' });
-      if (!r.ok) throw new Error('파일을 받지 못했어요: ' + entry.path + ' (HTTP ' + r.status + ')');
-      const blob = await r.blob();
-      files.set(String(entry.path).toLowerCase(), { path: String(entry.path), file: new File([blob], parts[parts.length - 1], { type: blob.type }) });
-      got += blob.size;
-      $('prog').value = (i + 1) / item.files.length;
-    }
-    $('prog').hidden = true;
-    await buildList(item.name || item.id, true);
-  } catch (e) {
-    $('prog').hidden = true; log('서버 게임 로드 실패: ' + e.message);
-    notice('게임을 불러오지 못했어요', esc(e.message));
-  }
-}
 
 async function walk(handle, prefix, out) {
   for await (const [name, h] of handle.entries()) {

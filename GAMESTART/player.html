@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#050806"><title>GAME PLAYER</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050806;color:#eff8f2;font-family:system-ui,"Malgun Gothic",sans-serif}
+.top{height:54px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#101b15;border-bottom:1px solid #254236}
+button,a{border:1px solid #315342;background:#17271e;color:#eef8f2;border-radius:9px;padding:8px 12px;font:inherit;text-decoration:none;cursor:pointer}
+#name{font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#stage{height:calc(100% - 54px);position:relative;background:#000}
+iframe{border:0;width:100%;height:100%;display:block;background:#000}
+#msg{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:25px;background:#07110e;line-height:1.7}
+#msg.show{display:grid}.panel{max-width:620px}.panel p{color:#a8b9ae}.panel a{display:inline-block;margin:6px}
+@media(max-width:600px){.top{height:50px;padding:0 7px;gap:5px}button,a{padding:7px 8px;font-size:12px}#stage{height:calc(100% - 50px)}}
+</style></head><body>
+<div class="top"><a href="index.html">← 목록</a><div id="name">게임 불러오는 중</div><button id="newtab">새 탭</button><button id="full">전체 화면</button></div>
+<div id="stage"><iframe id="game" allow="autoplay; fullscreen; gamepad; clipboard-read; clipboard-write" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div id="msg"><div class="panel"><h2 id="errtitle">게임을 불러올 수 없습니다.</h2><p id="errtext">게임 주소 또는 웹 포트의 iframe 허용 설정을 확인하세요.</p><a id="direct" target="_blank" rel="noopener">게임 직접 열기 ↗</a><a href="index.html">게임 목록으로</a></div></div></div>
+<script>
+const q=new URLSearchParams(location.search),id=q.get('game');
+const frame=document.getElementById('game'),msg=document.getElementById('msg'),name=document.getElementById('name'),direct=document.getElementById('direct');
+let target='';
+fetch('games.json',{cache:'no-store'}).then(r=>r.json()).then(items=>{
+ const g=(items||[]).find(x=>x.id===id);
+ if(!g)throw Error('등록된 게임을 찾을 수 없습니다.');
+ name.textContent=g.title||g.id;
+ target=g.launchUrl||g.launch||((g.folder||'')+'/index.html');
+ if(!target)throw Error('이 게임은 아직 실행 파일이 등록되지 않았습니다.');
+ if(/^https?:\/\//i.test(target)){} else if(target.startsWith('/')||target.includes('..'))throw Error('잘못된 게임 경로입니다.');
+ direct.href=target;frame.src=target;
+}).catch(e=>{document.getElementById('errtext').textContent=e.message;msg.classList.add('show')});
+document.getElementById('newtab').onclick=()=>{if(target)window.open(target,'_blank','noopener')};
+document.getElementById('full').onclick=()=>{const el=document.getElementById('stage');if(el.requestFullscreen)el.requestFullscreen();};
+frame.addEventListener('error',()=>msg.classList.add('show'));
+</script></body></html>

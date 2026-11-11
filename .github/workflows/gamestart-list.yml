@@ -1,46 +1,29 @@
-# GAMESTART 폴더의 게임 목록을 정적 JSON으로 생성합니다.
-name: GAMESTART 목록 갱신
+name: Build GAMESTART game catalogue
 on:
   push:
     paths:
       - 'GAMESTART/**'
-      - '!GAMESTART/list.json'
+      - 'scripts/build_gamestart.py'
+      - '.github/workflows/gamestart-list.yml'
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  list:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: list.json 만들기
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Generate games.json
+        run: python scripts/build_gamestart.py
+      - name: Commit catalogue
         run: |
-          python3 - <<'PY'
-          import os, json
-          root = 'GAMESTART'
-          out = []
-          os.makedirs(root, exist_ok=True)
-          for game_id in sorted(os.listdir(root)):
-              folder = os.path.join(root, game_id)
-              if not os.path.isdir(folder) or game_id.startswith('.'):
-                  continue
-              files = []
-              for base, dirs, names in os.walk(folder):
-                  dirs[:] = sorted(d for d in dirs if not d.startswith('.'))
-                  for name in sorted(names):
-                      if name.startswith('.') or name.lower() in ('readme.txt', 'readme.md'):
-                          continue
-                      full = os.path.join(base, name)
-                      rel = os.path.relpath(full, folder).replace(os.sep, '/')
-                      files.append({'path': rel, 'size': os.path.getsize(full)})
-              if files:
-                  out.append({'id': game_id, 'name': game_id.replace('_', ' '), 'files': files})
-          with open(os.path.join(root, 'list.json'), 'w', encoding='utf-8') as f:
-              json.dump(out, f, ensure_ascii=False, indent=2)
-          PY
-      - name: 변경 사항 저장
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add GAMESTART/list.json
-          git diff --cached --quiet || (git commit -m "GAMESTART 목록 갱신" && git push)
+          if ! git diff --quiet -- GAMESTART/games.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add GAMESTART/games.json
+            git commit -m "Update GAMESTART game catalogue [skip ci]"
+            git push
+          fi
