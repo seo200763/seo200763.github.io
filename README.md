@@ -31,3 +31,10 @@
 - 기종별 폴더·지원 형식·한글 이름 적는 법: ROMS/README.txt  (마메게임은 기존 MAME/ 폴더 그대로)
 - 게임하는 중 '게임불러오기' 를 누르면 목록이 다시 나타납니다. 내 기기의 롬 불러오기도 그대로 쓸 수 있어요.
 - 공통 코드: mamegame.js (모든 기종 공통 목록 · 다운로드)
+
+
+[서버 PC 게임 (GAMESTART/)]
+- GAMESTART/<게임이름>/ 폴더에 본인 소유 게임 파일을 올리면 Actions가 GAMESTART/list.json을 자동 생성합니다.
+- PC게임 실행기(pcgameemulator.html) → 게임불러오기 → 서버 GAMESTART에서 게임 선택으로 브라우저에 불러옵니다.
+- DOS 게임은 js-dos, 32비트 Windows 게임은 v86 + 준비된 Windows 이미지로 실행합니다.
+- 사용법과 제한 사항은 GAMESTART/README.txt를 참고하세요.
