@@ -14,16 +14,16 @@ main{flex:1;overflow:auto;margin:0 24px;padding:16px;background:rgba(255,255,255
 footer{margin:0 24px 10px;height:46px;display:flex;align-items:center;gap:10px;padding:0 14px;background:linear-gradient(#1f6bff,#0a3fb5);border:2px solid #8fd2ff;border-radius:0 0 14px 14px;font-weight:700}
 footer b{flex:1}footer a,footer button{background:#ffb21a;color:#222;border:0;border-radius:9px;padding:7px 16px;font:inherit;font-weight:800;text-decoration:none;cursor:pointer}
 #md{position:fixed;inset:0;background:#0009;display:none;place-items:center;z-index:9}#md.on{display:grid}
-#md div{background:#0b3a9a;border:2px solid #8fd2ff;border-radius:14px;padding:18px;width:min(420px,92vw);display:grid;gap:8px}
+#md>div{background:#0b3a9a;border:2px solid #8fd2ff;border-radius:14px;padding:18px;width:min(420px,92vw);display:grid;gap:8px}
 #md input{padding:8px;border-radius:8px;border:0;font:inherit;width:100%}#md label{font-size:12px;opacity:.85}#md .r{display:flex;gap:8px;justify-content:flex-end}
 #md button{border:0;border-radius:8px;padding:8px 16px;font:inherit;font-weight:800;cursor:pointer}#log{font-size:12px;color:#bff;white-space:pre-wrap}
 </style></head><body>
 <header><img src="IMG/gc/logo.png" alt="My Game Center"></header>
 <div class="tab"><a href="emulator.html">🏠 홈</a><span id="cn"></span></div>
 <main><div class="grid" id="g"></div></main>
-<footer><span>⭐</span><b id="ft">My Game Center</b><a href="emulator.html">기종선택</a><a href="index.html">나가기</a></footer>
+<footer><span>⭐</span><b id="ft">My Game Center</b><button id="up">게임업로드</button><a href="emulator.html">기종선택</a><a href="index.html">나가기</a></footer>
 <div id="md"><div>
-<b id="mt"></b><label>표시 이름</label><input id="nm"><label>게임 그림 (비워두면 그대로)</label><input id="fi" type="file" accept="image/*">
+<b id="mt"></b><label id="rl">게임 롬 파일</label><input id="ro" type="file"><label>표시 이름</label><input id="nm"><label>게임 그림 (비워두면 그대로)</label><input id="fi" type="file" accept="image/*">
 <label>깃허브 저장소 (아이디/저장소)</label><input id="repo" placeholder="owner/repo"><label>브랜치</label><input id="br" value="main"><label>깃허브 토큰 (이 탭에서만 기억)</label><input id="tk" type="password">
 <div id="log"></div><div class="r"><button id="cx">닫기</button><button id="sv" style="background:#ffb21a">저장</button></div></div></div>
 <script src="emudata.js?v=mg2"></script>
@@ -47,8 +47,10 @@ function render(){
   const im=d.firstChild;if(cov[base(f)]){const i=new Image();i.src='ROMS/'+c.fn+'/'+enc(cov[base(f)]);i.alt='';i.onerror=()=>im.textContent='사진이 없습니다.';im.appendChild(i)}else im.textContent='사진이 없습니다.';
   d.querySelector('.nm').textContent=tit[f]||base(f);
   d.onclick=()=>location.href='emulator.html?c='+c.id+'&rom='+encodeURIComponent('ROMS/'+c.fn+'/'+f);
-  d.querySelector('.ed').onclick=e=>{e.stopPropagation();cur=f;$('mt').textContent=f;$('nm').value=tit[f]||base(f);$('fi').value='';$('log').textContent='';$('md').classList.add('on')};
+  d.querySelector('.ed').onclick=e=>{e.stopPropagation();cur=f;setUp(false);$('sv').textContent='저장';$('mt').textContent=f;$('nm').value=tit[f]||base(f);$('fi').value='';$('log').textContent='';$('md').classList.add('on')};
   $('g').appendChild(d)})}
+const setUp=on=>{$('rl').style.display=$('ro').style.display=on?'':'none'};
+$('up').onclick=()=>{cur=null;setUp(true);$('mt').textContent='게임 업로드 · '+c.n;$('sv').textContent='업로드';$('nm').value='';$('fi').value='';$('ro').value='';$('log').textContent='';$('md').classList.add('on')};
 $('cx').onclick=()=>$('md').classList.remove('on');
 $('repo').value=localStorage.gc_repo||'';$('br').value=localStorage.gc_br||'main';$('tk').value=sessionStorage.gc_tk||'';
 const H=()=>({Authorization:'Bearer '+$('tk').value.trim(),Accept:'application/vnd.github+json'}),api=p=>`https://api.github.com/repos/${$('repo').value.trim()}/contents/${enc(p)}`;
@@ -56,7 +58,10 @@ const b64=b=>{let s='',u=new Uint8Array(b);for(let i=0;i<u.length;i+=32768)s+=St
 async function put(p,content,msg){const g=await fetch(api(p)+'?ref='+$('br').value,{headers:H()});const sha=g.ok?(await g.json()).sha:undefined;
  const r=await fetch(api(p),{method:'PUT',headers:H(),body:JSON.stringify({message:msg,content,branch:$('br').value,sha})});if(!r.ok)throw Error(p+' 저장 실패 '+r.status)}
 $('sv').onclick=async()=>{try{localStorage.gc_repo=$('repo').value;localStorage.gc_br=$('br').value;sessionStorage.gc_tk=$('tk').value;
- if(!$('repo').value||!$('tk').value)throw Error('저장소와 토큰을 입력하세요.');const f=cur,file=$('fi').files[0];
+ if(!$('repo').value||!$('tk').value)throw Error('저장소와 토큰을 입력하세요.');const ro=$('ro').files[0];let f=cur;
+ if(!f){if(!ro)throw Error('롬 파일을 선택하세요.');if(ro.size>90*1048576)throw Error('롬이 90MB를 넘어 올릴 수 없어요. ROMS 폴더에 직접 올려주세요.');
+  f=ro.name;$('log').textContent='롬 올리는 중... (큰 파일은 시간이 걸려요)';await put(`ROMS/${c.fn}/${f}`,b64(await ro.arrayBuffer()),'rom '+f);if(!roms.includes(f))roms.push(f)}
+ const file=$('fi').files[0];
  if(file){const ext=(file.name.split('.').pop()||'png').toLowerCase();$('log').textContent='그림 올리는 중...';
   await put(`ROMS/${c.fn}/${base(f)}.${ext}`,b64(await file.arrayBuffer()),'cover '+f);cov[base(f)]=base(f)+'.'+ext}
  const nn=$('nm').value.trim();if(nn&&nn!==(tit[f]||base(f))){$('log').textContent='이름 저장 중...';
