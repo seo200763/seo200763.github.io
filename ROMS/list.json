@@ -20,12 +20,28 @@
  "SEGASATURN": [],
  "SNES": [
   {
+   "file": "BS Mario Collection 3 (J).jpg",
+   "size": 34689
+  },
+  {
    "file": "BS Mario Collection 3 (J).zip",
    "size": 542773
   },
   {
+   "file": "Donkey Kong Country (U) (V1.2).jpg",
+   "size": 30021
+  },
+  {
    "file": "Donkey Kong Country (U) (V1.2).zip",
    "size": 2557476
+  },
+  {
+   "file": "Street Fighter II Turbo (V1.0) (E) [!].jpg",
+   "size": 23201
+  },
+  {
+   "file": "Street Fighter II Turbo (V1.0) (E) [!].zip",
+   "size": 1668471
   }
  ],
  "VIRTUALBOY": []
