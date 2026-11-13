@@ -18,6 +18,15 @@
  "SEGA32X": [],
  "SEGACD": [],
  "SEGASATURN": [],
- "SNES": [],
+ "SNES": [
+  {
+   "file": "BS Mario Collection 3 (J).zip",
+   "size": 542773
+  },
+  {
+   "file": "Donkey Kong Country (U) (V1.2).zip",
+   "size": 2557476
+  }
+ ],
  "VIRTUALBOY": []
 }
