@@ -1,0 +1,67 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Game Center</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{background:#4da2fe url(IMG/gc/bg.jpg) center/cover fixed;font-family:"Malgun Gothic",system-ui,sans-serif;color:#fff;display:flex;flex-direction:column}
+header{padding:10px 24px 0}header img{height:clamp(54px,9vw,110px);display:block}
+.tab{margin:6px 24px 0;display:flex;gap:8px}.tab a,.tab span{background:linear-gradient(#1f7bff,#0a4fc8);border:2px solid #8fd2ff;border-bottom:0;border-radius:12px 12px 0 0;padding:7px 18px;font-weight:800;color:#fff;text-decoration:none;text-shadow:0 1px 2px #003}
+main{flex:1;overflow:auto;margin:0 24px;padding:16px;background:rgba(255,255,255,.28);border:2px solid #9fdcff;border-radius:0 14px 0 0;backdrop-filter:blur(3px)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{position:relative;aspect-ratio:760/456;cursor:pointer;transition:.15s;filter:drop-shadow(0 4px 8px #0a3a8a88)}.card:hover{transform:translateY(-4px) scale(1.02)}
+.img{position:absolute;left:4%;top:17%;width:90.5%;height:56%;border-radius:12px;overflow:hidden;background:linear-gradient(#2f8dff,#0a55d6);display:flex;align-items:center;justify-content:center;font-weight:800;text-shadow:0 1px 3px #003;font-size:clamp(12px,1.4vw,17px)}
+.img img{width:100%;height:100%;object-fit:cover;display:block}
+.fr{position:absolute;inset:0;background:url(IMG/gc/card.png) center/100% 100%;pointer-events:none;z-index:2}
+.nm{position:absolute;z-index:3;left:15%;right:5%;top:76%;height:17%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(12px,1.35vw,18px);text-shadow:0 1px 3px #002;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ed{position:absolute;z-index:4;right:7%;top:20%;border:0;border-radius:8px;background:#0008;color:#fff;padding:3px 8px;cursor:pointer;opacity:0;transition:.15s}.card:hover .ed{opacity:1}
+footer{margin:0 24px 10px;height:46px;display:flex;align-items:center;gap:10px;padding:0 14px;background:linear-gradient(#1f6bff,#0a3fb5);border:2px solid #8fd2ff;border-radius:0 0 14px 14px;font-weight:700}
+footer b{flex:1}footer a,footer button{background:#ffb21a;color:#222;border:0;border-radius:9px;padding:7px 16px;font:inherit;font-weight:800;text-decoration:none;cursor:pointer}
+#md{position:fixed;inset:0;background:#0009;display:none;place-items:center;z-index:9}#md.on{display:grid}
+#md div{background:#0b3a9a;border:2px solid #8fd2ff;border-radius:14px;padding:18px;width:min(420px,92vw);display:grid;gap:8px}
+#md input{padding:8px;border-radius:8px;border:0;font:inherit;width:100%}#md label{font-size:12px;opacity:.85}#md .r{display:flex;gap:8px;justify-content:flex-end}
+#md button{border:0;border-radius:8px;padding:8px 16px;font:inherit;font-weight:800;cursor:pointer}#log{font-size:12px;color:#bff;white-space:pre-wrap}
+</style></head><body>
+<header><img src="IMG/gc/logo.png" alt="My Game Center"></header>
+<div class="tab"><a href="emulator.html">🏠 홈</a><span id="cn"></span></div>
+<main><div class="grid" id="g"></div></main>
+<footer><span>⭐</span><b id="ft">My Game Center</b><a href="emulator.html">기종선택</a><a href="index.html">나가기</a></footer>
+<div id="md"><div>
+<b id="mt"></b><label>표시 이름</label><input id="nm"><label>게임 그림 (비워두면 그대로)</label><input id="fi" type="file" accept="image/*">
+<label>깃허브 저장소 (아이디/저장소)</label><input id="repo" placeholder="owner/repo"><label>브랜치</label><input id="br" value="main"><label>깃허브 토큰 (이 탭에서만 기억)</label><input id="tk" type="password">
+<div id="log"></div><div class="r"><button id="cx">닫기</button><button id="sv" style="background:#ffb21a">저장</button></div></div></div>
+<script src="emudata.js?v=mg2"></script>
+<script>
+const $=i=>document.getElementById(i),q=new URLSearchParams(location.search),c=(typeof C!=='undefined'?C:[]).find(x=>x.id===q.get('c'));
+if(!c)location.replace('emulator.html');
+const IMGX=/\.(png|jpe?g|webp|gif)$/i,base=f=>f.replace(/\.[^.]+$/,''),enc=p=>p.split('/').map(encodeURIComponent).join('/');
+let roms=[],cov={},tit={},cur=null;
+$('cn').textContent=c.n;$('ft').textContent='My Game Center - '+c.n;document.title=c.n+' · My Game Center';
+const jget=u=>fetch(u,{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}));
+Promise.all([jget('ROMS/list.json'),jget('ROMS/titles.json')]).then(([l,t])=>{
+ const it=(l[c.fn]||[]).map(x=>x.file||x);tit=(t&&t[c.fn])||{};
+ it.filter(f=>IMGX.test(f)).forEach(f=>cov[base(f)]=f);
+ roms=it.filter(f=>!IMGX.test(f)&&!/\.(txt|md|json)$/i.test(f));render();
+});
+function render(){
+ $('g').innerHTML='';
+ if(!roms.length){$('g').textContent='ROMS/'+c.fn+' 폴더에 게임 롬 파일을 넣어주세요.';return}
+ roms.forEach(f=>{const d=document.createElement('div');d.className='card';
+  d.innerHTML='<div class="img"></div><div class="fr"></div><div class="nm"></div><button class="ed" title="그림/이름 수정">✎</button>';
+  const im=d.firstChild;if(cov[base(f)]){const i=new Image();i.src='ROMS/'+c.fn+'/'+enc(cov[base(f)]);i.alt='';i.onerror=()=>im.textContent='사진이 없습니다.';im.appendChild(i)}else im.textContent='사진이 없습니다.';
+  d.querySelector('.nm').textContent=tit[f]||base(f);
+  d.onclick=()=>location.href='emulator.html?c='+c.id+'&rom='+encodeURIComponent('ROMS/'+c.fn+'/'+f);
+  d.querySelector('.ed').onclick=e=>{e.stopPropagation();cur=f;$('mt').textContent=f;$('nm').value=tit[f]||base(f);$('fi').value='';$('log').textContent='';$('md').classList.add('on')};
+  $('g').appendChild(d)})}
+$('cx').onclick=()=>$('md').classList.remove('on');
+$('repo').value=localStorage.gc_repo||'';$('br').value=localStorage.gc_br||'main';$('tk').value=sessionStorage.gc_tk||'';
+const H=()=>({Authorization:'Bearer '+$('tk').value.trim(),Accept:'application/vnd.github+json'}),api=p=>`https://api.github.com/repos/${$('repo').value.trim()}/contents/${enc(p)}`;
+const b64=b=>{let s='',u=new Uint8Array(b);for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)};
+async function put(p,content,msg){const g=await fetch(api(p)+'?ref='+$('br').value,{headers:H()});const sha=g.ok?(await g.json()).sha:undefined;
+ const r=await fetch(api(p),{method:'PUT',headers:H(),body:JSON.stringify({message:msg,content,branch:$('br').value,sha})});if(!r.ok)throw Error(p+' 저장 실패 '+r.status)}
+$('sv').onclick=async()=>{try{localStorage.gc_repo=$('repo').value;localStorage.gc_br=$('br').value;sessionStorage.gc_tk=$('tk').value;
+ if(!$('repo').value||!$('tk').value)throw Error('저장소와 토큰을 입력하세요.');const f=cur,file=$('fi').files[0];
+ if(file){const ext=(file.name.split('.').pop()||'png').toLowerCase();$('log').textContent='그림 올리는 중...';
+  await put(`ROMS/${c.fn}/${base(f)}.${ext}`,b64(await file.arrayBuffer()),'cover '+f);cov[base(f)]=base(f)+'.'+ext}
+ const nn=$('nm').value.trim();if(nn&&nn!==(tit[f]||base(f))){$('log').textContent='이름 저장 중...';
+  const g=await fetch(api('ROMS/titles.json')+'?ref='+$('br').value,{headers:H()});let all={};
+  if(g.ok)all=JSON.parse(decodeURIComponent(escape(atob((await g.json()).content.replace(/\n/g,'')))));
+  (all[c.fn]=all[c.fn]||{})[f]=nn;await put('ROMS/titles.json',btoa(unescape(encodeURIComponent(JSON.stringify(all,null,1)))),'title '+f);tit[f]=nn}
+ $('log').textContent='완료! (서버 반영까지 1~2분 걸릴 수 있어요)';render();}catch(e){$('log').textContent=e.message}};
+</script></body></html>
