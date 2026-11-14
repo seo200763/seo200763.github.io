@@ -378,7 +378,7 @@ html #rp{--u:calc(min(100vw,177.7778vh) / 1672);--rpdef:url(emuicons/bg.webp);ba
 #rp .rp-it{transition:transform .18s,filter .2s}
 #rp .rp-it:hover,#rp .rp-it:focus-visible{transform:translateY(-3px);filter:brightness(1.06)}
 #rp .rp-it:active{transform:scale(.97)}
-#rp .rp-it.img img{display:block;width:100%;aspect-ratio:600/410;filter:drop-shadow(0 4px 8px rgba(60,120,200,.25))}
+#rp .rp-it.img img{display:block;width:100%;height:auto;filter:drop-shadow(0 4px 8px rgba(60,120,200,.25))}
 #rp .rp-it:not(.img){aspect-ratio:600/410;justify-content:center;gap:0;border:max(2px,calc(var(--u)*3)) solid #77abf0;border-radius:calc(var(--u)*30);background:linear-gradient(160deg,#f1f9ff,#cfe5fc);padding:calc(var(--u)*8)}
 #rp .rp-it:not(.img) .rp-box,#rp .rp-it:not(.img):hover .rp-box{width:auto;height:58%;aspect-ratio:1;border:0;background:none;box-shadow:none;transform:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 #rp .rp-it:not(.img) .rp-box img,#rp .rp-it:not(.img) .rp-box svg{width:100%;height:100%}
@@ -1638,7 +1638,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape')winClose()});
   calc:'<rect x="15" y="9" width="34" height="46" rx="4"/><rect x="21" y="15" width="22" height="9" rx="1.5"/><path d="M23 33h.1M32 33h.1M41 33h.1M23 42h.1M32 42h.1M41 42h.1M23 49h.1M32 49h.1M41 49h.1" stroke-width="3"/>'
  };
 
- var IMGT={'atari2600':'emuicons/atari2600.webp','nes':'emuicons/nes.webp','sms':'emuicons/sms.webp','pce':'emuicons/pce.webp','md':'emuicons/md.webp','gb':'emuicons/gb.webp','lynx':'emuicons/lynx.webp','snes':'emuicons/snes.webp','gg':'emuicons/gg.webp','segacd':'emuicons/segacd.webp','3do':'emuicons/3do.webp'};
+ var IMGT={'atari2600':'emuicons/atari2600.webp','nes':'emuicons/nes.webp','sms':'emuicons/sms.webp','pce':'emuicons/pce.webp','md':'emuicons/md.webp','gb':'emuicons/gb.webp','lynx':'emuicons/lynx.webp','snes':'emuicons/snes.webp','gg':'emuicons/gg.webp','segacd':'emuicons/segacd.webp','3do':'emuicons/3do.webp','jaguar':'emuicons/jaguar.webp','psx':'emuicons/psx.webp','saturn':'emuicons/saturn.webp','s32x':'emuicons/s32x.webp','vb':'emuicons/vb.webp','n64':'emuicons/n64.webp','ngp':'emuicons/ngp.webp','gbc':'emuicons/gbc.webp','dc':'emuicons/dc.webp','ps2':'emuicons/ps2.webp','gba':'emuicons/gba.webp','gc':'emuicons/gc.webp','mamegame':'emuicons/mamegame.webp','nds':'emuicons/nds.webp','wii':'emuicons/wii.webp'};
 var mode=ls.get('rpIcon','color');
 
  function tile(kind,id,name,inner){
