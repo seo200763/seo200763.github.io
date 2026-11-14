@@ -1,0 +1,26 @@
+[
+  {
+    "id": "aceman",
+    "title": "파이팅 에이스맨",
+    "sub": "Fighting!! Aceman Part 1",
+    "file": "aceman.zip",
+    "exe": "D:\\FIGHTI~1\\ACEMAN4.EXE",
+    "dir": "D:\\FIGHTI~1\\",
+    "os": "win95",
+    "ram": 64,
+    "ramMobile": 32,
+    "vga": 8
+  },
+  {
+    "id": "hwanse",
+    "title": "환세취호전",
+    "sub": "幻世醉虎傳",
+    "file": "hschj.zip",
+    "exe": "D:\\HWANSE\\HWANSE.EXE",
+    "dir": "D:\\HWANSE\\",
+    "os": "win95",
+    "ram": 64,
+    "ramMobile": 32,
+    "vga": 8
+  }
+]
