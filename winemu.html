@@ -126,6 +126,8 @@ html,body{margin:0;width:100%;height:100%;background:#000;color:#eee;font-family
 }
 #toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:92vw;background:rgba(0,0,0,.88);color:#fff;border:1px solid #888;padding:8px 12px;font:13px/1.5 Arial,"Malgun Gothic";z-index:60;display:none;pointer-events:none;text-align:center}
 @media(max-width:700px){.status{display:none}.help{display:none}.toolbar button,.toolbar label,.toolbar a.btn{padding:8px 9px}}
+#ovBtns.gl{display:flex;flex-direction:column;gap:8px;margin-top:14px;align-items:stretch}
+#ovBtns.gl button{min-width:240px;padding:12px 18px;font-size:16px}
 </style>
 </head>
 <body>
@@ -224,7 +226,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const status=t=>{$('status').textContent=t};
 let _tt;function toast(m,ms){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(_tt);_tt=setTimeout(()=>{t.style.display='none'},ms||4000)}   /* 모바일은 상태줄이 숨겨져서 안내를 화면에 직접 표시 */
 
-let emu=null,L=null,disk=null,diskName='',booting=0,zoom=1,stateBuf=null,skipAuto=false;   /* skipAuto: ZIP 바로실행 때 자동 부팅 입력/패치 생략 */
+let GAME=null,emu=null,L=null,disk=null,diskName='',booting=0,zoom=1,stateBuf=null,skipAuto=false;   /* skipAuto: ZIP 바로실행 때 자동 부팅 입력/패치 생략 */
 $('osSel').value=OSID;
 $('osSel').onchange=e=>{location.search='?os='+e.target.value};
 $('exitBtn').onclick=e=>{e.preventDefault();if(window.top!==window){try{parent.postMessage('sky-close','*')}catch(_){}return}location.href='index.html'};   /* 나가기: 항상 index.html 로 이동 */
@@ -530,11 +532,12 @@ async function makeEmulator(d){
   if(emu){try{emu.destroy()}catch(e){try{emu.stop()}catch(_){}}emu=null}
   $('screen_container').innerHTML='<div style="white-space:pre;font:14px monospace;line-height:14px"></div><canvas style="display:none"></canvas>';
   const lowMem=(navigator.deviceMemory&&navigator.deviceMemory<=4)||innerWidth<700;
-  const ram=stateBuf?OS.ram:Math.min(OS.ram,lowMem?32:OS.ram);  /* 상태 파일 복원 때만 RAM 고정 */
+  const baseRam=(GAME&&GAME.ram)||OS.ram,mobRam=(GAME&&GAME.ramMobile)||32;   /* 게임별 RAM(MB): games.json 의 ram / ramMobile */
+  const ram=stateBuf?baseRam:Math.min(baseRam,lowMem?mobRam:baseRam);  /* 상태 파일 복원 때만 RAM 고정 */
   const o={
     wasm_path:lib.wasm,
     memory_size:ram*1048576,
-    vga_memory_size:8*1048576,
+    vga_memory_size:((GAME&&GAME.vga)||8)*1048576,
     screen_container:$('screen_container'),
     bios:{url:lib.bios},
     vga_bios:{url:lib.vga},
@@ -1238,9 +1241,110 @@ addEventListener('keydown',e=>{
   if(e.key==='F11'){e.preventDefault();toggleFullscreen()}
 });
 
+/* ---------- 게임 런처 (윈도우95: 기종 선택 → 게임 목록 → 게임 하나만 실행) ----------
+   · 윈도우 이미지는 os/win95/win95.zip 하나만 사용합니다. (부팅 시 C:\GAME.TXT 에 적힌 게임을 시작프로그램이 자동 실행)
+   · 게임은 WINGAMES/<파일>.zip (zip 안에 FAT 디스크 이미지 .img) 로 올리고, 목록은 WINGAMES/games.json 에 적습니다.
+   · 게임 이미지는 두 번째 하드디스크(D:)로 연결되고, 고른 게임의 경로만 C:\GAME.TXT 에 기록합니다.
+   · games.json 항목: id, title, file, exe(D:\... 실행파일), dir(D:\... 작업폴더), ram(MB), ramMobile(폰 RAM), vga(MB), os(기본 win95) */
+const GAMES_URL='WINGAMES/games.json',GAMES_DIR='WINGAMES/';
+const DEFAULT_GAMES=[
+  {id:'aceman',title:'파이팅 에이스맨',sub:'Fighting!! Aceman Part 1',file:'aceman.zip',exe:'D:\\FIGHTI~1\\ACEMAN4.EXE',dir:'D:\\FIGHTI~1\\',os:'win95',ram:64,ramMobile:32,vga:8},
+  {id:'hwanse',title:'환세취호전',sub:'幻世醉虎傳',file:'hschj.zip',exe:'D:\\HWANSE\\HWANSE.EXE',dir:'D:\\HWANSE\\',os:'win95',ram:64,ramMobile:32,vga:8}
+];
+async function loadGameList(){
+  try{
+    const r=await fetch(GAMES_URL,{cache:'no-store'});
+    if(r.ok){const j=await r.json();if(Array.isArray(j)&&j.length)return j}
+  }catch(_){}
+  return DEFAULT_GAMES;
+}
+/* 윈도우 이미지(C:)의 GAME.TXT 를 고른 게임 경로로 바꿈 (메모리 상에서만, 원본 파일은 그대로)
+   형식: 1줄 실행파일 / 빈 줄 / 작업 폴더 */
+function patchGameTxt(buf,g){
+  try{
+    const u=new Uint8Array(buf),dv=new DataView(buf);
+    if(u.length<65536||u[510]!==0x55||u[511]!==0xAA)return'MBR 아님';
+    const pt=[446,462,478,494].find(o=>[4,6,0xE].includes(u[o+4]));if(pt==null)return'FAT16 파티션 없음';
+    const OFF=dv.getUint32(pt+8,true)*512,bps=dv.getUint16(OFF+11,true),spc=u[OFF+13],res=dv.getUint16(OFF+14,true),nf=u[OFF+16],rootent=dv.getUint16(OFF+17,true),fs=dv.getUint16(OFF+22,true);
+    if(bps!==512||!spc||!nf)return'BPB 이상';
+    const CL=spc*bps,rootsec=res+nf*fs,ds=rootsec+rootent*32/512;
+    const text=g.exe+'\r\n\r\n'+(g.dir||g.exe.replace(/[^\\]*$/,''));
+    const data=Uint8Array.from(text,ch=>ch.charCodeAt(0)&255);
+    const nm='GAME    TXT';
+    for(let i=0;i<rootent;i++){
+      const o=OFF+rootsec*512+i*32;
+      if(u[o]===0)break;
+      if(u[o]===0xE5||u[o+11]===0x0F)continue;
+      let ok=1;for(let k=0;k<11;k++)if(u[o+k]!==nm.charCodeAt(k)){ok=0;break}
+      if(!ok)continue;
+      const c=dv.getUint16(o+26,true);
+      if(c<2||data.length>CL)return'GAME.TXT 갱신 불가';
+      const p=OFF+(ds+(c-2)*spc)*512;
+      u.fill(0,p,p+CL);u.set(data,p);dv.setUint32(o+28,data.length,true);
+      return'GAME.TXT → '+text.replace(/\r\n/g,' | ');
+    }
+    return'이미지에 C:\\GAME.TXT 가 없습니다';
+  }catch(e){return'GAME.TXT 패치 실패: '+e.message}
+}
+/* 게임 하나만 실행: 윈도우 이미지 + 게임 이미지(D:) */
+async function startGame(g){
+  const my=++booting;
+  try{
+    GAME=g;skipAuto=true;stateBuf=null;
+    ov(g.title,'서버에서 윈도우 이미지를 찾는 중…',{pct:3});status('이미지 찾는 중…');
+    const f=await probe(OSID);
+    if(my!==booting)return;
+    if(!f){noImage();return}
+    const blob=await getServerBlob(f,'윈도우 이미지를 받는 중…');
+    if(my!==booting)return;
+    const d=await toDisk(f.u,blob,q=>ov(g.title,'윈도우 이미지 압축 해제 중…',{pct:q}));
+    if(d.k!=='hd')throw Error('윈도우 이미지가 하드디스크 이미지가 아닙니다');
+    disk=d;diskName=f.u.split('/').pop();
+    const gf=await probeUrl(GAMES_DIR+g.file);
+    if(my!==booting)return;
+    if(!gf)throw Error('서버에 <b>'+GAMES_DIR+g.file+'</b> 파일이 없습니다. 게임 zip 을 올려 주세요.');
+    const gb=await getServerBlob(gf,'게임 파일을 받는 중… ('+g.title+')');
+    if(my!==booting)return;
+    const gd=await toDisk(gf.u,gb,q=>ov(g.title,'게임 이미지 압축 해제 중…',{pct:q}));
+    if(gd.k!=='hd')throw Error('게임 zip 안에 하드디스크 이미지(.img)가 필요합니다');
+    const r=patchGameTxt(disk.buf,g);console.log('[game]',r);
+    if(!/^GAME\.TXT →/.test(r))toast(r,9000);
+    media.hdb=gd.buf;media.names.hdb=g.title;refreshMedia();
+    await makeEmulator(disk);
+    status(g.title+' 실행 중');toast(g.title+' 시작 — 윈도우가 뜨면 게임이 자동으로 실행됩니다',6000);
+  }catch(e){
+    console.error(e);status('오류');
+    ov(g.title,'오류: '+(e&&e.message||e),{btns:[['다시 시도',()=>startGame(g)],['🎮 게임 목록',()=>{location.href='winemu.html?os='+OSID}]]});
+  }
+}
+function showGameList(list){
+  ov(OS.n+' 게임 런처','실행할 게임을 선택하세요.<br><small>게임마다 윈도우가 새로 열리고, 선택한 게임 하나만 실행됩니다.</small>',
+    {btns:[...list.map(g=>['🎮 '+g.title,()=>{location.href='winemu.html?os='+OSID+'&game='+encodeURIComponent(g.id)}]),
+           ['🖥 윈도우만 실행',()=>{location.href='winemu.html?os='+OSID+'&plain=1'}]]});
+  $('ovBtns').classList.add('gl');
+  status('게임을 선택하세요');
+}
+/* 툴바에 '게임 목록' 버튼 (게임 목록이 있는 윈도우에서만) */
+function addListBtn(){
+  if($('gameListBtn'))return;
+  const a=document.createElement('a');a.className='btn';a.id='gameListBtn';a.href='winemu.html?os='+OSID;a.textContent='🎮 게임 목록';
+  $('exitBtn').after(a);
+}
+
 /* ---------- 시작 ---------- */
-ov(OS.n,`<b>${OS.n}</b> 에뮬레이터입니다.<br>서버의 <b>os/${OSID}/${OSID}.img</b>(또는 .zip)를 자동으로 불러옵니다.`,{btns:[['▶ '+OS.n+' 시작',()=>start(true)],['💾 이미지 불러오기',pickLocal]]});
-addEventListener('load',()=>{setTimeout(()=>start(true),200)});
+(async()=>{
+  const all=await loadGameList();
+  const list=all.filter(g=>(g.os||'win95')===OSID);
+  const whenLoaded=fn=>document.readyState==='complete'?setTimeout(fn,200):addEventListener('load',()=>setTimeout(fn,200));
+  if(list.length&&!qs.has('plain')){
+    addListBtn();
+    const g=list.find(x=>x.id===qs.get('game'));
+    if(g){whenLoaded(()=>startGame(g));return}
+    showGameList(list);return;
+  }
+  ov(OS.n,`<b>${OS.n}</b> 에뮬레이터입니다.<br>서버의 <b>os/${OSID}/${OSID}.img</b>(또는 .zip)를 자동으로 불러옵니다.`,{btns:[['▶ '+OS.n+' 시작',()=>start(true)],['💾 이미지 불러오기',pickLocal]]});
+  whenLoaded(()=>start(true));
+})();
 </script>
 </body>
 </html>
