@@ -488,12 +488,22 @@ function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorag
 
 var st=document.createElement('style');
 st.textContent=`
-#ds-bar{position:fixed;top:calc(env(safe-area-inset-top,0px) + var(--ds-top,3px));left:50%;transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:8px;padding:3px 10px;border-radius:12px;background:rgba(15,17,22,.8);color:#d8dde6;font:600 10.5px/1 system-ui,-apple-system,"Malgun Gothic",sans-serif;border:1px solid rgba(255,255,255,.14);-webkit-user-select:none;user-select:none;max-width:calc(100vw - 8px);white-space:nowrap;-webkit-tap-highlight-color:transparent;box-sizing:border-box}
-#ds-bar .it{display:flex;align-items:center;gap:3px;padding:3px 0}
+#ds-bar{position:fixed;top:calc(env(safe-area-inset-top,0px) + var(--ds-top,3px));left:50%;transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:0;padding:4px 8px;border-radius:99px;background:linear-gradient(180deg,rgba(32,32,34,.94),rgba(14,14,16,.94));color:#e4e6ea;font:500 12.5px/1 system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;letter-spacing:.01em;border:1px solid rgba(255,255,255,.08);box-shadow:0 3px 12px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.07);-webkit-user-select:none;user-select:none;max-width:calc(100vw - 8px);white-space:nowrap;-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+#ds-bar .it{display:flex;align-items:center;gap:6px;padding:4px 11px;position:relative}
+#ds-bar .it+.it::before{content:"";position:absolute;left:0;top:50%;height:17px;transform:translateY(-50%);border-left:1.5px solid rgba(255,255,255,.2)}
 #ds-bar .it[data-act]{cursor:pointer}
-#ds-bar i{width:7px;height:7px;border-radius:50%;background:#6b7280;display:block;flex:none}
-#ds-bar .off{opacity:.55}
-#ds-bar .on i{background:#2bdc5b;box-shadow:0 0 5px 1px rgba(43,220,91,.85)}
+#ds-bar .it[data-act]:hover{color:#fff}
+#ds-bar i{width:9px;height:9px;border-radius:50%;background:#5b5f66;display:block;flex:none}
+#ds-bar .off{color:#b4b8bf}
+#ds-bar .off .ic{color:#8b9098}
+#ds-bar .on i{background:#22d83a;box-shadow:0 0 6px 1px rgba(34,216,58,.8)}
+#ds-bar .on .ic{color:#22d83a;filter:drop-shadow(0 0 4px rgba(34,216,58,.6))}
+#ds-bar .ic{display:block;width:19px;height:19px;flex:none}
+#ds-bar .ic svg{display:block;width:100%;height:100%}
+#ds-bar .bw{gap:7px}
+#ds-bar .bp{font-size:13px;font-weight:500;color:#e8eaee}
+#ds-bar .bz{display:none;width:12px;height:17px;flex:none;margin-right:-2px}
+#ds-bar .bz.on{display:block}
 #ds-sv{position:fixed;top:calc(env(safe-area-inset-top,0px) + var(--ds-sv-top,var(--ds-top,6px)));left:calc(env(safe-area-inset-left,0px) + 10px);z-index:2147483000;display:inline-flex;align-items:center;gap:7px;height:36px;margin:0;padding:0 16px 0 13px;border-radius:99px;border:2px solid #ffd0d6;background:linear-gradient(135deg,#ff8a96,#e8495b 70%);color:#fff;text-shadow:0 1px 2px rgba(120,20,40,.5);font:400 14.5px/1 Jua,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;letter-spacing:.03em;white-space:nowrap;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;box-sizing:border-box;box-shadow:0 4px 0 #a8263d,0 8px 18px rgba(232,73,91,.4);transition:transform .15s,box-shadow .15s,filter .2s}
 #ds-sv:hover{transform:translateY(-2px);filter:brightness(1.06);box-shadow:0 6px 0 #a8263d,0 12px 22px rgba(232,73,91,.45)}
 #ds-sv:active{transform:translateY(3px);box-shadow:0 1px 0 #a8263d}
@@ -503,21 +513,26 @@ st.textContent=`
 #ds-sv.on:hover{box-shadow:0 6px 0 #1c6f4c,0 12px 22px rgba(47,158,110,.45)}
 #ds-sv.on:active{box-shadow:0 1px 0 #1c6f4c}
 #ds-sv:focus-visible{outline:3px solid #ffcf7d;outline-offset:3px}
-@media (max-width:560px){body{margin-top:42px}#ds-bar{top:calc(env(safe-area-inset-top,0px) + var(--ds-top,3px) + 9px);left:auto;right:4px;transform:none;max-width:calc(100vw - 134px);overflow-x:auto;scrollbar-width:none;gap:6px;padding:3px 8px}#ds-bar::-webkit-scrollbar{display:none}}
+@media (max-width:560px){body{margin-top:42px}#ds-bar{top:calc(env(safe-area-inset-top,0px) + var(--ds-top,3px) + 9px);left:auto;right:4px;transform:none;max-width:calc(100vw - 134px);overflow-x:auto;scrollbar-width:none;padding:3px 4px;font-size:11.5px}#ds-bar::-webkit-scrollbar{display:none}#ds-bar .it{padding:4px 8px}#ds-bar .ic{width:17px;height:17px}}
 html.ds-saver #ds-bar .on i{box-shadow:none}
-#ds-bar .bat{width:17px;height:9px;border:1px solid #9aa3b2;border-radius:2px;position:relative;display:block;padding:0;box-sizing:border-box}
-#ds-bar .bat::after{content:"";position:absolute;right:-3px;top:2px;width:2px;height:3px;background:#9aa3b2;border-radius:0 1px 1px 0}
-#ds-bar .bat b{display:block;height:100%;width:0;background:#2bdc5b}
+#ds-bar .bat{width:25px;height:12px;border:1.5px solid #d3d6dc;border-radius:3.5px;position:relative;display:block;padding:1px;box-sizing:border-box;flex:none}
+#ds-bar .bat::after{content:"";position:absolute;right:-4px;top:2.5px;width:2.5px;height:4px;background:#d3d6dc;border-radius:0 1.5px 1.5px 0}
+#ds-bar .bat b{display:block;height:100%;width:0;background:#22d83a;border-radius:1.5px}
 #ds-toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 32px);left:50%;transform:translateX(-50%);z-index:2147483001;display:none;background:rgba(15,17,22,.92);color:#fff;font:600 12px/1.3 system-ui,-apple-system,"Malgun Gothic",sans-serif;padding:7px 12px;border-radius:10px;max-width:90vw;text-align:center}
 html.ds-saver *,html.ds-saver *::before,html.ds-saver *::after{animation-duration:.001s!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;text-shadow:none!important;scroll-behavior:auto!important}
 `;
 document.head.appendChild(st);
 
-var items=[['bt','BT','블루투스','pair'],['usb','USB','USB','wired'],['otg','OTG','OTG','wired'],['kb','⌨','키보드'],['ms','🖱','마우스'],['pad','🎮','게임패드']];
+var IC={
+ kb:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5.5" width="20" height="13" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.2 9.6h.01M9.7 9.6h.01M13.2 9.6h.01M16.7 9.6h.01M6.2 13.4h.01M17.8 13.4h.01M8.6 14h6.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+ ms:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.2" y="2.4" width="11.6" height="19.2" rx="5.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.8v7.2M6.4 10h11.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+ pad:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.6 6.8h8.8a5.2 5.2 0 0 1 5.1 4.2l.9 5.1a2.7 2.7 0 0 1-4.7 2.2l-2.3-2.4H8.6l-2.3 2.4a2.7 2.7 0 0 1-4.7-2.2l.9-5.1a5.2 5.2 0 0 1 5.1-4.2z" fill="currentColor"/><path d="M8 9.6v3.6M6.2 11.4h3.6" stroke="#141416" stroke-width="1.7" stroke-linecap="round"/><circle cx="15.7" cy="10.6" r="1" fill="#141416"/><circle cx="17.9" cy="12.6" r="1" fill="#141416"/></svg>'
+};
+var items=[['bt','BT','블루투스','pair'],['usb','USB','USB','wired'],['otg','OTG','OTG','wired'],['kb','','키보드'],['ms','','마우스'],['pad','','게임패드']];
 var bar=document.createElement('div');
 bar.id='ds-bar';
-bar.innerHTML='<span class="it bw" title="배터리"><span class="bat"><b></b></span><span class="bp">--</span></span>'
- +items.map(function(a){return '<span class="it off" data-k="'+a[0]+'"'+(a[3]?' data-act="'+a[3]+'"':'')+'><i></i><span>'+a[1]+'</span></span>'}).join('');
+bar.innerHTML='<span class="it bw" title="배터리"><span class="bat"><b></b></span><svg class="bz" viewBox="0 0 12 17" aria-hidden="true"><path d="M7.4 0 .6 9.6h4.5L4 17l7.4-10H6.7z" fill="#f5a623"/></svg><span class="bp">--</span></span>'
+ +items.map(function(a){return '<span class="it off" data-k="'+a[0]+'"'+(a[3]?' data-act="'+a[3]+'"':'')+'>'+(IC[a[0]]?'<span class="ic">'+IC[a[0]]+'</span>':'<i></i><span>'+a[1]+'</span>')+'</span>'}).join('');
 document.body.appendChild(bar);
 var svb=document.createElement('button');svb.type='button';svb.id='ds-sv';
 svb.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-8.500 5-14 14-14 0 9-5.500 14-14 14z"/><path d="M5 19l7-7"/></svg><span>절전</span><span class="st">꺼짐</span>';
@@ -542,7 +557,7 @@ function paintBatt(){
   if(!batt){p.textContent='--';f.style.width='0';w.title='이 브라우저는 배터리 정보를 제공하지 않습니다';return}
   var l=Math.round(batt.level*100);
   f.style.width=l+'%';f.style.background=l<=20?'#ef4444':l<=50?'#f5b301':'#2bdc5b';
-  p.textContent=(batt.charging?'⚡':'')+l+'%';
+  p.textContent=l+'%';var z=bar.querySelector('.bz');if(z)z.classList.toggle('on',!!batt.charging);
   w.title='배터리 '+l+'%'+(batt.charging?' · 충전 중':'');
 }
 function onBatt(){
