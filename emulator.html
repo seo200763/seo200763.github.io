@@ -356,21 +356,24 @@ html.emuopen #rp{display:none}
 
 /* ===== 시안(게임 에뮬레이터 선택) 디자인 : 16:9 배경 위에 실제 버튼·기종 타일을 올림 ===== */
 html #rp{--u:calc(min(100vw,177.7778vh) / 1672);--rpdef:url(emuicons/bg2.webp);background:#2f8ef0 var(--rpbg,var(--rpdef)) center/cover no-repeat;overflow:hidden}
-#rp .st{position:absolute;left:50%;top:50%;width:calc(var(--u)*1672);height:calc(var(--u)*941);transform:translate(-50%,-50%);background:url(emuicons/bg2.webp) 0 0/100% 100% no-repeat}
-#rp .bk{position:absolute;left:calc(var(--u)*30);top:calc(var(--u)*855);width:calc(var(--u)*242);height:calc(var(--u)*76);border:calc(var(--u)*3) solid #fff;border-radius:calc(var(--u)*38);background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(214,234,255,.82));color:#1f4e84;font:700 max(12px,calc(var(--u)*26)) 'Fredoka','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;box-shadow:0 calc(var(--u)*6) calc(var(--u)*16) rgba(20,70,160,.35);cursor:pointer;transition:background .2s,transform .15s}
+#rp .st{position:absolute;inset:0;--y0:calc(50% - var(--u)*470.5)}
+#rp .bk{position:absolute;left:calc(var(--u)*30);bottom:calc(var(--u)*26);width:calc(var(--u)*242);height:calc(var(--u)*76);border:calc(var(--u)*3) solid #fff;border-radius:calc(var(--u)*38);background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(214,234,255,.82));color:#1f4e84;font:700 max(12px,calc(var(--u)*26)) 'Fredoka','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;box-shadow:0 calc(var(--u)*6) calc(var(--u)*16) rgba(20,70,160,.35);cursor:pointer;transition:background .2s,transform .15s}
 #rp .bk:hover{background:#fff;transform:translateY(-2px)}
 #rp .bk:active{transform:scale(.97)}
 #rp .bk span{display:inline}
-#rp .ttl{display:block;position:absolute;left:calc(var(--u)*810);top:calc(var(--u)*18);width:calc(var(--u)*720);height:auto;pointer-events:none;-webkit-mask-image:radial-gradient(ellipse 62% 72% at 50% 50%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 62% 72% at 50% 50%,#000 60%,transparent 100%);filter:drop-shadow(0 calc(var(--u)*4) calc(var(--u)*8) rgba(20,70,160,.35))}
-#rp .tb{position:absolute;left:calc(var(--u)*700);width:calc(var(--u)*940);top:calc(var(--u)*872);display:flex;justify-content:center;gap:calc(var(--u)*10)}
+#rp .ttl2{position:absolute;right:calc(var(--u)*32);width:calc(var(--u)*940);top:calc(var(--y0) + var(--u)*20);text-align:center;pointer-events:none;font-family:'Fredoka','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif}
+#rp .ttl2 .t1{display:inline-flex;align-items:center;gap:calc(var(--u)*16);font-weight:700;font-size:max(22px,calc(var(--u)*68));line-height:1.1;letter-spacing:.01em;color:#fff;-webkit-text-stroke:max(5px,calc(var(--u)*13)) #2c6fd8;paint-order:stroke fill;text-shadow:0 calc(var(--u)*6) 0 #1b4aa6,0 calc(var(--u)*12) calc(var(--u)*20) rgba(10,50,150,.55)}
+#rp .ttl2 .t1 i{font-style:normal;font-size:.9em;-webkit-text-stroke:0;filter:drop-shadow(0 calc(var(--u)*4) calc(var(--u)*6) rgba(10,50,150,.5))}
+#rp .ttl2 .t2{display:block;width:max-content;max-width:100%;margin:calc(var(--u)*12) auto 0;padding:calc(var(--u)*8) calc(var(--u)*34);border-radius:99px;border:max(2px,calc(var(--u)*3)) solid rgba(255,255,255,.9);background:linear-gradient(180deg,#4a8cf0,#2456b8);color:#fff;font-weight:600;font-size:max(12px,calc(var(--u)*27));letter-spacing:.02em;box-shadow:0 calc(var(--u)*6) calc(var(--u)*16) rgba(10,50,150,.4),inset 0 1px 0 rgba(255,255,255,.45)}
+#rp .tb{position:absolute;right:calc(var(--u)*32);width:calc(var(--u)*940);top:calc(var(--y0) + var(--u)*872);display:flex;justify-content:center;gap:calc(var(--u)*10)}
 #rp .tb .rp-nav{font-size:max(10px,calc(var(--u)*17));padding:calc(var(--u)*9) calc(var(--u)*14);color:#1f4e84;background:rgba(255,255,255,.62)}
-#rp .pn{position:absolute;left:calc(var(--u)*700);top:calc(var(--u)*205);width:calc(var(--u)*940);height:calc(var(--u)*650);border-radius:calc(var(--u)*34);background:linear-gradient(180deg,rgba(216,233,254,.84),rgba(236,247,253,.84));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:calc(var(--u)*4) solid #77abf0;box-shadow:inset 0 0 0 calc(var(--u)*3) rgba(255,255,255,.75),0 calc(var(--u)*10) calc(var(--u)*30) rgba(20,70,160,.35)}
+#rp .pn{position:absolute;right:calc(var(--u)*32);top:calc(var(--y0) + var(--u)*205);width:calc(var(--u)*940);height:calc(var(--u)*650);border-radius:calc(var(--u)*34);background:linear-gradient(180deg,rgba(216,233,254,.84),rgba(236,247,253,.84));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:calc(var(--u)*4) solid #77abf0;box-shadow:inset 0 0 0 calc(var(--u)*3) rgba(255,255,255,.75),0 calc(var(--u)*10) calc(var(--u)*30) rgba(20,70,160,.35)}
 #rp .sc{position:absolute;inset:calc(var(--u)*14) calc(var(--u)*8) calc(var(--u)*14) calc(var(--u)*22);overflow-y:auto;padding:0 calc(var(--u)*10) 0 0;scrollbar-width:thin;scrollbar-color:#5b9bf0 #cfe3fb}
 #rp .sc::-webkit-scrollbar{width:max(8px,calc(var(--u)*14))}
 #rp .sc::-webkit-scrollbar-track{background:#cfe3fb;border-radius:99px}
 #rp .sc::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#8fc3ff,#4d8fee);border-radius:99px;border:2px solid #e8f3ff}
 #rp .stt{position:absolute;width:calc(var(--u)*84);height:calc(var(--u)*84);pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 6l7.5 16.5 18 2-13.4 12.2 3.8 17.8L32 45.2 16.1 54.5l3.8-17.8L6.5 24.5l18-2z' fill='%23ffe27a' stroke='%23ffb347' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 3px 4px rgba(60,120,200,.35))}
-#rp .s1{left:calc(var(--u)*658);top:calc(var(--u)*163)}#rp .s2{left:calc(var(--u)*1598);top:calc(var(--u)*163)}#rp .s3{left:calc(var(--u)*658);top:calc(var(--u)*813)}#rp .s4{left:calc(var(--u)*1598);top:calc(var(--u)*813)}
+#rp .s1{left:calc(100% - var(--u)*1014);top:calc(var(--y0) + var(--u)*163)}#rp .s2{left:calc(100% - var(--u)*74);top:calc(var(--y0) + var(--u)*163)}#rp .s3{left:calc(100% - var(--u)*1014);top:calc(var(--y0) + var(--u)*813)}#rp .s4{left:calc(100% - var(--u)*74);top:calc(var(--y0) + var(--u)*813)}
 #rp .sc .rp-sec{margin:calc(var(--u)*10) calc(var(--u)*4) calc(var(--u)*12);font-size:max(11px,calc(var(--u)*17));color:#2f6fb5;text-shadow:0 1px 0 #fff}
 #rp .sc .rp-sec::after{background:linear-gradient(90deg,#7fb2f0,rgba(127,178,240,0))}
 #rp .sc .rp-sec:not(:first-child){margin-top:calc(var(--u)*26)}
@@ -387,7 +390,9 @@ html #rp{--u:calc(min(100vw,177.7778vh) / 1672);--rpdef:url(emuicons/bg2.webp);b
 @media not all and (min-aspect-ratio:13/10){
  html #rp{--rpdef:url(emuicons/bg2.webp);background-position:22% center;overflow-y:auto}
  #rp .st{position:static;width:auto;height:auto;transform:none;background:none;max-width:780px;margin:0 auto;padding:10px 12px 36px;display:flex;flex-direction:column;gap:12px}
- #rp .ttl{display:block;position:static;left:auto;top:auto;width:100%;height:auto;filter:none;-webkit-mask-image:radial-gradient(ellipse 62% 72% at 50% 50%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 62% 72% at 50% 50%,#000 60%,transparent 100%)}
+ #rp .ttl2{position:static;width:auto;text-align:center;padding:4px 0 2px}
+ #rp .ttl2 .t1{font-size:clamp(26px,8vw,40px);-webkit-text-stroke:7px #2c6fd8}
+ #rp .ttl2 .t2{font-size:clamp(12px,3.6vw,15px);padding:6px 20px;margin-top:8px}
  #rp .bk{position:static;width:auto;height:auto;align-self:flex-start;border:1px solid #fff;background:rgba(255,255,255,.6);color:#1f4e84;font:600 14px 'Fredoka','Noto Sans KR',sans-serif;padding:8px 16px;border-radius:99px}
  #rp .bk span{display:inline}
  #rp .tb{position:static;width:auto;flex-wrap:wrap;justify-content:flex-start;gap:6px}
@@ -425,7 +430,7 @@ html #rp{--u:calc(min(100vw,177.7778vh) / 1672);--rpdef:url(emuicons/bg2.webp);b
 <body>
 <div id="rp">
  <div class="st">
-  <img class="ttl" src="emuicons/title.webp" alt="게임 에뮬레이터 선택">
+  <div class="ttl2"><span class="t1"><i>🎮</i>게임 에뮬레이터 선택</span><span class="t2">원하는 게임기를 선택해주세요!</span></div>
   <button type="button" class="bk" id="rVer" aria-label="뒤로가기"><span>‹ 뒤로가기</span></button>
   <div class="tb">
    <button type="button" class="rp-nav" id="rExit" onclick="location.href='index.html'">나가기</button>
