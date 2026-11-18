@@ -244,6 +244,11 @@ body.pfs #menu{display:none}
     : load('assets/jszip.min.js', 4000).catch(() => load('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'));
   /* 화면이 먼저 뜬 뒤, 쉬는 시간에 엔진을 미리 받아둠 (실패해도 조용히 무시 → 나중에 다시 시도) */
   (window.requestIdleCallback || (f => setTimeout(f, 800)))(() => { loadEngine().catch(() => { EP = null; }); loadZip().catch(() => {}); });
+  ['pointerdown', 'keydown', 'touchstart'].forEach(ev => window.addEventListener(ev, function f() {
+    window.removeEventListener(ev, f, true);
+    try { (window.emulators && emulators.audioContext && emulators.audioContext.resume) && emulators.audioContext.resume(); } catch (e) {}
+    try { document.querySelectorAll('audio,video').forEach(a => a.play && a.play().catch(() => {})); } catch (e) {}
+  }, true));
   const nav = o => { const u = new URLSearchParams(location.search); for (const k in o) u.set(k, o[k]); location.search = u.toString(); };
 
   /* ---- 대화상자 ---- */
@@ -594,7 +599,7 @@ body.pfs #menu{display:none}
       status('<div style="font-size:20px;font-weight:800">' + esc(title) + '</div><div style="color:#aaa">' + esc(lab) + '</div>' +
         (local && exes.length > 1 ? '<select id="exe0">' + exes.map(n => '<option value="' + esc(n) + '"' + (n === G.exe ? ' selected' : '') + '>▶ ' + esc(n) + '</option>').join('') + '</select>' : '') +
         '<button class="pri" id="go">▶ 시작</button>');
-      await new Promise(ok => { $('go').onclick = ok; });   /* 사용자 클릭 → 오디오/전체화면 허용 */
+      if (local && exes.length > 1) await new Promise(ok => { $('go').onclick = ok; });   /* 실행파일을 고를 때만 대기 */
       const s0 = $('exe0'); if (s0 && s0.value !== G.exe) { G.exe = s0.value; await setLaunch(); }
       await boot(null);
     } catch (e) { console.error(e); fail('도스를 시작하지 못했어요', e); }
