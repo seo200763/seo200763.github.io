@@ -21,6 +21,7 @@ var enc=function(s){return btoa(unescape(encodeURIComponent(s)))},dec=function(s
 function tmap(arr){var t={};arr.forEach(function(g){t[g.file]=g.title});return t}
 async function files(f){var p="ROMS/"+f,items=null,t={};
 try{var r=await fetch(API+p+"?ref="+cfg.branch);if(r.ok)items=(await r.json()).filter(function(x){return x.type==="file"});else if(r.status===404)items=[]}catch(e){}
+if(!items||!items.length){try{var lj=await (await fetch("ROMS/list.json",{cache:"no-store"})).json(),la=lj[f];if(la&&la.length)items=la.map(function(g){return{name:g.file,type:"file"}})}catch(e){}}
 if(items){var j=items.find(function(x){return x.name.toLowerCase()==="games.json"});if(j&&j.download_url){try{t=tmap((await (await fetch(j.download_url+"?t="+Date.now())).json()).games||[])}catch(e){}}}
 else{try{var d=(await (await fetch(p+"/games.json",{cache:"no-store"})).json()).games||[];items=d.map(function(g){return{name:g.file}});t=tmap(d)}catch(e){items=[]}}
 if(FRESH[f])t=FRESH[f];return{items:items,t:t}}
