@@ -4,9 +4,6 @@
 <meta name="robots" content="noindex">
 <title>도스게임 실행</title>
 <script src="auth.js"></script>
-<link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css">
-<script src="https://v8.js-dos.com/latest/js-dos.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;overflow:hidden;overscroll-behavior:none}
@@ -45,6 +42,21 @@ function fail(t,e){pg.style.display="none";say(t+(e?"\n("+(e.message||e)+")":"")
 function ext(n){var i=n.lastIndexOf(".");return i<0?"":n.slice(i+1).toLowerCase()}
 function setP(p){pg.firstChild.style.width=Math.round(p*100)+"%"}
 
+/* ---------- 엔진 불러오기: 내 사이트 jsdos/ 폴더만 사용 (외부 사이트 사용 안 함) ---------- */
+var LOCAL="jsdos/",PREFIX="jsdos/";
+function ldJS(src){return new Promise(function(ok,no){var e=document.createElement("script");e.src=src+"?v=1";e.onload=ok;e.onerror=function(){no(new Error(src+" 없음"))};document.head.append(e)})}
+function ldCSS(href){var l=document.createElement("link");l.rel="stylesheet";l.href=href;document.head.append(l)}
+async function engine(){
+  ldCSS(LOCAL+"js-dos.css");
+  await ldJS(LOCAL+"js-dos.js");
+  if(typeof Dos!=="function")throw new Error("Dos 함수 없음");
+  try{await ldJS(LOCAL+"jszip.min.js")}catch(e){}   /* 있으면 zip 게임도 자동 설정, 없어도 .jsdos 는 실행됨 */
+  /* js-dos 파일들이 jsdos/ 바로 안에 있는지, jsdos/emulators/ 안에 있는지 자동 확인 */
+  PREFIX=LOCAL;
+  try{var r=await fetch(LOCAL+"emulators/emulators.js",{method:"HEAD"});if(r.ok)PREFIX=LOCAL+"emulators/"}catch(e){}
+  try{if(window.emulators)window.emulators.pathPrefix=PREFIX}catch(e){}
+}
+
 /* ---------- 파일 받기 (진행률 표시) ---------- */
 function getFile(url){return new Promise(function(ok,no){
   var x=new XMLHttpRequest();x.open("GET",url+(url.indexOf("?")<0?"?":"&")+"t="+Date.now());x.responseType="arraybuffer";
@@ -64,6 +76,7 @@ function autoFor(p){var parts=p.split("/"),f=parts.pop(),a="";if(parts.length)a+
 
 /* ---------- 번들 만들기 ---------- */
 async function build(buf){
+  if(typeof JSZip!=="function"){if(ext(F)==="jsdos")return new Blob([buf]);throw new Error("zip 게임은 jsdos/jszip.min.js 가 필요해요 (.jsdos 파일은 없어도 됩니다)")}
   var z=await JSZip.loadAsync(buf),names=Object.keys(z.files).filter(function(k){return !z.files[k].dir});
   if(!names.length)throw new Error("압축 파일이 비어 있어요");
   var hasConf=names.some(function(n){return /^\.jsdos\/dosbox\.conf$/i.test(n)});
@@ -98,7 +111,7 @@ function pick(list){return new Promise(function(ok){
 async function start(blob){
   BLOB=blob;var url=URL.createObjectURL(blob);
   say("게임 시작 중…");setP(1);
-  PROPS=Dos($("#dos"),{url:url,autoStart:true,noCloud:true,noNetworking:true,
+  PROPS=Dos($("#dos"),{url:url,pathPrefix:PREFIX,autoStart:true,noCloud:true,noNetworking:true,
     onEvent:function(ev,a){if(ev==="ci-ready"){CI=a;cover.classList.add("hide");initPad()}
       if(ev==="bnd-play"||ev==="emu-ready"||ev==="ci-ready")cover.classList.add("hide")}});
   /* 혹시 이벤트가 안 와도 잠시 뒤 안내 가림막 제거 */
@@ -125,8 +138,7 @@ $("#fs").onclick=function(){var s=$("#stage");(s.requestFullscreen||s.webkitRequ
 (async function(){
   if(!F||/[\/\\]|\.\./.test(F)){location.replace("roms.html?m=dosgame");return}
   $("#ttl").textContent=F.replace(/\.[^.]+$/,"");document.title=F.replace(/\.[^.]+$/,"")+" · 도스게임";
-  if(typeof Dos!=="function"){fail("도스 엔진(js-dos)을 불러오지 못했어요.\n인터넷 연결이나 광고차단/보안 프로그램을 확인해주세요.");return}
-  if(typeof JSZip!=="function"){fail("압축 해제 도구(JSZip)를 불러오지 못했어요. 인터넷 연결을 확인해주세요.");return}
+  try{await engine()}catch(e){fail("내 사이트의 jsdos 폴더에서 도스 엔진을 찾지 못했어요.\n저장소에 js-dos 패키지의 dist 폴더 안 파일 전부(js-dos.js, js-dos.css 등)를 jsdos 폴더에 넣어주세요.\n(광고 아님 · 외부 사이트를 쓰지 않고 내 서버 파일만 사용합니다)",e);return}
   try{var buf=await getFile(DIR+encodeURIComponent(F));say("게임 파일 준비 중…");var blob=await build(buf);await start(blob)}
   catch(e){fail("게임을 실행하지 못했어요",e)}
 })();
