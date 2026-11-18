@@ -13,6 +13,6 @@ if(m.eng==="ejs")(async function(){var bios=null;for(var b of(m.bios||[])){try{i
 window.EJS_player="#game";EJS_core=m.core;EJS_gameUrl=url;EJS_gameName=name;EJS_pathtodata="https://cdn.emulatorjs.org/stable/data/";EJS_startOnLoaded=true;if(bios)EJS_biosUrl=bios;ld(EJS_pathtodata+"loader.js")})();
 else if(m.eng==="html")box.innerHTML='<iframe src="'+url+'" allow="fullscreen;gamepad"></iframe>';
 else if(m.eng==="swf")ld("https://unpkg.com/@ruffle-rs/ruffle",function(){var p=RufflePlayer.newest().createPlayer();p.style.cssText="width:100%;height:100%";box.innerHTML="";box.append(p);p.load(url)});
-else if(m.eng==="jsdos")location.replace("dosplay.html?f="+encodeURIComponent(f))
+else if(m.eng==="jsdos")location.replace("dos.html?f="+encodeURIComponent(f)+"&t="+encodeURIComponent(name))
 else msg("이 종류는 아직 실행 엔진이 없어요.")}
 </script></body></html>

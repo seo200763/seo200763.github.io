@@ -579,8 +579,8 @@ body.pfs #menu{display:none}
 
       const auto = await confAutoexec(base);
       let bconf = null;
-      if (local) { const bf = zip.file('.jsdos/dosbox.conf'); if (bf) bconf = await bf.async('string'); }   /* 완성된 .jsdos 번들은 자체 설정 사용 */
-      if (!auto && !exe && !blank && !local && !(JC && (JC.conf || JC.autoexec))) throw new Error('zip 안에서 실행 파일(exe/com/bat)을 찾지 못했어요');
+      if (local || /\.jsdos$/i.test(fname)) { const bf = zip.file('.jsdos/dosbox.conf'); if (bf) bconf = await bf.async('string'); }   /* 완성된 .jsdos 번들은 자체 설정 사용 */
+      if (!auto && !exe && !blank && !local && !bconf && !(JC && (JC.conf || JC.autoexec))) throw new Error('zip 안에서 실행 파일(exe/com/bat)을 찾지 못했어요');
       G = { buf, base, title, names, zip, auto: null, conf: null, cfAuto: auto, bconf, exe, exes, local: !!local, k: null };
       await setLaunch();
       if (!local && !blank) { try { const r = await fetch('DOS/list.json', { cache: 'no-store' }); if (r.ok) { const it = (await r.json()).find(g => g.f === fname); if (it && Array.isArray(it.k)) G.k = it.k; } } catch (e) {} }
@@ -618,7 +618,7 @@ body.pfs #menu{display:none}
     if (/[\/\\]/.test(fname) || fname.indexOf('..') >= 0) return showList();
     status('게임 파일 받는 중…');
     try {
-      const r = await fetch('DOS/' + encodeURIComponent(fname)); if (!r.ok) throw new Error('게임 파일을 찾을 수 없어요 (' + r.status + ')');
+      let r = await fetch('ROMS/DOS/' + encodeURIComponent(fname)); if (!r.ok) r = await fetch('DOS/' + encodeURIComponent(fname)); if (!r.ok) throw new Error('게임 파일을 찾을 수 없어요 (ROMS/DOS/' + fname + ' · ' + r.status + ')');
       play(await r.arrayBuffer(), fname, t || fname.replace(/\.[^.]+$/, ''));
     } catch (e) { fail('게임 파일을 받지 못했어요', e); }
   }
@@ -628,6 +628,7 @@ body.pfs #menu{display:none}
     if (!G) msg.style.display = 'none';
     let items = []; try { const r = await fetch('DOS/list.json', { cache: 'no-store' }); if (r.ok) items = await r.json(); } catch (e) {}
     const b = dlg('<h2>MS-DOS (js-dos ' + ENG + ' 엔진)</h2>' +
+      '<button class="g" id="site"><b>📋 사이트 게임목록</b><small>roms.html</small></button>' +
       '<button class="g" id="blank"><b>⌨ DOS 프롬프트 (빈 C:)</b><small>게임 없이 시작</small></button>' +
       items.map((g, i) => '<button class="g" data-i="' + i + '"><b>' + esc(g.t || g.f) + '</b><small>' + esc(g.f) + '</small></button>').join('') +
       (items.length ? '' : '<p style="color:#999">DOS/list.json 에 등록된 게임이 없어요.</p>') +
@@ -639,6 +640,7 @@ body.pfs #menu{display:none}
     $('loc').onclick = () => $('pick').click();
     $('dir').onclick = () => $('pickdir').click();
     $('jsn').onclick = () => $('pickjson2').click();
+    $('site').onclick = () => { location.href = 'roms.html?m=dosgame'; };
     $('blank').onclick = () => { const u = new URLSearchParams(); u.set('blank', '1'); location.search = u.toString(); };
   }
   $('b-load').onclick = showList;
