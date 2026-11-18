@@ -1,23 +1,42 @@
 {
  "3DO": [],
  "ATARI2600": [],
+ "DOS": [],
+ "FLASH": [],
+ "FOLDER": [],
  "GAMEBOY": [],
  "GAMEBOYADVANCE": [],
  "GAMEBOYCOLOR": [],
  "GAMEGEAR": [],
+ "GB": [],
+ "GBA": [],
+ "GBC": [],
+ "GG": [],
+ "HTML5": [],
  "JAGUAR": [],
+ "JAVA": [],
  "LYNX": [],
+ "MAME": [],
  "MASTERSYSTEM": [],
+ "MD": [],
  "MEGADRIVE": [],
+ "N64": [],
+ "NDS": [],
  "NEOGEOPOCKET": [],
  "NES": [],
+ "NGP": [],
  "NINTENDO64": [],
  "NINTENDODS": [],
+ "PCE": [],
  "PCENGINE": [],
  "PLAYSTATION": [],
+ "PSX": [],
+ "S32X": [],
+ "SATURN": [],
  "SEGA32X": [],
  "SEGACD": [],
  "SEGASATURN": [],
+ "SMS": [],
  "SNES": [
   {
    "file": "BS Mario Collection 3 (J).jpg",
@@ -44,5 +63,7 @@
    "size": 1668471
   }
  ],
- "VIRTUALBOY": []
+ "VB": [],
+ "VIRTUALBOY": [],
+ "WEB": []
 }
