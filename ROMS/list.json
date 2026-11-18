@@ -1,7 +1,16 @@
 {
  "3DO": [],
  "ATARI2600": [],
- "DOS": [],
+ "DOS": [
+  {
+   "file": "wolf3d.jpg",
+   "size": 19807
+  },
+  {
+   "file": "wolf3d.jsdos",
+   "size": 1173810
+  }
+ ],
  "FLASH": [],
  "FOLDER": [],
  "GAMEBOY": [],
