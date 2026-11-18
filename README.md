@@ -26,16 +26,16 @@
 - BIOS/ 폴더에 바이오스를 올려 두면 자동으로 사용합니다. (BIOS/README.txt)
 - 저사양 전용 화면(lowend.html)에는 PC용·준비중 기종이 나오지 않습니다.
 
-[서버 롬 폴더 (ROMS/)] (11월 11일)
-- 기종 화면(PC·태블릿·스마트폰·통합화면·DeX)에서 기종을 누르면 ROMS/<기종폴더>/ 에 올려 둔 게임 목록이 나타나고, 누르면 서버에서 받아 바로 실행됩니다.
-- 기종별 폴더·지원 형식·한글 이름 적는 법: ROMS/README.txt  (마메게임은 기존 MAME/ 폴더 그대로)
-- 게임하는 중 '게임불러오기' 를 누르면 목록이 다시 나타납니다. 내 기기의 롬 불러오기도 그대로 쓸 수 있어요.
-- 공통 코드: mamegame.js (모든 기종 공통 목록 · 다운로드)
+[세이브 호환] (savebridge.js)
+- 💾 저장 / 📥 불러오기가 다른 에뮬레이터와 세이브를 주고받을 수 있게 개편: 게임 내 저장(.sav .srm .mcr .mcd + N64 .eep .sra .fla .mpk)과 즉시저장(.state)을 지원, 불러올 때 종류 자동 판별(zip·여러 파일 가능)
+- 자세한 사용법·한계: SAVE-GUIDE.md
+- 적용 페이지: emulator · classic · lowend · mobile · tablet · dex · webthema/thema01
 
 
-[웹 포팅 PC 게임 (GAMESTART/)]
-- 메인 화면의 WEB GAMES에서 웹 포팅 게임 전용 런처로 이동합니다.
-- Windows OS 에뮬레이터를 실행하지 않고 HTML5/WebAssembly로 포팅된 게임을 직접 엽니다.
-- 예제: OpenTTD 커뮤니티 WebAssembly 포트 연결.
-- 새 게임은 GAMESTART/<게임폴더>/game.json 및 웹 실행 파일을 추가하고, 자동 생성되는 GAMESTART/games.json에 등록합니다.
-- 일반 EXE/ISO를 복사하는 것만으로 웹 포팅되지는 않습니다. 상세 내용은 GAMESTART/README.txt 참고.
+[2026-11-18 개편]
+- login.html : 로그인(아이디 고정·비밀번호는 암호화 값으로만 저장, 5회 실패 시 잠금, 로그인 후 사용시간 제한 없음 — 로그아웃하거나 브라우저 탭을 닫으면 끝). 모든 페이지는 auth.js 로 로그인 확인.
+- index.html : 새 메인(영호의 게임세상 9메뉴). 예전 메인은 index-old.html
+- roms.html : 기종 선택 + ROMS/<기종>/ 게임목록 + 확장자 안내 + 게임추가(GitHub 토큰)
+- play.html : 게임 자동 실행(EmulatorJS · js-dos · Ruffle) / romdata.js : 기종·확장자 / config.js : 저장소 정보
+- emulator.html : 해상도 선택창 제거
+- 게임목록: [사진] 게임이름 / 기종 [실행][삭제]. 롬파일과 같은 이름의 사진이 있으면 함께 표시, 없으면 파란 배경 ‘사진없음’. 게임이름은 ROMS/<기종>/games.json 에 저장됩니다.
