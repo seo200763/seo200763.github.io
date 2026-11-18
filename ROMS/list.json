@@ -3,6 +3,14 @@
  "ATARI2600": [],
  "DOS": [
   {
+   "file": "GTA.jsdos",
+   "size": 58117855
+  },
+  {
+   "file": "GTA.png",
+   "size": 425059
+  },
+  {
    "file": "wolf3d.jpg",
    "size": 19807
   },
