@@ -12,7 +12,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)
 .bar a,.bar button{font:inherit;color:#fff;background:#1e6bff;border:0;border-radius:10px;padding:8px 14px;text-decoration:none;cursor:pointer;white-space:nowrap}
 .bar .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:14px;opacity:.85}
 #stage{position:relative;flex:1;min-height:0;background:#000}
-#dos{position:absolute;inset:0}
+#cv{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;outline:none;image-rendering:pixelated}
 #cover{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;background:#000}
 #cover.hide{display:none}
 #cover .ms{font-size:16px;line-height:1.5;white-space:pre-wrap;word-break:break-all}
@@ -21,86 +21,67 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)
 #cover button{font:inherit;color:#fff;background:#1e6bff;border:0;border-radius:10px;padding:10px 16px;cursor:pointer;margin:3px}
 #cover .ex{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto;width:min(420px,92%)}
 #cover .ex button{background:#223;text-align:left}
-/* 가상 버튼(터치 화면에서만) */
 #pad{position:absolute;inset:0;z-index:10;pointer-events:none;display:none}
 #pad.on{display:block}
 #pad button{pointer-events:auto;position:absolute;width:56px;height:56px;border-radius:14px;border:2px solid rgba(255,160,160,.85);background:rgba(20,20,30,.45);color:#fff;font:600 15px system-ui;touch-action:none;user-select:none;-webkit-user-select:none}
-#pad button:active,#pad button.dn{background:rgba(255,120,120,.5)}
-#pad .l{left:calc(10px + env(safe-area-inset-left,0px))}#pad .r{right:calc(10px + env(safe-area-inset-right,0px))}
-#tg{position:absolute;z-index:11;right:8px;top:8px;width:auto!important;height:34px!important;padding:0 10px;font-size:13px!important;pointer-events:auto;border-radius:10px;border:1px solid #777;background:rgba(20,20,30,.6);color:#fff}
+#pad button.dn{background:rgba(255,120,120,.5)}
+#tg{position:absolute;z-index:11;right:8px;top:8px;height:34px;padding:0 10px;font-size:13px;border-radius:10px;border:1px solid #777;background:rgba(20,20,30,.6);color:#fff;display:none}
 </style></head><body>
 <div class="bar"><a id="back" href="roms.html?m=dosgame">← 게임목록</a><button id="fs" type="button">전체화면</button><a href="index.html">끝내기</a><span class="t" id="ttl"></span></div>
-<div id="stage"><div id="dos"></div>
-<div id="pad"></div><button id="tg" type="button" style="display:none">버튼 켜기</button>
+<div id="stage"><canvas id="cv" tabindex="0"></canvas>
+<div id="pad"></div><button id="tg" type="button">버튼 끄기</button>
 <div id="cover"><div class="ms" id="ms">게임 불러오는 중…</div><div class="pg" id="pg"><i></i></div></div></div>
 <script>
+/* js-dos 6.22 방식 (dosgames.com 같은 사이트가 쓰는 방식): <canvas> + wdosbox.js + 게임 압축파일 풀기 → DOSBox 실행
+   엔진 파일은 ① 내 사이트 jsdos/ 폴더 → ② jsDelivr → ③ unpkg 순서로 찾습니다. */
 var $=function(s){return document.querySelector(s)};
 var q=new URLSearchParams(location.search),F=q.get("f")||"",DIR="ROMS/DOS/";
-var cover=$("#cover"),ms=$("#ms"),pg=$("#pg"),PROPS=null,CI=null,BLOB=null;
+var cover=$("#cover"),ms=$("#ms"),pg=$("#pg"),cv=$("#cv"),CI=null,BASE="";
+var BASES=["jsdos/","https://cdn.jsdelivr.net/npm/js-dos@6.22.60/dist/","https://unpkg.com/js-dos@6.22.60/dist/"];
 function say(t,err){ms.className="ms"+(err?" err":"");ms.textContent=t}
 function fail(t,e){pg.style.display="none";say(t+(e?"\n("+(e.message||e)+")":""),true);console.error(e)}
 function ext(n){var i=n.lastIndexOf(".");return i<0?"":n.slice(i+1).toLowerCase()}
 function setP(p){pg.firstChild.style.width=Math.round(p*100)+"%"}
 
-/* ---------- 엔진 불러오기: 내 사이트 jsdos/ 폴더만 사용 (외부 사이트 사용 안 함) ---------- */
-var LOCAL="jsdos/",PREFIX="jsdos/";
-function ldJS(src){return new Promise(function(ok,no){var e=document.createElement("script");e.src=src+"?v=1";e.onload=ok;e.onerror=function(){no(new Error(src+" 없음"))};document.head.append(e)})}
-function ldCSS(href){var l=document.createElement("link");l.rel="stylesheet";l.href=href;document.head.append(l)}
+/* ---------- 엔진 불러오기 ---------- */
+function ldJS(src){return new Promise(function(ok,no){var e=document.createElement("script");e.src=src;e.onload=ok;e.onerror=function(){e.remove();no(new Error(src))};document.head.append(e)})}
+function head(u){return fetch(u,{method:"HEAD"}).then(function(r){return r.ok}).catch(function(){return false})}
 async function engine(){
-  ldCSS(LOCAL+"js-dos.css");
-  await ldJS(LOCAL+"js-dos.js");
-  if(typeof Dos!=="function")throw new Error("Dos 함수 없음");
-  try{await ldJS(LOCAL+"jszip.min.js")}catch(e){}   /* 있으면 zip 게임도 자동 설정, 없어도 .jsdos 는 실행됨 */
-  /* js-dos 파일들이 jsdos/ 바로 안에 있는지, jsdos/emulators/ 안에 있는지 자동 확인 */
-  PREFIX=LOCAL;
-  try{var r=await fetch(LOCAL+"emulators/emulators.js",{method:"HEAD"});if(r.ok)PREFIX=LOCAL+"emulators/"}catch(e){}
-  try{if(window.emulators)window.emulators.pathPrefix=PREFIX}catch(e){}
-}
+  var last=null;
+  for(var i=0;i<BASES.length;i++){
+    try{
+      if(BASES[i]==="jsdos/"&&!(await head("jsdos/js-dos.js")))continue;
+      say("도스 엔진 불러오는 중…");
+      await ldJS(BASES[i]+"js-dos.js");
+      if(typeof Dos!=="function")throw new Error("Dos 함수 없음");
+      BASE=BASES[i];return}
+    catch(e){last=e}}
+  throw last||new Error("엔진 파일을 찾지 못했어요")}
 
-/* ---------- 파일 받기 (진행률 표시) ---------- */
+/* ---------- 게임 파일 받기 ---------- */
 function getFile(url){return new Promise(function(ok,no){
   var x=new XMLHttpRequest();x.open("GET",url+(url.indexOf("?")<0?"?":"&")+"t="+Date.now());x.responseType="arraybuffer";
   x.onprogress=function(e){if(e.lengthComputable){setP(e.loaded/e.total);say("게임 내려받는 중… "+Math.round(e.loaded/e.total*100)+"%")}};
   x.onload=function(){x.status>=200&&x.status<300?ok(x.response):no(new Error("게임 파일을 찾을 수 없어요 (HTTP "+x.status+")"))};
   x.onerror=function(){no(new Error("네트워크 오류"))};x.send()})}
 
-/* ---------- dosbox.conf 만들기 ---------- */
-function conf(auto){return "[sdl]\nautolock=false\nfullscreen=false\nwaitonerror=true\n\n[dosbox]\nmachine=svga_s3\nmemsize=16\n\n[cpu]\ncore=auto\ncputype=auto\ncycles=auto\n\n[mixer]\nrate=44100\nblocksize=1024\nprebuffer=20\n\n[sblaster]\nsbtype=sb16\nsbbase=220\nirq=7\ndma=1\nhdma=5\n\n[midi]\nmpu401=intelligent\n\n[speaker]\npcspeaker=true\n\n[dos]\nxms=true\nems=true\numb=true\n\n[autoexec]\necho off\nmount c .\nc:\n"+auto+"\n"}
+/* ---------- zip 안의 파일 이름 목록 (압축 해제 도구 없이 읽기) ---------- */
+function zipNames(buf){var v=new DataView(buf),u=new Uint8Array(buf),n=v.byteLength,e=-1,i;
+  for(i=n-22;i>=Math.max(0,n-65600);i--){if(v.getUint32(i,true)===0x06054b50){e=i;break}}
+  if(e<0)throw new Error("zip(jsdos) 파일이 아니에요");
+  var cnt=v.getUint16(e+10,true),off=v.getUint32(e+16,true),out=[],td=new TextDecoder("utf-8");
+  for(i=0;i<cnt&&off+46<=n&&v.getUint32(off,true)===0x02014b50;i++){
+    var nl=v.getUint16(off+28,true),xl=v.getUint16(off+30,true),cl=v.getUint16(off+32,true);
+    out.push(td.decode(u.subarray(off+46,off+46+nl)));off+=46+nl+xl+cl}
+  return out}
 
-/* ---------- zip 안에서 실행파일 후보 찾기 ---------- */
+/* ---------- 설정 만들기 ---------- */
+function conf(auto){return "[sdl]\nautolock=false\nfullscreen=false\nwaitonerror=true\n\n[dosbox]\nmachine=svga_s3\nmemsize=16\n\n[cpu]\ncore=auto\ncputype=auto\ncycles=auto\n\n[mixer]\nrate=44100\nblocksize=1024\nprebuffer=20\n\n[sblaster]\nsbtype=sb16\nsbbase=220\nirq=7\ndma=1\nhdma=5\n\n[midi]\nmpu401=intelligent\n\n[speaker]\npcspeaker=true\n\n[dos]\nxms=true\nems=true\numb=true\n\n[autoexec]\necho off\nmount c .\nc:\n"+auto+"\n"}
 var BADEXE=/(^|\/)(setup|install|instal|uninst|uninstall|config|setsound|sound|catalog|readme|help|vesa|univbe|unzip|pkunzip|scandisk|mouse|ctmouse|cwsdpmi|dos4gw|dos32a|pmode|pmodew)[^\/]*\.(exe|com|bat)$/i;
 function candidates(names){var c=names.filter(function(n){return /\.(exe|com|bat)$/i.test(n)});
   var good=c.filter(function(n){return !BADEXE.test(n)});if(good.length)c=good;
   c.sort(function(a,b){var da=a.split("/").length,db=b.split("/").length;if(da!==db)return da-db;var ba=/\.bat$/i.test(a),bb=/\.bat$/i.test(b);if(ba!==bb)return ba?-1:1;return a.localeCompare(b)});return c}
 function autoFor(p){var parts=p.split("/"),f=parts.pop(),a="";if(parts.length)a+="cd "+parts.join("\\")+"\n";return a+(/\.bat$/i.test(f)?"call ":"")+f}
-
-/* ---------- 번들 만들기 ---------- */
-async function build(buf){
-  if(typeof JSZip!=="function"){if(ext(F)==="jsdos")return new Blob([buf]);throw new Error("zip 게임은 jsdos/jszip.min.js 가 필요해요 (.jsdos 파일은 없어도 됩니다)")}
-  var z=await JSZip.loadAsync(buf),names=Object.keys(z.files).filter(function(k){return !z.files[k].dir});
-  if(!names.length)throw new Error("압축 파일이 비어 있어요");
-  var hasConf=names.some(function(n){return /^\.jsdos\/dosbox\.conf$/i.test(n)});
-  /* zip 안에 맨 윗 폴더가 하나뿐이면 벗겨냄 (jsdos 번들은 그대로) */
-  var strip="";
-  if(!hasConf){var tops={};names.forEach(function(n){tops[n.split("/")[0]]=1});var tk=Object.keys(tops);
-    if(tk.length===1&&names.every(function(n){return n.indexOf("/")>0}))strip=tk[0]+"/"}
-  var map={};names.forEach(function(n){map[n]=strip&&n.indexOf(strip)===0?n.slice(strip.length):n});
-  var pure=Object.keys(map).map(function(k){return map[k]});
-  var cf=null;
-  if(hasConf){cf=await z.file(names.find(function(n){return /^\.jsdos\/dosbox\.conf$/i.test(n)})).async("string");
-    if(!/\[autoexec\][\s\S]*\S/.test(cf.split(/\[autoexec\]/i)[1]||"")){hasConf=false;cf=null}}
-  var auto=null;
-  if(!hasConf){var cand=candidates(pure.filter(function(n){return n.indexOf(".jsdos/")!==0}));
-    if(!cand.length)throw new Error("zip 안에 실행 파일(.exe .com .bat)이 없어요");
-    if(cand.length===1)auto=autoFor(cand[0]);else auto=await pick(cand)}
-  /* 폴더 항목 없이 '파일만' 담은 깨끗한 zip → js-dos v8 이 폴더 때문에 죽는 문제 방지 */
-  var out=new JSZip();
-  names.forEach(function(n){var m=map[n];
-    if(/^\.jsdos\/dosbox\.conf$/i.test(m))return;
-    out.file(m,z.files[n].async("uint8array"),{createFolders:false,binary:true})});
-  out.file(".jsdos/dosbox.conf",hasConf?cf:conf(auto),{createFolders:false});
-  return out.generateAsync({type:"blob",compression:"STORE"})}
-
 function pick(list){return new Promise(function(ok){
   pg.style.display="none";say("실행할 파일을 골라주세요");
   var d=document.createElement("div");d.className="ex";
@@ -108,38 +89,48 @@ function pick(list){return new Promise(function(ok){
   cover.append(d)})}
 
 /* ---------- 실행 ---------- */
-async function start(blob){
-  BLOB=blob;var url=URL.createObjectURL(blob);
+async function run(buf){
+  var names=zipNames(buf).filter(function(n){return n.slice(-1)!=="/"});
+  var hasConf=names.some(function(n){return /^\.jsdos\/dosbox\.conf$/i.test(n)}),auto=null;
+  if(!hasConf){
+    var cand=candidates(names);if(!cand.length)throw new Error("압축파일 안에 실행 파일(.exe .com .bat)이 없어요");
+    auto=cand.length===1?autoFor(cand[0]):await pick(cand)}
   say("게임 시작 중…");setP(1);
-  PROPS=Dos($("#dos"),{url:url,pathPrefix:PREFIX,autoStart:true,noCloud:true,noNetworking:true,
-    onEvent:function(ev,a){if(ev==="ci-ready"){CI=a;cover.classList.add("hide");initPad()}
-      if(ev==="bnd-play"||ev==="emu-ready"||ev==="ci-ready")cover.classList.add("hide")}});
-  /* 혹시 이벤트가 안 와도 잠시 뒤 안내 가림막 제거 */
-  setTimeout(function(){cover.classList.add("hide")},4000)}
+  var url=URL.createObjectURL(new Blob([buf],{type:"application/zip"}));
+  var dos=Dos(cv,{wdosboxUrl:BASE+"wdosbox.js"});
+  dos.ready(function(fs,main){
+    fs.extract(url).then(function(){
+      var args;if(hasConf)args=["-conf",".jsdos/dosbox.conf"];else{fs.createFile("web.conf",conf(auto));args=["-conf","web.conf"]}
+      cover.classList.add("hide");cv.focus();
+      return main(args).then(function(ci){CI=ci;initPad()})
+    }).catch(function(e){cover.classList.remove("hide");fail("게임을 실행하지 못했어요",e)})})}
 
 /* ---------- 가상 버튼 (휴대폰·태블릿) ---------- */
-var KEYS={up:265,down:264,left:263,right:262,enter:257,space:32,esc:256,ctrl:341,alt:342,shift:340,tab:258,Y:89,N:78,P:80,S:83,1:49,2:50,3:51,4:52};
-var PADS=[["↑","up","l",null,"bottom:170px;left:68px"],["↓","down","l",null,"bottom:50px;left:68px"],["←","left","l",null,"bottom:110px;left:10px"],["→","right","l",null,"bottom:110px;left:126px"],
- ["Ctrl","ctrl","r",null,"bottom:110px;right:10px"],["Alt","alt","r",null,"bottom:110px;right:76px"],["Space","space","r",null,"bottom:44px;right:10px"],["Enter","enter","r",null,"bottom:44px;right:76px"],
- ["Shift","shift","r",null,"bottom:176px;right:10px"],["Esc","esc","r",null,"bottom:176px;right:76px"],["Y","Y","r",null,"bottom:242px;right:10px"],["N","N","r",null,"bottom:242px;right:76px"]];
-function key(k,dn){try{if(CI&&CI.sendKeyEvent)CI.sendKeyEvent(KEYS[k],dn)}catch(e){}}
+var KM={up:[38,"ArrowUp"],down:[40,"ArrowDown"],left:[37,"ArrowLeft"],right:[39,"ArrowRight"],enter:[13,"Enter"],space:[32," "],esc:[27,"Escape"],ctrl:[17,"Control"],alt:[18,"Alt"],shift:[16,"Shift"],Y:[89,"y"],N:[78,"n"]};
+function key(k,dn){var m=KM[k];if(!m)return;
+  var ev=new KeyboardEvent(dn?"keydown":"keyup",{key:m[1],bubbles:true,cancelable:true});
+  try{Object.defineProperty(ev,"keyCode",{get:function(){return m[0]}});Object.defineProperty(ev,"which",{get:function(){return m[0]}})}catch(e){}
+  cv.dispatchEvent(ev)}
+var PADS=[["↑","up","l","bottom:170px;left:68px"],["↓","down","l","bottom:50px;left:68px"],["←","left","l","bottom:110px;left:10px"],["→","right","l","bottom:110px;left:126px"],
+ ["Ctrl","ctrl","r","bottom:110px;right:10px"],["Alt","alt","r","bottom:110px;right:76px"],["Space","space","r","bottom:44px;right:10px"],["Enter","enter","r","bottom:44px;right:76px"],
+ ["Shift","shift","r","bottom:176px;right:10px"],["Esc","esc","r","bottom:176px;right:76px"],["Y","Y","r","bottom:242px;right:10px"],["N","N","r","bottom:242px;right:76px"]];
 function initPad(){
   var touch=("ontouchstart" in window)||navigator.maxTouchPoints>0,pad=$("#pad"),tg=$("#tg");
   if(!touch||pad.children.length)return;
-  PADS.forEach(function(p){var b=document.createElement("button");b.textContent=p[0];b.className=p[2];b.style.cssText=p[4];b.style.width=p[0].length>3?"60px":"";
+  PADS.forEach(function(p){var b=document.createElement("button");b.textContent=p[0];b.style.cssText=p[3];if(p[0].length>3)b.style.width="60px";
     var d=function(e){e.preventDefault();b.classList.add("dn");key(p[1],true)},u=function(e){e.preventDefault();b.classList.remove("dn");key(p[1],false)};
-    b.addEventListener("touchstart",d,{passive:false});b.addEventListener("touchend",u,{passive:false});b.addEventListener("touchcancel",u,{passive:false});
-    b.addEventListener("mousedown",d);b.addEventListener("mouseup",u);b.addEventListener("mouseleave",u);pad.append(b)});
-  pad.classList.add("on");tg.style.display="";tg.textContent="버튼 끄기";
+    b.addEventListener("touchstart",d,{passive:false});b.addEventListener("touchend",u,{passive:false});b.addEventListener("touchcancel",u,{passive:false});pad.append(b)});
+  pad.classList.add("on");tg.style.display="block";
   tg.onclick=function(){var on=pad.classList.toggle("on");tg.textContent=on?"버튼 끄기":"버튼 켜기"}}
 
 /* ---------- 시작 ---------- */
-$("#fs").onclick=function(){var s=$("#stage");(s.requestFullscreen||s.webkitRequestFullscreen||function(){}).call(s)};
+cv.addEventListener("click",function(){cv.focus()});
+$("#fs").onclick=function(){var s=$("#stage");(s.requestFullscreen||s.webkitRequestFullscreen||function(){}).call(s);cv.focus()};
 (async function(){
   if(!F||/[\/\\]|\.\./.test(F)){location.replace("roms.html?m=dosgame");return}
   $("#ttl").textContent=F.replace(/\.[^.]+$/,"");document.title=F.replace(/\.[^.]+$/,"")+" · 도스게임";
-  try{await engine()}catch(e){fail("내 사이트의 jsdos 폴더에서 도스 엔진을 찾지 못했어요.\n저장소에 js-dos 패키지의 dist 폴더 안 파일 전부(js-dos.js, js-dos.css 등)를 jsdos 폴더에 넣어주세요.\n(광고 아님 · 외부 사이트를 쓰지 않고 내 서버 파일만 사용합니다)",e);return}
-  try{var buf=await getFile(DIR+encodeURIComponent(F));say("게임 파일 준비 중…");var blob=await build(buf);await start(blob)}
+  try{await engine()}catch(e){fail("도스 엔진(js-dos)을 불러오지 못했어요.\n내 사이트 jsdos 폴더에도, jsDelivr/unpkg 에도 접속하지 못했어요.",e);return}
+  try{var buf=await getFile(DIR+encodeURIComponent(F));say("게임 파일 준비 중…");await run(buf)}
   catch(e){fail("게임을 실행하지 못했어요",e)}
 })();
 </script></body></html>
