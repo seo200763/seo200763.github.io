@@ -40,7 +40,6 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>MS-DOS</title>
-<link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css">
 <style>
 *{box-sizing:border-box}
 :root{--zh:clamp(176px,33vh,290px);--mh:calc(48px + env(safe-area-inset-top));--bs:clamp(48px,12vmin,80px);--ac:#E8A020}
@@ -178,7 +177,7 @@ body.pfs #menu{display:none}
     document.querySelectorAll('#btns>*').forEach(e => { e.style.display = (!fs || sel.indexOf(e.dataset.k || e.id) >= 0) ? '' : 'none'; });
   }
   const relayout = () => { applyBtns(); setTimeout(() => window.dispatchEvent(new Event('resize')), 60); [150, 450, 1000].forEach(t => setTimeout(anchor, t)); };
-  setInterval(anchor, 500); window.addEventListener('resize', () => setTimeout(anchor, 120));
+  setInterval(() => { if (body.classList.contains('ctl-on')) anchor(); }, 500); window.addEventListener('resize', () => setTimeout(anchor, 120));
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
   window.addEventListener('orientationchange', relayout);
 
@@ -198,22 +197,53 @@ body.pfs #menu{display:none}
   const qs = new URLSearchParams(location.search);
   let ENG = qs.get('engine') || ''; if (!ENG) { try { ENG = localStorage.getItem('dosEngine') || ''; } catch (e) {} }
   if (ENG !== 'v6') ENG = 'v8';
-  const V8 = 'https://v8.js-dos.com/latest/js-dos.js';
+  /* ---- 엔진 로더: 내 서버(assets/jsdos) 우선 → 외부 주소들을 차례로(각 7초 제한) / 페이지 표시는 막지 않음 ---- */
+  const ABS = p => new URL(p, location.href).href;
+  const V8S = [
+    { n: '내 서버', js: 'assets/jsdos/js-dos.js', css: 'assets/jsdos/js-dos.css', base: 'assets/jsdos/', own: true },
+    { n: 'js-dos.com', js: 'https://v8.js-dos.com/latest/js-dos.js', css: 'https://v8.js-dos.com/latest/js-dos.css', base: '' },
+    { n: 'jsDelivr', js: 'https://cdn.jsdelivr.net/npm/js-dos@8/dist/js-dos.js', css: 'https://cdn.jsdelivr.net/npm/js-dos@8/dist/js-dos.css', base: 'https://cdn.jsdelivr.net/npm/js-dos@8/dist/' },
+    { n: 'unpkg', js: 'https://unpkg.com/js-dos@8/dist/js-dos.js', css: 'https://unpkg.com/js-dos@8/dist/js-dos.css', base: 'https://unpkg.com/js-dos@8/dist/' }
+  ];
   const LOCAL = 'assets/jsdos/', CDN = 'https://unpkg.com/js-dos@6.22.60/dist/';
-  const load = src => new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => { s.remove(); no(new Error('불러오기 실패: ' + src + '\n(인터넷/차단 확인)')); }; document.body.appendChild(s); });
-  let BASE = LOCAL;
-  async function loadEngine() {
-    if (typeof Dos === 'function') return;
-    if (ENG === 'v8') {
-      await load(V8);
-      if (typeof Dos !== 'function') throw new Error('js-dos v8 을 불러왔지만 Dos 함수가 없어요');
-      return;
-    }
-    try { await load(LOCAL + 'js-dos.js'); BASE = LOCAL; }
-    catch (e) { await load(CDN + 'js-dos.js'); BASE = CDN; }
-    if (typeof Dos !== 'function') throw new Error('js-dos v6 를 불러왔지만 Dos 함수가 없어요');
+  const load = (src, ms) => new Promise((ok, no) => {
+    const s = document.createElement('script'); let done = 0;
+    const end = (f, v) => { if (done) return; done = 1; clearTimeout(tm); f(v); };
+    const tm = setTimeout(() => { s.remove(); end(no, new Error('시간 초과: ' + src)); }, ms || 7000);
+    s.src = src; s.async = true; s.onload = () => end(ok);
+    s.onerror = () => { s.remove(); end(no, new Error('불러오기 실패: ' + src)); };
+    document.head.appendChild(s);
+  });
+  const addCss = href => { try { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; l.onerror = () => l.remove(); document.head.appendChild(l); } catch (e) {} };
+  let BASE = LOCAL, PFX = '', EP = null;
+  function loadEngine() {
+    if (typeof Dos === 'function') return Promise.resolve();
+    return EP || (EP = (async () => {
+      const errs = [];
+      if (ENG === 'v8') {
+        let list = V8S.slice(); let last = ''; try { last = localStorage.getItem('dosSrc') || ''; } catch (e) {}
+        const i = list.findIndex(x => x.n === last); if (i > 0) list.unshift(list.splice(i, 1)[0]);
+        for (const s of list) {
+          try {
+            await load(s.js, s.own ? 4000 : 7000);
+            if (typeof Dos !== 'function') throw new Error('Dos 함수가 없어요: ' + s.js);
+            if (s.base) { PFX = ABS(s.base + 'emulators/'); try { if (window.emulators) window.emulators.pathPrefix = PFX; } catch (e) {} }
+            addCss(s.css); try { localStorage.setItem('dosSrc', s.n); } catch (e) {}
+            return;
+          } catch (e) { errs.push(s.n + ' ✗'); }
+        }
+        EP = null;
+        throw new Error('js-dos v8 엔진을 불러오지 못했어요 (' + errs.join(', ') + ')\n\n해결: assets/jsdos/ 폴더에 js-dos.js · js-dos.css · emulators/ 폴더를 올려주세요 (assets/jsdos/README.txt 참고)\n또는 ⚙ 도스엔진선택 에서 v6 로 바꿔보세요.');
+      }
+      try { await load(LOCAL + 'js-dos.js', 4000); BASE = LOCAL; }
+      catch (e) { await load(CDN + 'js-dos.js'); BASE = CDN; }
+      if (typeof Dos !== 'function') { EP = null; throw new Error('js-dos v6 를 불러왔지만 Dos 함수가 없어요'); }
+    })());
   }
-  const loadZip = () => typeof JSZip === 'function' ? Promise.resolve() : load('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+  const loadZip = () => typeof JSZip === 'function' ? Promise.resolve()
+    : load('assets/jszip.min.js', 4000).catch(() => load('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'));
+  /* 화면이 먼저 뜬 뒤, 쉬는 시간에 엔진을 미리 받아둠 (실패해도 조용히 무시 → 나중에 다시 시도) */
+  (window.requestIdleCallback || (f => setTimeout(f, 800)))(() => { loadEngine().catch(() => { EP = null; }); loadZip().catch(() => {}); });
   const nav = o => { const u = new URLSearchParams(location.search); for (const k in o) u.set(k, o[k]); location.search = u.toString(); };
 
   /* ---- 대화상자 ---- */
@@ -508,6 +538,7 @@ body.pfs #menu{display:none}
         /* kiosk:true → js-dos 기본 메뉴/사이드바 숨김 (메뉴는 위의 새 메뉴 사용) */
         PROPS = window.DOS_PROPS = Dos($('dos'), {
           url: url, autoStart: true, noCloud: true, kiosk: true, noSideBar: true,
+          ...(PFX ? { pathPrefix: PFX } : {}),
           onEvent: (ev, a) => { if (ev === 'ci-ready') { CI = window.DOS_CI = a; relayout(); } }
         });
         return;
