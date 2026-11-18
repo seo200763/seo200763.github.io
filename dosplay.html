@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>도스게임 실행</title>
-<script src="noads.js"></script><script src="auth.js"></script>
+<script src="auth.js"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;overflow:hidden;overscroll-behavior:none}
@@ -30,7 +30,7 @@ body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)
 <div class="bar"><a id="back" href="roms.html?m=dosgame">← 게임목록</a><button id="fs" type="button">전체화면</button><a href="index.html">끝내기</a><span class="t" id="ttl"></span></div>
 <div id="stage"><canvas id="cv" tabindex="0"></canvas>
 <div id="pad"></div><button id="tg" type="button">버튼 끄기</button>
-<div id="cover"><div class="ms" id="ms">게임 불러오는 중…</div><div class="pg" id="pg"><i></i></div></div></div>
+<div id="cover"><div class="ms" id="ms">게임 불러오는 중…</div><div class="pg" id="pg"><i></i></div><div class="ms" id="dbg" style="font-size:12px;opacity:.6"></div></div></div>
 <script>
 /* js-dos 6.22 방식 (dosgames.com 같은 사이트가 쓰는 방식): <canvas> + wdosbox.js + 게임 압축파일 풀기 → DOSBox 실행
    엔진 파일은 ① 내 사이트 jsdos/ 폴더 → ② jsDelivr → ③ unpkg 순서로 찾습니다. */
@@ -41,6 +41,9 @@ var BASES=["jsdos/","https://cdn.jsdelivr.net/npm/js-dos@6.22.60/dist/","https:/
 function say(t,err){ms.className="ms"+(err?" err":"");ms.textContent=t}
 function fail(t,e){pg.style.display="none";say(t+(e?"\n("+(e.message||e)+")":""),true);console.error(e)}
 function ext(n){var i=n.lastIndexOf(".");return i<0?"":n.slice(i+1).toLowerCase()}
+var DBG=[];function dbg(t){DBG.push(t);var d=$("#dbg");if(d)d.textContent=DBG.slice(-6).join("\n");console.log("[dosplay]",t)}
+window.addEventListener("error",function(e){dbg("오류: "+(e.message||"")+(e.filename?" @"+e.filename.split("/").pop()+":"+e.lineno:""))});
+window.addEventListener("unhandledrejection",function(e){dbg("오류(promise): "+(e.reason&&e.reason.message||e.reason))});
 function setP(p){pg.firstChild.style.width=Math.round(p*100)+"%"}
 
 /* ---------- 엔진 불러오기 ---------- */
@@ -96,14 +99,25 @@ async function run(buf){
     var cand=candidates(names);if(!cand.length)throw new Error("압축파일 안에 실행 파일(.exe .com .bat)이 없어요");
     auto=cand.length===1?autoFor(cand[0]):await pick(cand)}
   say("게임 시작 중…");setP(1);
-  var url=URL.createObjectURL(new Blob([buf],{type:"application/zip"}));
-  var dos=Dos(cv,{wdosboxUrl:BASE+"wdosbox.js"});
+  var direct=DIR+encodeURIComponent(F);
+  await boot(BASE,direct,hasConf,auto)}
+
+/* 한 번 시도: DOSBox 준비 → 게임 풀기 → 실행. 60초 안에 안 되면 실패로 보고 다음 방법으로 */
+function boot(base,src,hasConf,auto){return new Promise(function(ok,no){
+  var done=false,step="DOSBox 불러오는 중",t=setTimeout(function(){if(!done){done=true;no(new Error("시간 초과: "+step))}},60000);
+  function bad(e){if(!done){done=true;clearTimeout(t);no(e)}}
+  var old=cv,nc=old.cloneNode(false);old.parentNode.replaceChild(nc,old);cv=nc;cv.addEventListener("click",function(){cv.focus()});
+  dbg("엔진: "+base.replace(/^https?:\/\//,"").slice(0,40)+" / 게임: "+(src.indexOf("blob:")===0?"blob":"직접"));
+  var dos;try{dos=Dos(cv,{wdosboxUrl:base+"wdosbox.js"})}catch(e){return bad(e)}
   dos.ready(function(fs,main){
-    fs.extract(url).then(function(){
+    step="게임 파일 푸는 중";dbg("DOSBox 준비됨");
+    fs.extract(src).then(function(){
+      step="게임 실행 중";dbg("압축 풀기 완료");
       var args;if(hasConf)args=["-conf",".jsdos/dosbox.conf"];else{fs.createFile("web.conf",conf(auto));args=["-conf","web.conf"]}
       cover.classList.add("hide");cv.focus();
-      return main(args).then(function(ci){CI=ci;initPad()})
-    }).catch(function(e){cover.classList.remove("hide");fail("게임을 실행하지 못했어요",e)})})}
+      var p=main(args);done=true;clearTimeout(t);ok();
+      if(p&&p.then)p.then(function(ci){CI=ci;initPad()},function(e){cover.classList.remove("hide");fail("게임이 도중에 멈췄어요",e)})
+    }).catch(bad)})})}
 
 /* ---------- 가상 버튼 (휴대폰·태블릿) ---------- */
 var KM={up:[38,"ArrowUp"],down:[40,"ArrowDown"],left:[37,"ArrowLeft"],right:[39,"ArrowRight"],enter:[13,"Enter"],space:[32," "],esc:[27,"Escape"],ctrl:[17,"Control"],alt:[18,"Alt"],shift:[16,"Shift"],Y:[89,"y"],N:[78,"n"]};
