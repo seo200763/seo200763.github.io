@@ -3,22 +3,6 @@
  "ATARI2600": [],
  "DOS": [
   {
-   "file": "GTA.jsdos",
-   "size": 58117855
-  },
-  {
-   "file": "GTA.png",
-   "size": 425059
-  },
-  {
-   "file": "nfs1.jsdos",
-   "size": 1343401
-  },
-  {
-   "file": "nfs1.png",
-   "size": 112373
-  },
-  {
    "file": "wolf3d.jpg",
    "size": 19807
   },
@@ -90,5 +74,7 @@
  ],
  "VB": [],
  "VIRTUALBOY": [],
- "WEB": []
+ "WEB": [],
+ "WIN31": [],
+ "WIN95": []
 }

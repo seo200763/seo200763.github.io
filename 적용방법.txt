@@ -1,0 +1,5 @@
+[적용] 이 폴더의 파일을 사이트 저장소(seo200763.github.io) 같은 위치에 덮어쓰기/추가하세요.
+ 덮어쓰기: dosplay.html  romdata.js  play.html  ROMS/list.json
+ 새 파일 : jsdoslib.js  ROMS/WIN31/README.txt  ROMS/WIN95/README.txt
+ 윈도우 95 게임용: os/win95/win95.zip (zip 안에 .img) 를 따로 올려야 합니다.
+ 사이트 메뉴: PC게임/도스게임 > 도스게임 · 윈도우 3.1 게임 · 윈도우 95 게임

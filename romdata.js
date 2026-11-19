@@ -23,7 +23,9 @@ lynx:E('아타리 링스','LYNX','lynx','lnx zip','#ff8a2b','LYNX'),ngp:E('네�
 vb:E('버추얼보이','VB','vb','vb zip','#e82020','VB'),nds:E('닌텐도 DS','NDS','desmume2015','nds zip','#aab6c8','NDS'),
 win31:{n:'윈도우 3.1',eng:'v86',open:'win31',c:'#3b82f6',l:'3.1'},win95:{n:'윈도우 95',eng:'v86',open:'win95',c:'#14b8a6',l:'95'},
 win98:{n:'윈도우 98',eng:'v86',open:'win98',c:'#60a5fa',l:'98'},msdos:{n:'MS-DOS 부팅',eng:'v86',open:'dos',c:'#4b5563',l:'DOS'},
-dosgame:{n:'도스게임',f:'DOS',eng:'jsdos',ex:['jsdos','zip'],note:'DOS 게임 폴더를 zip 으로 묶어 올리면 됩니다(게임 실행 파일이 zip 안에 있어야 함). .exe 한 개만 올리면 실행되지 않습니다.'},
+dosgame:{n:'도스게임',f:'DOS',eng:'jsdos',ex:['jsdos','zip'],c:'#4b5563',l:'DOS',note:'JSDOS 변환기(도스 게임)로 만든 .jsdos 파일을 올리세요. 게임 폴더를 그냥 zip 으로 묶어 올려도 자동 설정으로 실행을 시도합니다(.exe 한 개만 올리면 실행되지 않습니다).'},
+win31game:{n:'윈도우 3.1 게임',f:'WIN31',eng:'jsdos',ex:['jsdos','zip'],c:'#3b82f6',l:'3.1',note:'JSDOS 변환기(윈도우 3.1 게임)로 만든 .jsdos 파일을 올리세요. 윈도우 3.1 폴더가 함께 들어 있어야 하며, 용량이 커서 PC 에서 하는 것을 권장합니다.'},
+win95game:{n:'윈도우 95 게임',f:'WIN95',eng:'jsdos',ex:['jsdos'],c:'#14b8a6',l:'95',note:'JSDOS 변환기(윈도우 95 게임)로 만든 .jsdos 파일을 올리세요. 공용 윈도우 이미지 os/win95/win95.zip 이 있어야 실행됩니다(zip 안에 .img). PC 에서 하는 것을 권장하며 폰에서는 느리거나 안 될 수 있어요.'},
 mame:E('오락실게임 (마메)','MAME','fbneo','zip','#ff7a1a','MAME',{bios:['ROMS/MAME/_bios/neogeo.zip','MAME/_bios/neogeo.zip'],note:'네오지오 게임(킹 오브 파이터즈, 메탈슬러그 등)은 ROMS/MAME/_bios/neogeo.zip 바이오스가 필요합니다.'}),
 folderphone:{n:'폴더폰게임',f:'FOLDER',eng:'none',ex:['jar','jad'],note:'폴더폰·자바 게임(.jar)을 실행해 주는 웹 엔진이 아직 연결되지 않았어요. 파일 보관용 목록으로만 보입니다.'},
 java:{n:'자바게임',f:'JAVA',eng:'none',ex:['jar','jad'],note:'자바(.jar) 게임을 실행해 주는 웹 엔진이 아직 연결되지 않았어요. 파일 보관용 목록으로만 보입니다.'},
@@ -32,7 +34,7 @@ html5:{n:'HTML5게임',f:'HTML5',eng:'html',ex:['html','htm'],note:'게임 전�
 flash:{n:'플래시게임',f:'FLASH',eng:'swf',ex:['swf'],note:'Ruffle 플래시 에뮬레이터로 실행합니다. 일부 오래된 ActionScript 3 게임은 안 열릴 수 있어요.'}
 },
 CATS:[
-{k:'pc',n:'PC게임',ms:['win31','win95','win98','msdos']},{k:'dos',n:'도스게임',ms:['dosgame']},
+{k:'pc',n:'PC게임',ms:['win31','win95','win98','msdos']},{k:'dos',n:'도스게임',ms:['dosgame','win31game','win95game']},
 {k:'classic',n:'고전게임',ms:['nes','snes','sms','pce','md','n64','psx','segacd','saturn','s32x','3do','jaguar','atari2600','handheld']},
 {k:'arcade',n:'오락실게임',ms:['mame']},{k:'folder',n:'폴더폰게임',ms:['folderphone']},{k:'web',n:'웹게임',ms:['webgame']},
 {k:'java',n:'자바게임',ms:['java']},{k:'html5',n:'HTML5게임',ms:['html5']},{k:'flash',n:'플래시게임',ms:['flash']}],
@@ -42,7 +44,7 @@ bin:'CD 기종에서는 .cue 와 짝인 데이터 파일이라 .cue 와 함께 z
 chd:'CD 이미지를 한 파일로 줄인 형식이라 가장 안정적입니다. 용량도 작아서 추천합니다.',
 iso:'CD 이미지 한 파일 형식입니다. 바로 실행할 수 있습니다.',img:'CD 이미지 한 파일 형식입니다.',pbp:'플레이스테이션 게임 한 파일 형식이라 용량이 작아 휴대폰에서도 잘 돌아갑니다.',
 m3u:'여러 장짜리 CD 게임의 목록 파일입니다. CD 이미지와 같은 폴더에 두고 zip 으로 묶으세요.',
-jsdos:'DOS 게임 폴더를 zip 으로 묶고 확장자를 .jsdos 로 바꾼 파일입니다.',swf:'플래시 게임 파일입니다.',html:'브라우저에서 바로 열리는 웹 게임입니다.',htm:'브라우저에서 바로 열리는 웹 게임입니다.',
+jsdos:'JSDOS 변환기로 만든 게임 파일입니다(도스·윈도우 3.1·윈도우 95 공용). 폴더를 zip 으로 묶고 .jsdos 설정 파일을 넣은 형태예요.',swf:'플래시 게임 파일입니다.',html:'브라우저에서 바로 열리는 웹 게임입니다.',htm:'브라우저에서 바로 열리는 웹 게임입니다.',
 jar:'자바 게임 파일입니다(지금은 보관만 가능).',jad:'자바 게임 설명 파일입니다(지금은 보관만 가능).'},
 BAD:{'7z':'7z 는 브라우저 에뮬레이터가 풀지 못합니다. zip 으로 다시 압축해 올리세요.',rar:'rar 는 브라우저 에뮬레이터가 풀지 못합니다. zip 으로 다시 압축해 올리세요.',
 exe:'.exe 는 윈도우 프로그램이라 직접 실행할 수 없습니다. 윈도우/DOS 기종에서 쓰세요.',txt:'설명 파일이라 게임이 아닙니다.',json:'설명 파일이라 게임이 아닙니다.',md:'설명 파일이라 게임이 아닙니다.'}
