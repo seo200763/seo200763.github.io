@@ -440,6 +440,74 @@ const extra={'WINLOGS.BAT':'@ECHO OFF\nC:\\WINDOWS\\WIN.COM /S /B\n','WINLOGE.BA
  }catch(e){return'패치 실패: '+e.message}
 }
 
+/* ---- Windows 95 이미지 자동 패치 (메모리 상에서 FAT16 직접 수정) ----
+   증상: 로고 → 바탕화면 직전에 "컴퓨터를 꺼도 좋습니다 / C:\>" 로 떨어짐.
+   원인: AUTOEXEC.BAT 가 부팅마다 DX.REG 를 가져와 화면을 256색(BitsPerPixel=8)으로 강제하는데,
+         v86 에서 하드웨어 감지를 마친 이미지는 디스플레이 드라이버가 '표준 VGA(vga.drv, 16색 전용)'로 바뀌어 있어 8bpp 를 적용하지 못하고 윈도우가 종료됨.
+   조치: SYSTEM.INI 가 표준 VGA 를 가리키면 DX.REG 의 BitsPerPixel 을 4 로 맞춤 · MSDOS.SYS 에 Logging=1 추가(BOOTLOG.TXT 로 원인 확인용) */
+function patchWin95(buf){
+ try{
+  const u=new Uint8Array(buf),dv=new DataView(buf);
+  if(u.length<65536||u[510]!==0x55||u[511]!==0xAA)return'MBR 아님';
+  const pt=[446,462,478,494].find(o=>[4,6,0xE].includes(u[o+4]));if(pt==null)return'FAT16 파티션 없음';
+  const OFF=dv.getUint32(pt+8,true)*512;
+  const bps=dv.getUint16(OFF+11,true),spc=u[OFF+13],res=dv.getUint16(OFF+14,true),nf=u[OFF+16],rootent=dv.getUint16(OFF+17,true),fs=dv.getUint16(OFF+22,true);
+  if(bps!==512||!spc||!nf)return'BPB 이상';
+  const tot=dv.getUint16(OFF+19,true)||dv.getUint32(OFF+32,true);
+  const CL=spc*bps,rootsec=res+nf*fs,ds=rootsec+rootent*32/512,ncl=Math.floor((tot-ds)/spc);
+  if(ncl<4085||ncl>=65525)return'FAT16 아님';
+  const g=c=>dv.getUint16(OFF+res*512+c*2,true);
+  const sf=(c,v)=>{for(let i=0;i<nf;i++)dv.setUint16(OFF+(res+i*fs)*512+c*2,v,true)};
+  const cpos=c=>OFF+(ds+(c-2)*spc)*512;
+  const chain=c=>{const o=[];while(c>=2&&c<0xFFF8&&o.length<70000){o.push(c);c=g(c)}return o};
+  const freeCh=c=>chain(c).forEach(x=>sf(x,0));
+  let hint=2;
+  const alloc=n=>{const out=[];let c=hint;while(out.length<n){if(c>=ncl+2)throw Error('디스크 공간 부족');if(g(c)===0)out.push(c);c++}
+   out.forEach((x,i)=>sf(x,i+1<out.length?out[i+1]:0xFFFF));hint=out[out.length-1]+1;return out};
+  const n83=n=>{const[a,e='']=n.toUpperCase().split('.');const r=new Uint8Array(11).fill(32);for(let i=0;i<Math.min(8,a.length);i++)r[i]=a.charCodeAt(i);for(let i=0;i<Math.min(3,e.length);i++)r[8+i]=e.charCodeAt(i);return r};
+  const slots=dc=>{const s=[];if(dc==null){const b=OFF+rootsec*512;for(let i=0;i<rootent;i++)s.push(b+i*32)}else chain(dc).forEach(x=>{for(let i=0;i<CL/32;i++)s.push(cpos(x)+i*32)});return s};
+  const find=(dc,name)=>{const nm=n83(name);let fr=null;
+   for(const o of slots(dc)){if(u[o]===0){fr=fr??o;return{o:null,fr}}
+    if(u[o]===0xE5){fr=fr??o;continue}if(u[o+11]===0x0F)continue;
+    let ok=1;for(let i=0;i<11;i++)if(u[o+i]!==nm[i]){ok=0;break}if(ok)return{o,fr}}
+   return{o:null,fr}};
+  const clOf=o=>dv.getUint16(o+26,true),szOf=o=>dv.getUint32(o+28,true);
+  const read=(dc,name)=>{const{o}=find(dc,name);if(o==null)return null;const c=clOf(o),sz=szOf(o),out=new Uint8Array(sz);let p=0;
+   for(const x of chain(c)){const n=Math.min(CL,sz-p);if(n<=0)break;out.set(u.subarray(cpos(x),cpos(x)+n),p);p+=n}return out};
+  const write=(dc,name,data)=>{const{o,fr}=find(dc,name);let slot;
+   if(o!=null){const c=clOf(o);if(c>=2)freeCh(c);slot=o}
+   else{if(fr==null)throw Error('디렉터리 가득 참');slot=fr;u.fill(0,slot,slot+32);u.set(n83(name),slot);u[slot+11]=0x20;dv.setUint16(slot+24,0x5821,true)}
+   let first=0;
+   if(data.length){const cl=alloc(Math.ceil(data.length/CL));cl.forEach((x,i)=>{u.fill(0,cpos(x),cpos(x)+CL);u.set(data.subarray(i*CL,(i+1)*CL),cpos(x))});first=cl[0]}
+   dv.setUint16(slot+26,first,true);dv.setUint32(slot+28,data.length,true)};
+  const enc=t=>Uint8Array.from(t.replace(/\r?\n/g,'\r\n'),ch=>ch.charCodeAt(0)&255),dec=a=>{let s='';for(let i=0;i<a.length;i+=8192)s+=String.fromCharCode.apply(null,a.subarray(i,i+8192));return s};
+  const win=find(null,'WINDOWS');if(win.o==null)return'WINDOWS 폴더 없음';const wd=clOf(win.o);
+  const done=[];
+  /* 1) 표준 VGA 드라이버인데 DX.REG 가 256색을 강제하면 16색(4bpp)으로 맞춤 */
+  const si=read(wd,'SYSTEM.INI'),sit=si?dec(si):'';
+  const isVga=/^display\.drv\s*=.*\(VGA\)/mi.test(sit)&&!/^display\.drv\s*=.*S3/mi.test(sit);
+  const dx=read(null,'DX.REG');
+  if(dx&&isVga){
+   let t=dec(dx);
+   if(/"BitsPerPixel"\s*=\s*"8"/i.test(t)){
+    if(!read(null,'DX.BAK'))write(null,'DX.BAK',dx);
+    t=t.replace(/"BitsPerPixel"\s*=\s*"8"/ig,'"BitsPerPixel"="4"');
+    write(null,'DX.REG',enc(t));done.push('DX.REG 16색(4bpp)');
+   }
+  }
+  /* 2) 부팅 로그(C:\BOOTLOG.TXT) 기록 – 그래도 안 될 때 원인 확인용 */
+  const ms=read(null,'MSDOS.SYS');
+  if(ms){
+   let t=dec(ms);
+   if(!/^Logging\s*=/mi.test(t)&&/\[Options\]/i.test(t)){
+    t=t.replace(/\[Options\]\r?\n/i,m=>m+'Logging=1\r\n');
+    write(null,'MSDOS.SYS',enc(t));done.push('MSDOS.SYS Logging=1');
+   }
+  }
+  return done.length?'패치 적용: '+done.join(', '):'이미 패치됨/해당 없음';
+ }catch(e){return'패치 실패: '+e.message}
+}
+
 /* ---------- v86 엔진 불러오기 (os/v86 우선, 없으면 CDN) ---------- */
 async function urlOk(u){try{const r=await fetch(u,{headers:{Range:'bytes=0-0'},cache:'no-store'});return r.ok&&!/html/i.test(r.headers.get('content-type')||'')}catch(_){return false}}
 async function firstOk(list){for(const u of list){if(await urlOk(u))return u}return list[list.length-1]}
@@ -594,6 +662,7 @@ async function start(force){
     ov(OS.n,'이미지 준비 중…',{pct:5,sub:'ZIP이면 압축을 푸는 중입니다'});
     const d=await toDisk(f.u,blob,q=>ov(OS.n,'이미지 압축 해제 중…',{pct:q}));
     if(OSID==='win31'&&d.k==='hd'){const r=patchWin31(d.buf);console.log('[win31]',r)}
+    if(OSID==='win95'&&d.k==='hd'){const r=patchWin95(d.buf);console.log('[win95]',r);if(/패치 적용/.test(r))toast('윈도우95 화면 설정 자동 보정: 16색 VGA',5000)}
     disk=d;diskName=f.u.split('/').pop();
     if(my!==booting)return;
     stateBuf=null;   /* 서버 상태 파일(.v86state)은 찾지 않고 항상 일반 부팅 */
@@ -611,6 +680,7 @@ async function loadLocalFile(file){
     const d=await toDisk(file.name,file,q=>ov(OS.n,'이미지 압축 해제 중…',{pct:q}));
     if(my!==booting)return;
     if(OSID==='win31'&&d.k==='hd'){const r=patchWin31(d.buf);console.log('[win31]',r)}
+    if(OSID==='win95'&&d.k==='hd'){const r=patchWin95(d.buf);console.log('[win95]',r);if(/패치 적용/.test(r))toast('윈도우95 화면 설정 자동 보정: 16색 VGA',5000)}
     disk=d;diskName=file.name;stateBuf=null;skipAuto=false;
     await makeEmulator(d);
   }catch(e){
