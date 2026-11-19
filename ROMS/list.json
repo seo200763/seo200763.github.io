@@ -3,8 +3,6 @@
  "ATARI2600": [],
  "DOS": [
   {
-<<<<<<< HEAD
-=======
    "file": "GTA.jsdos",
    "size": 58117855
   },
@@ -37,7 +35,6 @@
    "size": 14229455
   },
   {
->>>>>>> e64a50ed9abdb5cbbf671fd085f4a9b6e9fafc41
    "file": "wolf3d.jpg",
    "size": 19807
   },
