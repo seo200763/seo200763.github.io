@@ -108,9 +108,10 @@ async function main(){
   var opts = GWJ.jsdosOptions(meta, !!meta.base);
   var el = document.getElementById('dos');
 
-  if (meta.base || !cf){
-    /* 방식 B: 설정 + 파일들을 직접 넘김 (공용 윈도우 이미지 사용 / 설정 없는 zip) */
-    var files = [];
+  var gametxt = meta.kind === 'win95' && meta.launch === 'gametxt' && meta.exe;
+  if (meta.base || !cf || gametxt){
+    /* 방식 B: 설정 + 파일들을 직접 넘김 (공용 윈도우 이미지 / 설정 없는 zip / 게임 자동실행 기록) */
+    var files = [], imgPath = null, imgBytes = null;
     if (meta.base){
       var bz = await getBuf(GWJ.baseUrl(meta.base), '윈도우 이미지');
       show('윈도우 이미지 여는 중…\n(처음에는 시간이 걸릴 수 있어요)');
@@ -118,10 +119,22 @@ async function main(){
       var ents = Object.keys(bzip.files).map(function(n){ return {name: n, size: (bzip.files[n]._data && bzip.files[n]._data.uncompressedSize) || 0, dir: bzip.files[n].dir}; }).filter(function(e){ return !e.dir; });
       var img = GWJ.pickImage(ents);
       if (!img) throw new Error('os/' + meta.base + '/' + meta.base + '.zip 안에서 디스크 이미지(.img)를 찾지 못했어요.');
-      files.push({path: 'win95.img', contents: await bzip.file(img.name).async('uint8array')});
+      imgPath = 'win95.img';
+      imgBytes = await bzip.file(img.name).async('uint8array');
+      bzip = null;
+    } else if (gametxt){
+      var ie = names.map(function(n){ return {name: n, size: (zip.files[n]._data && zip.files[n]._data.uncompressedSize) || 0}; });
+      var own = GWJ.pickImage(ie);
+      if (own){ imgPath = own.name; imgBytes = await zip.file(own.name).async('uint8array'); }
     }
+    if (imgBytes && gametxt){
+      var okp = GWJ.patchGameTxt(imgBytes, GWJ.gameTxtFor(meta.exe, meta.drive || 'D'));
+      if (!okp) console.warn('GAME.TXT 를 바꾸지 못했어요. 윈도우 안에서 게임을 직접 실행하세요.');
+    }
+    if (imgBytes) files.push({path: imgPath, contents: imgBytes});
+    imgBytes = null;
     for (var i = 0; i < names.length; i++){
-      if (/^\.jsdos\//i.test(names[i])) continue;
+      if (/^\.jsdos\//i.test(names[i]) || names[i] === imgPath) continue;
       tx.textContent = '파일 준비 중… ' + (i + 1) + ' / ' + names.length; pb.style.width = ((i + 1) * 100 / names.length) + '%';
       files.push({path: names[i], contents: await zip.file(names[i]).async('uint8array')});
     }
