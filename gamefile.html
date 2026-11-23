@@ -1,0 +1,40 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GAMEFILE 바로 플레이</title>
+<link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css">
+<style>body{margin:0;background:#0b0f1a;color:#eef;font:15px sans-serif}h1{margin:14px}h2{margin:18px 14px 6px;color:#8cf}h3{margin:10px 14px 4px;color:#ccd;font-size:14px}
+.g{display:flex;flex-wrap:wrap;gap:8px;margin:0 14px}.g a{background:#1b2540;color:#fff;padding:9px 13px;border-radius:8px;text-decoration:none;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.g a:hover{background:#3a55a8}
+#msg{margin:14px;color:#fc8}#bar{position:fixed;top:0;left:0;right:0;z-index:9;background:#000b;padding:6px 10px}#bar a{color:#fff}#game{position:fixed;inset:34px 0 0 0}#dos{width:100%;height:100%}</style></head><body>
+<div id="app"><h1>🎮 GAMEFILE 게임목록</h1><div id="msg">목록 불러오는 중...</div><div id="list"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://v8.js-dos.com/latest/js-dos.js"></script>
+<script>
+var P=[["PC", "DOS", "dos", "MS-DOS 게임 (.jsdos / .zip)"], ["PC", "WINDOWS", "dos", "Windows 게임 (.jsdos 묶음)"], ["NINTENDO", "NES", "nes", ""], ["NINTENDO", "SNES", "snes", ""], ["NINTENDO", "GB", "gb", ""], ["NINTENDO", "GBC", "gb", ""], ["NINTENDO", "GBA", "gba", ""], ["NINTENDO", "NDS", "nds", ""], ["NINTENDO", "N64", "n64", ""], ["SEGA", "SMS", "segaMS", ""], ["SEGA", "MEGADRIVE", "segaMD", ""], ["SEGA", "GAMEGEAR", "segaGG", ""], ["SEGA", "SEGACD", "segaCD", ""], ["SEGA", "SATURN", "segaSaturn", ""], ["SONY", "PSX", "psx", ""], ["ETC", "PCENGINE", "pce", ""], ["ETC", "ARCADE", "arcade", ""], ["ETC", "ATARI2600", "atari2600", ""], ["ETC", "LYNX", "lynx", ""]];var Q=new URLSearchParams(location.search),B='GAMEFILE/';
+var ext=/\.(zip|7z|jsdos|nes|sfc|smc|gb|gbc|gba|nds|n64|z64|v64|sms|md|gen|smd|gg|bin|cue|iso|chd|pbp|pce|a26|lnx|exe|img)$/i;
+function enc(s){return s.split('/').map(encodeURIComponent).join('/')}
+function find(p){for(var i=0;i<P.length;i++)if(P[i][1]===p)return P[i]}
+function listAll(){ // 1) GitHub API 2) games.json
+ var h=location.hostname,m=h.match(/^(.+)\.github\.io$/);var seg=location.pathname.split('/').filter(Boolean);
+ var tryGit=m?fetch('https://api.github.com/repos/'+m[1]+'/'+(m[1]+'.github.io')+'/git/trees/HEAD?recursive=1').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var o={};j.tree.forEach(function(t){if(t.type!=='blob'||t.path.indexOf(B)!==0)return;var r=t.path.slice(B.length).split('/');if(r.length>1&&ext.test(r[r.length-1])){(o[r[0]]=o[r[0]]||[]).push(r.slice(1).join('/'))}});return o}):Promise.reject();
+ return tryGit.catch(function(){return fetch(B+'games.json?'+Date.now()).then(function(r){return r.json()}).then(function(j){return j.files||{}})});
+}
+function home(){listAll().then(function(o){var h='',last='',n=0;P.forEach(function(p){var a=o[p[1]]||[];if(!a.length)return;n+=a.length;if(p[0]!==last){h+='<h2>'+p[0]+'</h2>';last=p[0]}h+='<h3>'+p[1]+' ('+a.length+')</h3><div class="g">'+a.map(function(f){return '<a href="?p='+p[1]+'&f='+encodeURIComponent(f)+'">'+f.replace(/\.[^.]+$/,'')+'</a>'}).join('')+'</div>'});
+ document.getElementById('list').innerHTML=h;document.getElementById('msg').textContent=n?'게임을 누르면 바로 실행됩니다.':'GAMEFILE/기종폴더 안에 게임을 올리면 여기에 나타납니다. (닷홈 등은 목록갱신.bat 실행 후 games.json 도 올리세요)'}).catch(function(){document.getElementById('msg').textContent='목록을 읽지 못했습니다.'})}
+function play(){var p=find(Q.get('p')),f=Q.get('f');if(!p)return home();var url=B+p[1]+'/'+enc(f);
+ document.getElementById('app').innerHTML='<div id="bar"><a href="gamefile.html">← 목록</a> &nbsp; '+f+'</div><div id="game"></div>';var g=document.getElementById('game');
+ if(p[1]==='WINDOWS'&&!/\\.jsdos$/i.test(f)){location.replace('winemu.html?os=win95&game='+encodeURIComponent(url));return}
+ if(p[2]==='dos')return dos(g,url,f);
+ g.innerHTML='<div id="ejs" style="width:100%;height:100%"></div>';
+ window.EJS_player='#ejs';window.EJS_core=p[2];window.EJS_gameUrl=url;window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';window.EJS_startOnLoaded=true;window.EJS_gameName=f.replace(/\.[^.]+$/,'');
+ var bios={segaCD:'BIOS/bios_CD_U.bin',segaSaturn:'BIOS/saturn_bios.bin'}[p[2]];if(bios)window.EJS_biosUrl=bios;
+ var s=document.createElement('script');s.src='https://cdn.emulatorjs.org/stable/data/loader.js';document.body.appendChild(s)}
+function dos(g,url,f){g.innerHTML='<div id="dos"></div>';var m=document.getElementById('msg');
+ function run(u){Dos(document.getElementById('dos'),{url:u,autoStart:true})}
+ if(/\.jsdos$/i.test(f))return run(url);
+ fetch(url).then(function(r){return r.arrayBuffer()}).then(JSZip.loadAsync).then(function(z){
+  if(z.file('.jsdos/dosbox.conf'))return z.generateAsync({type:'blob'});
+  var c=[];z.forEach(function(p,e){if(!e.dir&&/\.(exe|com|bat)$/i.test(p)&&!/(setup|install|unins|uninst|config)/i.test(p))c.push({p:p,s:e._data&&e._data.uncompressedSize||0,b:/\.bat$/i.test(p)})});
+  if(!c.length)throw new Error('실행파일(exe/com/bat)이 없습니다');
+  c.sort(function(a,b){return (b.b-a.b)||(b.s-a.s)});var pick=c[0].p;
+  if(c.length>1&&c.length<9&&!sessionStorage['pick'+f]){var n=prompt('실행할 파일 번호 (취소=자동선택)\n'+c.map(function(x,i){return (i+1)+'. '+x.p}).join('\n'));if(n&&c[n-1])pick=c[n-1].p;sessionStorage['pick'+f]=1}
+  var d=pick.split('/');var exe=d.pop();z.file('.jsdos/dosbox.conf','[autoexec]\nmount c .\nc:\n'+(d.length?'cd '+d.join('\\')+'\n':'')+exe+'\n');return z.generateAsync({type:'blob'})
+ }).then(function(b){run(URL.createObjectURL(b))}).catch(function(e){g.innerHTML='<p style="padding:20px;color:#fc8">실행 실패: '+e.message+'</p>'})}
+Q.get('p')?play():home();
+</script></body></html>
