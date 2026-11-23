@@ -3,6 +3,38 @@
  "ATARI2600": [],
  "DOS": [
   {
+   "file": "GTA.jsdos",
+   "size": 58117855
+  },
+  {
+   "file": "GTA.png",
+   "size": 425059
+  },
+  {
+   "file": "nfs1.jsdos",
+   "size": 1343401
+  },
+  {
+   "file": "nfs1.png",
+   "size": 112373
+  },
+  {
+   "file": "stone.jsdos",
+   "size": 906623
+  },
+  {
+   "file": "stone.png",
+   "size": 12583
+  },
+  {
+   "file": "war2.gif",
+   "size": 30751
+  },
+  {
+   "file": "war2.jsdos",
+   "size": 14229455
+  },
+  {
    "file": "wolf3d.jpg",
    "size": 19807
   },
