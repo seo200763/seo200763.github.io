@@ -261,6 +261,8 @@ async function probeUrl(u){
   return null;
 }
 async function probe(id){
+  /* 윈도우95: 새로 첨부한 이미지(os/win95b/win95.zip 또는 .img)를 먼저 찾고, 없으면 기존 os/win95 사용 */
+  if(id==='win95'){for(const e of['zip','img']){const f=await probeUrl(`os/win95b/win95.${e}`);if(f)return f}}
   for(const e of['img','zip','iso']){const f=await probeUrl(`os/${id}/${id}.${e}`);if(f)return f}
   return null;
 }
