@@ -40,13 +40,13 @@
     var a = ['@echo off', 'mount c .', 'c:'];
     if (d) a.push('cd ' + d.replace(/\//g, '\\'));
     a.push(n);
-    return '[sdl]\nautolock=true\n\n[dosbox]\nmachine=svga_s3\nmemsize=16\n\n[cpu]\ncore=auto\ncycles=auto\n\n[autoexec]\n' + a.join('\n') + '\n';
+    return '[sdl]\nautolock=false\n\n[dosbox]\nmachine=svga_s3\nmemsize=16\n\n[cpu]\ncore=auto\ncycles=auto\n\n[autoexec]\n' + a.join('\n') + '\n';
   }
 
   function win31Conf(w, exe) {
     var cd = 'cd \\' + (w.parent ? w.parent.replace(/\//g, '\\') + '\\' : '') + w.dir;
     var a = ['@echo off', 'mount c .', 'c:', cd, exe ? 'win C:\\' + norm(exe).replace(/\//g, '\\') : 'win'];
-    return '[sdl]\nautolock=true\n\n[dosbox]\nmachine=svga_s3\nmemsize=32\n\n[video]\nvmemsize=4\n\n[cpu]\ncore=auto\ncycles=auto\n\n[autoexec]\n' + a.join('\n') + '\n';
+    return '[sdl]\nautolock=false\n\n[dosbox]\nmachine=svga_s3\nmemsize=32\n\n[video]\nvmemsize=4\n\n[cpu]\ncore=auto\ncycles=auto\n\n[autoexec]\n' + a.join('\n') + '\n';
   }
 
   /* 윈도우 이미지 zip 안에서 디스크 이미지 하나 고르기 (가장 큰 .img/.ima/.vhd) */

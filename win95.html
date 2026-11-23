@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Windows 95 (256색)</title>
+<link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css">
+<script src="https://v8.js-dos.com/latest/js-dos.js"></script>
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;font-family:system-ui,"Malgun Gothic",sans-serif}
+#dos{width:100%;height:100%}
+#ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;color:#dbe7ff;background:#050b1e;z-index:20;white-space:pre-wrap;line-height:1.6;font-size:16px}
+#ov.err{color:#ff9a9a}
+#pb{width:min(420px,80vw);height:12px;background:#16264f;border-radius:8px;overflow:hidden}
+#pb i{display:block;height:100%;width:0;background:#1e6bff;transition:width .15s}
+#ov a,#ov button{font:inherit;color:#fff;background:#1e6bff;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;text-decoration:none}
+#back{position:fixed;right:max(8px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));z-index:30;opacity:.55;padding:6px 12px;font-size:14px;color:#fff;background:#1e6bff;border-radius:10px;text-decoration:none}
+#back:hover{opacity:1}
+</style>
+</head>
+<body>
+<a id="back" href="index.html">← 목록</a>
+<div id="dos"></div>
+<div id="ov"><div id="tx">준비 중…</div><div id="pb"><i></i></div><div id="acts"></div></div>
+<script src="jsdoslib.js"></script>
+<script src="dospad.js"></script>
+<script>
+(function(){
+/* Windows 95 — DOSBox-X(js-dos v8) 의 S3 Trio64 그래픽으로 부팅 → 이미지에 들어 있는 S3 드라이버로 640x480 256색
+   이미지: os/win95/win95.zip (안에 .img 하나).  v86 으로 열려면 winemu.html?os=win95&engine=v86 */
+var ov = document.getElementById('ov'), tx = document.getElementById('tx'), pb = ov.querySelector('#pb i'), acts = document.getElementById('acts');
+function show(t, err){ ov.style.display = 'flex'; ov.className = err ? 'err' : ''; tx.textContent = t; if (err) document.getElementById('pb').style.display = 'none'; }
+function fail(e){
+  console.error(e); show('실행하지 못했어요.\n\n' + (e && e.message || e), true);
+  acts.innerHTML = '<a href="winemu.html?os=win95&engine=v86">v86 으로 열기 (16색, 대체)</a> <button onclick="location.reload()">다시 시도</button>';
+}
+function loadScript(u){ return new Promise(function(ok, no){ var s = document.createElement('script'); s.src = u; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+async function needZip(){
+  if (window.JSZip) return;
+  var urls = ['https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js','https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'];
+  for (var i = 0; i < urls.length; i++){ try { await loadScript(urls[i]); if (window.JSZip) return; } catch(e){} }
+  throw new Error('ZIP 라이브러리(JSZip)를 불러오지 못했어요.');
+}
+function mb(n){ return (n / 1048576).toFixed(1) + 'MB'; }
+async function getBuf(url){
+  var r = await fetch(url);
+  if (!r.ok) throw new Error('윈도우95 이미지를 찾을 수 없어요 (' + r.status + ')\n' + url);
+  var total = +r.headers.get('content-length') || 0;
+  if (!r.body || !r.body.getReader) return new Uint8Array(await r.arrayBuffer());
+  var rd = r.body.getReader(), chunks = [], got = 0, t0 = Date.now();
+  for (;;){
+    var x = await rd.read(); if (x.done) break;
+    chunks.push(x.value); got += x.value.length;
+    var sec = (Date.now() - t0) / 1000, left = (total && got) ? Math.max(0, Math.round(sec * (total - got) / got)) : 0;
+    tx.textContent = '윈도우95 이미지 내려받는 중…\n' + mb(got) + (total ? ' / ' + mb(total) + ' (' + Math.floor(got * 100 / total) + '%' + (left ? ', 약 ' + left + '초 남음' : '') + ')' : '');
+    pb.style.width = total ? (got * 100 / total) + '%' : '50%';
+  }
+  var out = new Uint8Array(got), p = 0;
+  chunks.forEach(function(c){ out.set(c, p); p += c.length; });
+  return out;
+}
+
+/* 이미지 크기로 CHS 계산 (63섹터, 16헤드) */
+function conf(imgName, bytes){
+  var sectors = Math.floor(bytes / 512), cyl = Math.max(1, Math.floor(sectors / (63 * 16)));
+  return [
+    '[sdl]', 'autolock=false', '',
+    '[dosbox]', 'machine=svga_s3trio64', 'memsize=64', 'vmemsize=4', '',
+    '[render]', 'aspect=true', 'scaler=none', '',
+    '[cpu]', 'core=dynamic', 'cputype=pentium_mmx', 'cycles=max', '',
+    '[sblaster]', 'sbtype=sb16', 'sbbase=220', 'irq=7', 'dma=1', 'hdma=5', 'oplmode=opl3', '',
+    '[autoexec]',
+    '@echo off',
+    'imgmount c ' + imgName + ' -t hdd -size 512,63,16,' + cyl,
+    'boot -l c',
+    'boot c:',
+    ''
+  ].join('\n');
+}
+
+async function main(){
+  if (typeof Dos !== 'function') throw new Error('js-dos 를 불러오지 못했어요.\n(v8.js-dos.com 접속을 확인해주세요)');
+  await needZip();
+  var buf = await getBuf('os/win95/win95.zip');
+  show('이미지 압축 푸는 중…\n(처음에는 시간이 걸릴 수 있어요)'); pb.style.width = '60%';
+  var zip = await JSZip.loadAsync(buf); buf = null;
+  var best = null;
+  Object.keys(zip.files).forEach(function(n){ var z = zip.files[n]; if (!z.dir && /\.(img|ima|vhd)$/i.test(n)){ var sz = (z._data && z._data.uncompressedSize) || 0; if (!best || sz > best.sz) best = {n: n, sz: sz}; } });
+  if (!best) throw new Error('win95.zip 안에서 디스크 이미지(.img)를 찾지 못했어요.');
+  var bytes = await zip.file(best.n).async('uint8array'); zip = null;
+  pb.style.width = '90%';
+  var opts = { autoStart: true, kiosk: false, backend: 'dosboxX', autoSave: false };
+  var mode = GWPad.init({root: '#dos', win: true});
+  if (mode === 'mobile') opts.noSideBar = true;
+  opts.onEvent = function(ev, arg){ if (ev === 'ci-ready') GWPad.setCI(arg); };
+  opts.dosboxConf = conf('win95.img', bytes.length);
+  opts.initFs = [{ path: 'win95.img', contents: bytes }];
+  ov.style.display = 'none';
+  Dos(document.getElementById('dos'), opts);
+}
+main().catch(fail);
+})();
+</script>
+</body>
+</html>

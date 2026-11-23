@@ -214,6 +214,7 @@ const OSES={
 };
 const qs=new URLSearchParams(location.search);
 let OSID=qs.get('os');if(!OSES[OSID])OSID='win95';
+if(OSID==='win95'&&qs.get('engine')!=='v86'){location.replace('win95.html');throw new Error('redirect → win95.html (DOSBox-X 256색)')}   /* 윈도우95는 S3 256색 드라이버용 win95.html 로 실행 */
 const OS=OSES[OSID];
 document.title=OS.n+' 웹 에뮬레이터';
 
