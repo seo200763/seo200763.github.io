@@ -69,7 +69,11 @@ function conf(imgName, bytes){
     '[render]', 'aspect=true', 'scaler=none', '',
     '[dos]', 'ver=7.1', '',
     '[cpu]', 'core=dynamic', 'cputype=pentium_mmx', 'cycles=max', '',
-    '[sblaster]', 'sbtype=sb16', 'sbbase=220', 'irq=7', 'dma=1', 'hdma=5', 'oplmode=opl3', '',
+    '[sblaster]', 'sbtype=sb16', 'sbbase=220', 'irq=5', 'dma=1', 'hdma=5', 'oplmode=opl3', '',
+    '[serial]', 'serial1=disabled', 'serial2=disabled', 'serial3=disabled', 'serial4=disabled', '',
+    '[parallel]', 'parallel1=disabled', 'parallel2=disabled', 'parallel3=disabled', '',
+    '[joystick]', 'joysticktype=none', '',
+    '[ne2000]', 'ne2000=false', '',
     '[autoexec]',
     '@echo off',
     'ver set 7.1',
@@ -87,6 +91,20 @@ function conf(imgName, bytes){
   ].join('\n');
 }
 
+/* 부팅 중 새 하드웨어 설치 창(디스크 삽입 · 파일 복사)이 뜨면 자동으로 넘김.
+   Enter = 확인, Alt+S = 파일 무시.  사용자가 직접 마우스/키를 누르면 즉시 중단. */
+function autoPass(ci){
+  var stop = false, t0 = Date.now(), n = 0;
+  ['pointerdown','keydown'].forEach(function(ev){ document.addEventListener(ev, function(e){ if (e.isTrusted && !(e.target.closest && e.target.closest('.gwpad,#back'))) stop = true; }, true); });
+  function tap(codes){ codes.forEach(function(c){ try { ci.sendKeyEvent(c, true); } catch(_){} }); setTimeout(function(){ codes.slice().reverse().forEach(function(c){ try { ci.sendKeyEvent(c, false); } catch(_){} }); }, 120); }
+  var iv = setInterval(function(){
+    if (stop || Date.now() - t0 > 300000){ clearInterval(iv); return; }
+    if (Date.now() - t0 < 25000) return;          /* 윈도우 로고가 끝난 뒤부터 시작 */
+    n++;
+    if (n % 3 === 0) tap([342, 83]); else tap([257]);   /* Alt+S / Enter */
+  }, 2000);
+}
+
 async function main(){
   if (typeof Dos !== 'function') throw new Error('js-dos 를 불러오지 못했어요.\n(v8.js-dos.com 접속을 확인해주세요)');
   await needZip();
@@ -101,7 +119,7 @@ async function main(){
   var opts = { autoStart: true, kiosk: false, backend: 'dosboxX', autoSave: false };
   var mode = GWPad.init({root: '#dos', win: true});
   if (mode === 'mobile') opts.noSideBar = true;
-  opts.onEvent = function(ev, arg){ if (ev === 'ci-ready') GWPad.setCI(arg); };
+  opts.onEvent = function(ev, arg){ if (ev === 'ci-ready'){ GWPad.setCI(arg); autoPass(arg); } };
   opts.dosboxConf = conf('win95.img', bytes.length);
   opts.initFs = [{ path: 'win95.img', contents: bytes }];
   ov.style.display = 'none';
