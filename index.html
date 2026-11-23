@@ -1,0 +1,7 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap"><link rel="stylesheet" href="gw.css"><title>영호의 게임세상</title><script src="auth.js"></script></head><body><div class="wrap" style="position:relative">
+<button class="btn sub logout" onclick="YH.logout()">로그아웃</button><div style="height:44px"></div>
+<img class="ban" src="gameicons/banner.webp" alt="영호의 게임세상"><div class="grid" id="cats"></div></div>
+<script src="romdata.js"></script><script src="gw.js"></script><script>
+RD.CATS.forEach(function(c){var m=c.ms.length===1?RD.M[c.ms[0]]:null,id=c.ms[0];
+document.getElementById("cats").append(GW.tile({href:c.ms.length===1?"roms.html?m="+id:"roms.html?c="+c.k,label:c.n,img:c.k==="html5"||c.k==="flash"?null:c.k,svg:c.k==="html5"||c.k==="flash"?c.k:null}))});
+</script></body></html>

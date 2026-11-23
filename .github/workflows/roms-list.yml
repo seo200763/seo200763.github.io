@@ -1,0 +1,44 @@
+# ROMS/ 폴더에 롬을 올리면 ROMS/list.json (전체 목록)을 자동으로 만들어 줍니다.
+# 사이트는 GitHub 목록 조회가 막혔을 때 이 파일을 대신 읽습니다. (없어도 사이트는 동작해요)
+name: ROMS 목록 갱신
+on:
+  push:
+    paths:
+      - 'ROMS/**'
+      - '!ROMS/list.json'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: list.json 만들기
+        run: |
+          python3 - <<'PY'
+          import os, json
+          root = 'ROMS'
+          out = {}
+          for d in sorted(os.listdir(root)):
+              p = os.path.join(root, d)
+              if not os.path.isdir(p):
+                  continue
+              items = []
+              for f in sorted(os.listdir(p)):
+                  fp = os.path.join(p, f)
+                  if f.startswith('.') or not os.path.isfile(fp):
+                      continue
+                  if f.lower().endswith(('.txt', '.md', '.json')):
+                      continue
+                  items.append({'file': f, 'size': os.path.getsize(fp)})
+              out[d] = items
+          with open(os.path.join(root, 'list.json'), 'w', encoding='utf-8') as fh:
+              json.dump(out, fh, ensure_ascii=False, indent=1)
+          PY
+      - name: 바뀐 게 있으면 저장
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ROMS/list.json
+          git diff --cached --quiet || (git commit -m "ROMS 목록 갱신" && git push)

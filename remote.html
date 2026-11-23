@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050138">
+<title>원격 화면 · 영호의 게임세상</title>
+<style>
+:root{--cy:#35e6ff;--vi:#8b5cff;--pk:#ff4fa8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#050138;color:#fff;font:500 15px/1.5 "Noto Sans KR","Malgun Gothic",system-ui,sans-serif}
+body{display:flex;align-items:center;justify-content:center;padding:14px;background:radial-gradient(circle at 50% 0,#1a0d78,#050138 70%)}
+.card{width:min(94vw,520px);padding:20px;border-radius:16px;border:2px solid transparent;background:linear-gradient(#0a0a4a,#0a0a4a) padding-box,linear-gradient(90deg,var(--cy),var(--vi),var(--pk)) border-box;box-shadow:0 0 22px rgba(53,230,255,.3)}
+h1{margin:0 0 4px;font-size:21px}
+p.s{margin:0 0 14px;color:#b9c4ff;font-size:13px}
+.b{display:block;width:100%;margin:8px 0;padding:14px;border:0;border-radius:12px;font:700 16px inherit;font-family:inherit;color:#fff;cursor:pointer;background:linear-gradient(90deg,#1fb8d8,#7a4dff 60%,#e0409a)}
+.b.g{background:#232a78}
+.b:disabled{opacity:.5}
+input[type=text],input[type=tel],select{width:100%;padding:13px;border-radius:12px;border:2px solid #3a43a8;background:#0d1052;color:#fff;font:700 24px monospace;text-align:center;letter-spacing:.3em}
+select{font:500 15px inherit;font-family:inherit;letter-spacing:0;text-align:left}
+.code{font:900 44px monospace;letter-spacing:.2em;text-align:center;color:var(--cy);text-shadow:0 0 12px var(--cy);margin:10px 0}
+.note{margin-top:12px;padding:10px 12px;border-radius:10px;background:#12165c;color:#c9d2ff;font-size:12.5px}
+.note b{color:#ffd36e}
+label.k{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:14px}
+#st{min-height:20px;margin-top:8px;font-size:13px;color:#8dffb0;text-align:center}
+#st.e{color:#ff8a9d}
+.hide{display:none!important}
+#vw{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:50}
+#vid{max-width:100%;max-height:100%;touch-action:none;user-select:none;background:#000}
+#bar{position:fixed;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:60;display:flex;gap:6px;padding:6px;border-radius:12px;background:rgba(5,1,56,.85);opacity:.9}
+#bar button{padding:8px 11px;border:0;border-radius:8px;background:#2a2fa0;color:#fff;font:600 13px inherit;font-family:inherit}
+#bar button.on{background:#e0409a}
+#kb{position:fixed;left:-99px;top:0;width:10px;opacity:0}
+#hb{position:fixed;top:8px;right:8px;z-index:9999;padding:10px 12px;border-radius:12px;background:rgba(5,1,56,.92);border:2px solid var(--cy);font-size:13px;max-width:260px}
+#hb button{margin-top:6px;padding:7px 10px;border:0;border-radius:8px;background:#e0409a;color:#fff;font:700 13px inherit;font-family:inherit;width:100%}
+#ifr{position:fixed;inset:0;width:100%;height:100%;border:0;background:#000;z-index:1}
+#cur{position:fixed;z-index:9998;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:rgba(255,79,168,.55);border:3px solid #fff;box-shadow:0 0 12px var(--pk);pointer-events:none;display:none}
+.rip{position:fixed;z-index:9998;width:14px;height:14px;margin:-7px;border-radius:50%;border:3px solid var(--cy);pointer-events:none;animation:rp .6s forwards}
+@keyframes rp{to{transform:scale(4);opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="card" id="home">
+  <h1>🖥️ 원격 화면</h1>
+  <p class="s">프로그램 설치 없이, 코드만으로 화면을 보여주거나 봅니다.</p>
+  <button class="b" id="bHost">내 화면 공유하기 (PC 브라우저)</button>
+  <button class="b g" id="bView">코드 입력해서 상대 화면 보기</button>
+  <div class="note">
+    <b>알아두세요</b><br>
+    · 화면을 <b>공유하는 쪽</b>은 PC(크롬·엣지·파이어폭스)만 가능해요. 폰·태블릿 브라우저는 화면 공유를 지원하지 않아요.<br>
+    · <b>보는 쪽</b>은 PC·폰·태블릿 모두 가능해요.<br>
+    · 웹사이트는 PC 전체를 직접 조종할 수 없어요. 대신 <b>'사이트 조종 모드'</b>로 이 사이트 화면(에뮬레이터 등)은 상대가 직접 조작할 수 있어요.
+  </div>
+  <a href="index.html" style="display:block;margin-top:12px;text-align:center;color:#8aa0ff;font-size:13px">← 메인으로</a>
+</div>
+
+<div class="card hide" id="host">
+  <h1>화면 공유</h1>
+  <p class="s">공유를 시작하면 코드가 나와요. 상대에게 코드를 알려주세요.</p>
+  <div id="hSetup">
+    <label class="k"><input type="checkbox" id="cCtl"> 사이트 조종 모드 (상대가 이 사이트 화면을 조작)</label>
+    <select id="sPage" class="hide">
+      <option value="emulator.html">PC 에뮬레이터</option>
+      <option value="mobile.html">모바일 화면</option>
+      <option value="tablet.html">태블릿 화면</option>
+      <option value="dex.html">바탕화면(DeX)</option>
+      <option value="classic.html">통합화면</option>
+    </select>
+    <button class="b" id="bStart">공유 시작</button>
+  </div>
+  <div id="hCode" class="hide"><div class="code" id="codeT">------</div><p class="s" style="text-align:center">상대가 접속하면 허용 여부를 물어봐요.</p><button class="b g" id="bStop">공유 중지</button></div>
+  <div id="st"></div>
+  <button class="b g" onclick="location.reload()">처음으로</button>
+</div>
+
+<div class="card hide" id="view">
+  <h1>상대 화면 보기</h1>
+  <p class="s">상대가 알려준 6자리 코드를 입력하세요.</p>
+  <input type="tel" id="inCode" maxlength="6" placeholder="000000" inputmode="numeric" autocomplete="off">
+  <button class="b" id="bGo">접속</button>
+  <div id="st2" style="min-height:20px;margin-top:8px;font-size:13px;text-align:center"></div>
+  <button class="b g" onclick="location.reload()">처음으로</button>
+</div>
+
+<div id="vw" class="hide"><video id="vid" autoplay playsinline muted></video></div>
+<div id="bar" class="hide">
+  <button id="tCtl">🖱 조종 OFF</button><button id="tKb">⌨ 키보드</button><button id="tFs">⛶ 전체화면</button><button id="tEnd">나가기</button>
+</div>
+<input id="kb" autocomplete="off" autocapitalize="off">
+<div id="cur"></div>
+<div id="hb" class="hide"></div>
+<iframe id="ifr" class="hide"></iframe>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var SRC=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'];
+var PFX='yhremote-',CFG={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
+var peer,stream,conn,ctlOn=false,siteMode=false,allowCtl=false;
+
+function load(i,ok,ng){
+  if(window.Peer)return ok();
+  if(i>=SRC.length)return ng();
+  var s=document.createElement('script');s.src=SRC[i];s.onload=ok;s.onerror=function(){load(i+1,ok,ng)};document.head.appendChild(s);
+}
+function need(fn){load(0,fn,function(){say('연결 라이브러리를 불러오지 못했어요. 인터넷을 확인해 주세요.',1)})}
+function say(t,e,id){var n=$(id||(!$('#host').classList.contains('hide')?'#st':'#st2'));if(n){n.textContent=t;n.className=e?'e':'';n.style.color=e?'#ff8a9d':'#8dffb0'}}
+function show(id){['#home','#host','#view'].forEach(function(x){$(x).classList.toggle('hide',x!==id)})}
+
+$('#bHost').onclick=function(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){alert('이 기기의 브라우저는 화면 공유를 지원하지 않아요.\n공유는 PC 브라우저에서, 이 기기는 "보기"로 사용해 주세요.');return}
+  show('#host');
+};
+$('#bView').onclick=function(){show('#view')};
+$('#cCtl').onchange=function(){$('#sPage').classList.toggle('hide',!this.checked)};
+
+/* ---------------- 공유하는 쪽 ---------------- */
+function rnd(){return String(Math.floor(Math.random()*1000000)).padStart(6,'0')}
+$('#bStart').onclick=function(){
+  siteMode=$('#cCtl').checked;
+  need(function(){
+    navigator.mediaDevices.getDisplayMedia(siteMode?{video:{frameRate:30},audio:true,preferCurrentTab:true}:{video:{frameRate:30},audio:true}).then(function(s){
+      stream=s;s.getVideoTracks()[0].onended=stopHost;
+      if(siteMode){$('#ifr').src=$('#sPage').value;$('#ifr').classList.remove('hide');$('#home').classList.add('hide');document.body.style.background='#000'}
+      openPeer(0);
+    }).catch(function(){say('화면 공유가 취소됐어요.',1)});
+  });
+}
+function openPeer(n){
+  var code=rnd();peer=new Peer(PFX+code,CFG);
+  peer.on('open',function(){
+    $('#hSetup').classList.add('hide');$('#hCode').classList.remove('hide');$('#codeT').textContent=code;
+    if(siteMode){hb('코드 <b style="color:#35e6ff;font-size:20px">'+code+'</b><br>접속 대기 중…','공유 중지',stopHost);$('#host').classList.add('hide')}
+    say('접속 대기 중…');
+  });
+  peer.on('error',function(e){if(e.type==='unavailable-id'&&n<5)return openPeer(n+1);say('연결 서버 오류: '+e.type,1)});
+  peer.on('connection',function(c){
+    if(conn&&conn.open){c.close();return}
+    var ok=confirm('누군가 내 화면을 보려고 해요.\n허용할까요?\n(모르는 사람이면 거절하세요)');
+    if(!ok){c.on('open',function(){c.send({t:'no'});setTimeout(function(){c.close()},300)});return}
+    conn=c;
+    c.on('open',function(){
+      c.send({t:'ok',site:siteMode});
+      var call=peer.call(c.peer,stream);call.on('error',function(){});
+      say('연결됨 — 상대가 화면을 보고 있어요.');
+      if(siteMode)hb('🔴 공유 중 (연결됨)<label style="display:flex;gap:6px;margin-top:6px"><input type="checkbox" id="aCtl"> 상대 조종 허용</label>','공유 중지',stopHost);
+      var a=$('#aCtl');if(a)a.onchange=function(){allowCtl=this.checked};
+    });
+    c.on('data',onData);
+    c.on('close',function(){conn=null;allowCtl=false;say('상대가 나갔어요. 코드는 그대로 사용 가능해요.');$('#cur').style.display='none'});
+  });
+}
+function hb(h,btn,fn){var b=$('#hb');b.classList.remove('hide');b.innerHTML=h+'<button>'+btn+'</button>';b.querySelector('button').onclick=fn}
+function stopHost(){
+  try{stream&&stream.getTracks().forEach(function(t){t.stop()})}catch(e){}
+  try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}
+  location.reload();
+}
+
+/* 상대 입력 받기 */
+function onData(m){
+  var cur=$('#cur');
+  if(m.t==='m'||m.t==='d'||m.t==='u'){
+    var x=m.x*innerWidth,y=m.y*innerHeight;
+    cur.style.display='block';cur.style.left=x+'px';cur.style.top=y+'px';
+    if(m.t==='d'){var r=document.createElement('i');r.className='rip';r.style.left=x+'px';r.style.top=y+'px';document.body.appendChild(r);setTimeout(function(){r.remove()},650)}
+  }
+  if(!(siteMode&&allowCtl))return;
+  try{inject(m)}catch(e){}
+}
+function inject(m){
+  var f=$('#ifr'),d=f.contentDocument,w=f.contentWindow;if(!d)return;
+  if(m.t==='k'){
+    var o={key:m.key,code:m.code,bubbles:true,cancelable:true};
+    var ev=new w.KeyboardEvent(m.type,o);
+    try{Object.defineProperty(ev,'keyCode',{get:function(){return m.kc}});Object.defineProperty(ev,'which',{get:function(){return m.kc}})}catch(e){}
+    (d.activeElement||d.body).dispatchEvent(ev);return;
+  }
+  var x=m.x*f.clientWidth,y=m.y*f.clientHeight,el=d.elementFromPoint(x,y)||d.body;
+  var o={bubbles:true,cancelable:true,clientX:x,clientY:y,view:w,button:0,buttons:m.t==='d'?1:0,pointerId:1,pointerType:'mouse',isPrimary:true};
+  function fire(T,n){el.dispatchEvent(new w[T](n,o))}
+  if(m.t==='m'){fire('PointerEvent','pointermove');fire('MouseEvent','mousemove')}
+  if(m.t==='d'){if(el.focus)el.focus();fire('PointerEvent','pointerdown');fire('MouseEvent','mousedown')}
+  if(m.t==='u'){fire('PointerEvent','pointerup');fire('MouseEvent','mouseup');fire('MouseEvent','click')}
+  if(m.t==='w'){el.dispatchEvent(new w.WheelEvent('wheel',{bubbles:true,cancelable:true,clientX:x,clientY:y,deltaY:m.dy}))}
+}
+
+/* ---------------- 보는 쪽 ---------------- */
+$('#inCode').oninput=function(){this.value=this.value.replace(/\D/g,'')};
+$('#bGo').onclick=function(){
+  var code=$('#inCode').value;if(code.length!==6){say('6자리 코드를 입력하세요.',1);return}
+  say('접속 중…');$('#bGo').disabled=true;
+  need(function(){
+    peer=new Peer(CFG);
+    var t=setTimeout(function(){say('응답이 없어요. 코드를 확인하거나 상대가 공유 중인지 확인하세요.',1);$('#bGo').disabled=false},20000);
+    peer.on('error',function(e){clearTimeout(t);$('#bGo').disabled=false;say(e.type==='peer-unavailable'?'없는 코드예요. 다시 확인해 주세요.':'연결 오류: '+e.type,1)});
+    peer.on('call',function(c){
+      c.answer();
+      c.on('stream',function(s){
+        clearTimeout(t);var v=$('#vid');v.srcObject=s;v.muted=false;v.play().catch(function(){v.muted=true;v.play()});
+        ['#home','#host','#view'].forEach(function(x){$(x).classList.add('hide')});
+        $('#vw').classList.remove('hide');$('#bar').classList.remove('hide');
+      });
+    });
+    peer.on('open',function(){
+      conn=peer.connect(PFX+code,{reliable:true});
+      conn.on('data',function(m){
+        if(m.t==='no'){clearTimeout(t);$('#bGo').disabled=false;say('상대가 접속을 거절했어요.',1)}
+      });
+      conn.on('close',function(){alert('연결이 끝났어요.');location.reload()});
+    });
+  });
+};
+function send(m){if(conn&&conn.open)conn.send(m)}
+function norm(e){var r=$('#vid').getBoundingClientRect();return{x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}}
+var vid=$('#vid'),down=false;
+vid.addEventListener('pointerdown',function(e){e.preventDefault();down=true;try{vid.setPointerCapture(e.pointerId)}catch(_){}var p=norm(e);send({t:'d',x:p.x,y:p.y})});
+vid.addEventListener('pointermove',function(e){if(e.pointerType==='mouse'||down){var p=norm(e);send({t:'m',x:p.x,y:p.y})}});
+vid.addEventListener('pointerup',function(e){down=false;var p=norm(e);send({t:'u',x:p.x,y:p.y})});
+vid.addEventListener('wheel',function(e){e.preventDefault();var p=norm(e);send({t:'w',x:p.x,y:p.y,dy:e.deltaY})},{passive:false});
+vid.addEventListener('contextmenu',function(e){e.preventDefault()});
+function key(e,type){
+  if(!ctlOn||e.target.id==='kb')return;
+  e.preventDefault();send({t:'k',type:type,key:e.key,code:e.code,kc:e.keyCode});
+}
+document.addEventListener('keydown',function(e){if(!$('#vw').classList.contains('hide'))key(e,'keydown')});
+document.addEventListener('keyup',function(e){if(!$('#vw').classList.contains('hide'))key(e,'keyup')});
+/* 폰 키보드 */
+$('#kb').addEventListener('input',function(){var v=this.value;this.value='';if(!ctlOn)return;for(var i=0;i<v.length;i++){send({t:'k',type:'keydown',key:v[i],code:'',kc:v.toUpperCase().charCodeAt(i)});send({t:'k',type:'keyup',key:v[i],code:'',kc:v.toUpperCase().charCodeAt(i)})}});
+$('#kb').addEventListener('keydown',function(e){if(ctlOn&&(e.key==='Backspace'||e.key==='Enter')){send({t:'k',type:'keydown',key:e.key,code:e.key,kc:e.keyCode});send({t:'k',type:'keyup',key:e.key,code:e.key,kc:e.keyCode})}});
+$('#tCtl').onclick=function(){ctlOn=!ctlOn;this.classList.toggle('on',ctlOn);this.textContent=ctlOn?'🖱 조종 ON':'🖱 조종 OFF'};
+$('#tKb').onclick=function(){$('#kb').focus()};
+$('#tFs').onclick=function(){var d=document.documentElement;(document.fullscreenElement?document.exitFullscreen():(d.requestFullscreen||d.webkitRequestFullscreen).call(d))};
+$('#tEnd').onclick=function(){try{conn&&conn.close()}catch(e){}location.reload()};
+})();
+</script>
+</body>
+</html>

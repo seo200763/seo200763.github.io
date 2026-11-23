@@ -1,0 +1,80 @@
+{
+ "3DO": [],
+ "ATARI2600": [],
+ "DOS": [
+  {
+   "file": "wolf3d.jpg",
+   "size": 19807
+  },
+  {
+   "file": "wolf3d.jsdos",
+   "size": 1173810
+  }
+ ],
+ "FLASH": [],
+ "FOLDER": [],
+ "GAMEBOY": [],
+ "GAMEBOYADVANCE": [],
+ "GAMEBOYCOLOR": [],
+ "GAMEGEAR": [],
+ "GB": [],
+ "GBA": [],
+ "GBC": [],
+ "GG": [],
+ "HTML5": [],
+ "JAGUAR": [],
+ "JAVA": [],
+ "LYNX": [],
+ "MAME": [],
+ "MASTERSYSTEM": [],
+ "MD": [],
+ "MEGADRIVE": [],
+ "N64": [],
+ "NDS": [],
+ "NEOGEOPOCKET": [],
+ "NES": [],
+ "NGP": [],
+ "NINTENDO64": [],
+ "NINTENDODS": [],
+ "PCE": [],
+ "PCENGINE": [],
+ "PLAYSTATION": [],
+ "PSX": [],
+ "S32X": [],
+ "SATURN": [],
+ "SEGA32X": [],
+ "SEGACD": [],
+ "SEGASATURN": [],
+ "SMS": [],
+ "SNES": [
+  {
+   "file": "BS Mario Collection 3 (J).jpg",
+   "size": 34689
+  },
+  {
+   "file": "BS Mario Collection 3 (J).zip",
+   "size": 542773
+  },
+  {
+   "file": "Donkey Kong Country (U) (V1.2).jpg",
+   "size": 30021
+  },
+  {
+   "file": "Donkey Kong Country (U) (V1.2).zip",
+   "size": 2557476
+  },
+  {
+   "file": "Street Fighter II Turbo (V1.0) (E) [!].jpg",
+   "size": 23201
+  },
+  {
+   "file": "Street Fighter II Turbo (V1.0) (E) [!].zip",
+   "size": 1668471
+  }
+ ],
+ "VB": [],
+ "VIRTUALBOY": [],
+ "WEB": [],
+ "WIN31": [],
+ "WIN95": []
+}

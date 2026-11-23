@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07120f">
+<title>WEB GAME PORTAL · 영호의 게임에뮬레이터</title>
+<style>
+:root{color-scheme:dark;--bg:#07110e;--panel:#101d18;--panel2:#14251e;--line:#254236;--green:#29d17d;--text:#eef8f2;--muted:#9ab3a6}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,"Malgun Gothic",sans-serif;background:radial-gradient(ellipse at 50% -20%,#17392b 0,#07110e 55%);color:var(--text)}
+a{color:inherit}.wrap{width:min(1180px,calc(100% - 32px));margin:auto}
+header{height:72px;border-bottom:1px solid #203a30;display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:900;letter-spacing:.02em;font-size:19px}.brand span{color:var(--green);font-size:11px;margin-left:9px;border:1px solid #276847;background:#0d2a1d;padding:5px 8px;border-radius:20px}
+header a,.btn{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#12221b;color:var(--text);text-decoration:none;font-weight:700;cursor:pointer}
+.hero{text-align:center;padding:64px 0 38px}.eyebrow{color:var(--green);font-size:11px;letter-spacing:.12em;font-weight:900}.hero h1{font-size:clamp(32px,5vw,58px);line-height:1.08;margin:14px 0}.hero p{max-width:700px;margin:0 auto;color:var(--muted);line-height:1.8}
+.tools{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:25px}
+.primary{background:var(--green);color:#062014;border-color:var(--green)}
+.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:15px;margin:20px 0 15px}.sectionhead h2{margin:0;font-size:21px}.sectionhead small{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:15px;padding-bottom:40px}
+.card{background:linear-gradient(145deg,#14251e,#0d1914);border:1px solid var(--line);border-radius:17px;overflow:hidden;display:flex;flex-direction:column;min-height:285px}
+.art{height:135px;background:linear-gradient(135deg,#1a5137,#10231b);display:grid;place-items:center;font-size:48px;position:relative}
+.art:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,14,10,.35),transparent)}
+.art span{z-index:1;filter:drop-shadow(0 8px 14px #06150d)}
+.body{padding:17px;display:flex;flex-direction:column;flex:1}.body h3{margin:0 0 5px;font-size:19px}.sub{color:#9fc7b1;font-size:12px;margin-bottom:12px}.desc{color:var(--muted);font-size:13px;line-height:1.65;flex:1}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin:13px 0}.tag{font-size:10px;color:#b7d9c6;border:1px solid #315642;background:#10251a;border-radius:30px;padding:4px 8px}
+.cardfoot{display:flex;gap:8px;margin-top:8px}.cardfoot .btn{flex:1;text-align:center}.cardfoot .play{background:var(--green);color:#052014;border-color:var(--green)}
+.note{border:1px solid #584c2a;background:#211d12;color:#e8d7a9;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.7;margin-bottom:35px}
+.empty{border:1px dashed #315642;border-radius:16px;padding:28px;text-align:center;color:var(--muted);grid-column:1/-1}
+footer{border-top:1px solid #203a30;color:#789386;padding:20px 0 30px;font-size:12px;line-height:1.7}
+@media(max-width:600px){header{height:62px}.hero{padding:48px 0 28px}.sectionhead{align-items:start;flex-direction:column}.wrap{width:min(100% - 22px,1180px)}}
+</style>
+</head>
+<body>
+<header><div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:min(1180px,calc(100% - 32px))"><div class="brand">WEB GAME PORTAL <span>GAMESTART</span></div><a href="../index.html">← 메인 사이트</a></div></header>
+<main class="wrap">
+<section class="hero">
+<div class="eyebrow">BROWSER-NATIVE GAME LIBRARY</div>
+<h1>게임만 바로 실행하세요.</h1>
+<p>Windows 운영체제 화면을 거치지 않고, 웹으로 포팅된 게임을 브라우저에서 바로 실행하는 게임 라이브러리입니다. 웹 포트가 준비된 게임만 실행할 수 있습니다.</p>
+<div class="tools"><a class="btn primary" href="#library">▶ 게임 라이브러리</a><a class="btn" href="README.txt">GAMESTART 폴더 사용법</a></div>
+</section>
+<div class="sectionhead" id="library"><h2>게임 라이브러리</h2><small id="count">목록 불러오는 중…</small></div>
+<section class="grid" id="games"><div class="empty">게임 목록을 불러오는 중입니다.</div></section>
+<div class="note"><b>중요:</b> PC용 EXE나 ISO 파일을 폴더에 복사하는 것만으로 웹 게임이 되지는 않습니다. 각 게임에는 WebAssembly/WebGL 등으로 포팅된 실행 파일과 필요한 리소스가 있어야 합니다. 이 런처는 준비된 웹 포트를 목록화하고 실행하는 역할을 합니다.</div>
+</main>
+<footer><div class="wrap">영호의 게임에뮬레이터 · GAMESTART<br>게임 파일과 웹 포트는 사용 권한 및 각 프로젝트의 라이선스를 확인한 뒤 등록하세요.</div></footer>
+<script>
+const list=document.getElementById('games'),count=document.getElementById('count');
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function card(g){
+ const local=g.launch||((g.folder||'')+'/index.html');
+ const playable=!!(g.launchUrl||g.launch||g.folder);
+ const href='player.html?game='+encodeURIComponent(g.id||'');
+ return `<article class="card"><div class="art"><span>${esc(g.emoji||'🎮')}</span></div><div class="body"><h3>${esc(g.title||g.id)}</h3><div class="sub">${esc(g.subtitle||'웹 포팅 게임')}</div><div class="desc">${esc(g.description||'브라우저에서 실행하는 웹 포트입니다.')}</div><div class="meta"><span class="tag">${esc(g.platform||'Browser')}</span><span class="tag">${esc(g.engine||'Web Port')}</span><span class="tag">${playable?'실행 준비':'준비 중'}</span></div><div class="cardfoot"><a class="btn play" href="${href}">게임 실행 ↗</a>${g.source?`<a class="btn" href="${esc(g.source)}" target="_blank" rel="noopener">프로젝트</a>`:''}</div></div></article>`;
+}
+fetch('games.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('games.json을 읽지 못했습니다.');return r.json()}).then(items=>{
+ const games=Array.isArray(items)?items:[];
+ count.textContent=games.length+'개 등록됨';
+ list.innerHTML=games.length?games.map(card).join(''):'<div class="empty">아직 등록된 웹 포팅 게임이 없습니다.<br>GAMESTART/게임폴더/ 안에 game.json과 웹 실행 파일을 추가하세요.</div>';
+}).catch(e=>{count.textContent='목록 오류';list.innerHTML='<div class="empty">'+esc(e.message)+'<br>서버에 GAMESTART/games.json 파일이 있는지 확인하세요.</div>'});
+</script>
+</body></html>

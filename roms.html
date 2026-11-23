@@ -1,0 +1,64 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap"><link rel="stylesheet" href="gw.css"><title>영호의 게임세상 · 게임목록</title><script src="auth.js"></script></head><body><div class="wrap">
+<div class="top"><span><a class="btn sub" href="index.html" style="text-decoration:none;display:inline-block">처음으로</a> <button class="btn sub" onclick="history.length>1?history.back():location.href='index.html'">← 뒤로</button></span><h2 id="t"></h2></div>
+<div id="v"></div></div>
+<dialog id="dl"><h3 style="margin:0 0 6px;font-weight:400">게임추가</h3><p class="pill" style="margin:0 0 6px" id="dp"></p>
+<label for="nm">게임이름</label><input id="nm" type="text">
+<label for="fl" id="fll">게임 파일</label><input id="fl" type="file" style="width:100%">
+<label for="ph">같은 이름의 사진 (선택)</label><input id="ph" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="width:100%"><p class="pill" style="margin:4px 0 0">사진 없이 올리면 목록에 파란 배경의 ‘사진없음’으로 보입니다.</p>
+<label for="tk">GitHub 토큰</label><input id="tk" type="password" autocomplete="new-password"><p class="pill" style="margin:4px 0 0">토큰은 저장하지 않습니다. (repo 쓰기 권한 필요)</p>
+<p class="msg" id="dm"></p><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn sub" id="dc" type="button">닫기</button><button class="btn" id="dg" type="button">올리기</button></div></dialog>
+<dialog id="dd"><h3 style="margin:0 0 6px;font-weight:400">게임 삭제</h3><p id="dq" style="margin:0"></p>
+<label for="tk2">GitHub 토큰</label><input id="tk2" type="password" autocomplete="new-password">
+<p class="msg" id="dm2"></p><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn sub" id="dc2" type="button">취소</button><button class="btn del" id="dx" type="button">삭제</button></div></dialog>
+<script src="config.js"></script><script src="romdata.js"></script><script src="gw.js"></script><script>
+var $=function(s){return document.querySelector(s)},q=new URLSearchParams(location.search),V=$("#v"),M=RD.M,cfg=GW_CFG,IMG=["png","jpg","jpeg","webp","gif"],FRESH={};
+var API="https://api.github.com/repos/"+cfg.owner+"/"+cfg.repo+"/contents/",H=function(t){return{Authorization:"Bearer "+t,Accept:"application/vnd.github+json"}};
+function href(id){var m=M[id];return m.eng==="v86"?"emulator.html?open="+m.open:m.grp?"roms.html?g="+id:"roms.html?m="+id}
+function grid(title,ids){$("#t").textContent=title;var g=document.createElement("div");g.className="grid";ids.forEach(function(id){var m=M[id];g.append(GW.tile({href:href(id),label:m.n,img:m.img,c:m.c,l:m.l}))});V.append(g)}
+function ext(n){var i=n.lastIndexOf(".");return i<0?"":n.slice(i+1).toLowerCase()}
+function base(n){var i=n.lastIndexOf(".");return i<0?n:n.slice(0,i)}
+var enc=function(s){return btoa(unescape(encodeURIComponent(s)))},dec=function(s){return decodeURIComponent(escape(atob(s.replace(/\n/g,""))))};
+function tmap(arr){var t={};arr.forEach(function(g){t[g.file]=g.title});return t}
+async function files(f){var p="ROMS/"+f,items=null,t={};
+try{var r=await fetch(API+p+"?ref="+cfg.branch);if(r.ok)items=(await r.json()).filter(function(x){return x.type==="file"});else if(r.status===404)items=[]}catch(e){}
+if(!items||!items.length){try{var lj=await (await fetch("ROMS/list.json",{cache:"no-store"})).json(),la=lj[f];if(la&&la.length)items=la.map(function(g){return{name:g.file,type:"file"}})}catch(e){}}
+if(items){var j=items.find(function(x){return x.name.toLowerCase()==="games.json"});if(j&&j.download_url){try{t=tmap((await (await fetch(j.download_url+"?t="+Date.now())).json()).games||[])}catch(e){}}}
+else{try{var d=(await (await fetch(p+"/games.json",{cache:"no-store"})).json()).games||[];items=d.map(function(g){return{name:g.file}});t=tmap(d)}catch(e){items=[]}}
+if(FRESH[f])t=FRESH[f];return{items:items,t:t}}
+async function putFile(tk,path,body,b64){var u=API+path,sha;var ex=await fetch(u+"?ref="+cfg.branch,{headers:H(tk)});if(ex.ok)sha=(await ex.json()).sha;
+var r=await fetch(u,{method:"PUT",headers:H(tk),body:JSON.stringify({message:"게임 추가: "+path.split("/").pop(),content:b64,branch:cfg.branch,sha:sha})});if(!r.ok)throw r.status}
+function b64of(f){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result.split(",")[1])};r.onerror=rej;r.readAsDataURL(f)})}
+async function patchJson(tk,F,mut){var u=API+"ROMS/"+F+"/games.json",arr=[],sha,r=await fetch(u+"?ref="+cfg.branch,{headers:H(tk)});
+if(r.ok){var j=await r.json();sha=j.sha;try{arr=JSON.parse(dec(j.content)).games||[]}catch(e){}}
+arr=mut(arr);var w=await fetch(u,{method:"PUT",headers:H(tk),body:JSON.stringify({message:"게임 목록 갱신",content:enc(JSON.stringify({games:arr},null,1)),branch:cfg.branch,sha:sha})});if(!w.ok)throw w.status;FRESH[F]=tmap(arr)}
+function errTxt(e){return e===401||e===403?"토큰이 맞지 않거나 쓰기 권한이 없어요.":"처리하지 못했어요"+(typeof e==="number"?" ("+e+")":". 인터넷 연결을 확인해주세요.")}
+async function list(id){var m=M[id];$("#t").textContent=m.n;var F="ROMS/"+m.f,R=await files(m.f),cov={};
+R.items.forEach(function(x){if(IMG.indexOf(ext(x.name))>=0)cov[base(x.name).toLowerCase()]=x});
+var ok=R.items.filter(function(x){return m.ex.indexOf(ext(x.name))>=0}),bad=R.items.filter(function(x){return ok.indexOf(x)<0&&IMG.indexOf(ext(x.name))<0&&!/^(readme\.txt|games\.json|\.gitkeep)$/i.test(x.name)});
+var gd=RD.guide(m,!ok.length);
+V.innerHTML=gd+'<div id="gl" style="margin-top:14px"></div>';var g=$("#gl");
+if(!ok.length)g.innerHTML='<div class="card empty"><p>게임이 없습니다. 폴더에 게임을 추가해주세요.</p><button class="btn" id="add">게임추가</button></div>';
+else{var d=document.createElement("div");d.className="list";ok.forEach(function(x){var c=cov[base(x.name).toLowerCase()],run=m.eng!=="none",title=R.t[x.name]||base(x.name).replace(/_+/g," "),r=document.createElement("div");r.className="gr";
+r.innerHTML=(c?'<img class="thumb" alt="" src="'+GW.esc(c.download_url||F+"/"+encodeURIComponent(c.name))+'">':'<div class="thumb">사진없음</div>')+'<div class="nm">'+GW.esc(title)+' <small>/ '+GW.esc(m.n)+'</small></div>'
++(run?'<a class="btn sm" href="play.html?m='+id+'&f='+encodeURIComponent(x.name)+'">실행</a>':'<span class="btn sm off" title="실행 엔진 준비중">준비중</span>')+'<button class="btn sm del" type="button">삭제</button>';
+r.querySelector(".del").onclick=function(){ask(id,x,c,title)};d.append(r)});g.append(d);g.insertAdjacentHTML("beforeend",'<p class="pill">게임 '+ok.length+'개 · <button class="btn sub" id="add" style="padding:3px 12px">게임추가</button></p>')}
+if(bad.length){var b=document.createElement("div");b.className="list";b.style.marginTop="14px";bad.forEach(function(x){var e=ext(x.name),r=document.createElement("div");r.className="row off";r.innerHTML=GW.esc(x.name)+"<i>"+GW.esc(RD.BAD[e]||"이 기종에서는 ."+e+" 파일을 실행할 수 없어요. 가능: ."+m.ex.join(" ."))+"</i>";b.append(r)});g.append(b)}
+$("#add").onclick=function(){$("#dp").textContent="올릴 위치: "+F+"/";$("#fl").accept="."+m.ex.join(",.");$("#fll").textContent="게임 파일 (."+m.ex.join(" .")+")";$("#dm").textContent="";$("#dm").style.color="";$("#dl").dataset.id=id;$("#dl").showModal()}}
+function ask(id,x,c,title){var m=M[id];$("#dq").textContent="‘"+title+"’ 게임"+(c?"과 대표사진":"")+"을 폴더에서 삭제할까요? 되돌릴 수 없습니다.";$("#dm2").textContent="";
+$("#dx").onclick=async function(){var s=$("#dm2"),t=$("#tk2").value.trim();if(!t){s.textContent="GitHub 토큰을 입력해주세요.";return}s.textContent="삭제하는 중…";
+try{var names=[x.name].concat(c?[c.name]:[]);for(var n of names){var u=API+"ROMS/"+m.f+"/"+encodeURIComponent(n),g=await fetch(u+"?ref="+cfg.branch,{headers:H(t)});if(!g.ok)throw g.status;var r=await fetch(u,{method:"DELETE",headers:H(t),body:JSON.stringify({message:"게임 삭제: "+n,sha:(await g.json()).sha,branch:cfg.branch})});if(!r.ok)throw r.status}
+await patchJson(t,m.f,function(a){return a.filter(function(g){return g.file!==x.name})});$("#tk2").value="";$("#dd").close();list(id)}catch(e){s.textContent=errTxt(e)}};$("#dd").showModal()}
+$("#dc").onclick=function(){$("#dl").close()};$("#dc2").onclick=function(){$("#dd").close()};
+$("#fl").onchange=function(){var f=this.files[0];if(f&&!$("#nm").value)$("#nm").value=base(f.name)};
+$("#dg").onclick=async function(){var id=$("#dl").dataset.id,m=M[id],F="ROMS/"+m.f,s=$("#dm"),t=$("#tk").value.trim(),f=$("#fl").files[0],p=$("#ph").files[0],nm=$("#nm").value.trim();s.style.color="";
+if(!f){s.textContent="게임 파일을 골라주세요.";return}if(m.ex.indexOf(ext(f.name))<0){s.textContent="이 기종은 ."+m.ex.join(" .")+" 파일만 올릴 수 있어요.";return}
+if(p&&IMG.indexOf(ext(p.name))<0){s.textContent="사진은 png, jpg, webp, gif 만 가능해요.";return}
+if(f.size>50*1048576){s.textContent="50MB가 넘는 게임 파일은 GitHub 웹사이트에서 직접 올려주세요.";return}if(p&&p.size>5*1048576){s.textContent="사진은 5MB 이하만 올릴 수 있어요.";return}
+if(!t){s.textContent="GitHub 토큰을 입력해주세요.";return}
+try{s.textContent="게임 파일 올리는 중…";await putFile(t,F+"/"+encodeURIComponent(f.name),0,await b64of(f));
+if(p){s.textContent="사진 올리는 중…";await putFile(t,F+"/"+encodeURIComponent(base(f.name)+"."+ext(p.name)),0,await b64of(p))}
+s.textContent="이름 저장 중…";await patchJson(t,m.f,function(a){a=a.filter(function(g){return g.file!==f.name});a.push({file:f.name,title:nm||base(f.name)});return a});
+$("#tk").value="";$("#nm").value="";$("#fl").value="";$("#ph").value="";$("#dl").close();list(id)}catch(e){s.textContent=errTxt(e)}};
+var m=q.get("m"),g=q.get("g"),c=q.get("c");
+if(m&&M[m]&&M[m].f)list(m);else if(g&&M[g]&&M[g].grp)grid(M[g].n,M[g].grp);else{var C=RD.CATS.find(function(x){return x.k===c});C?grid(C.n+" · 기종 선택",C.ms):location.replace("index.html")}
+</script></body></html>
