@@ -37,6 +37,10 @@
 </script>
 
 <meta name="theme-color" content="#c0c0c0">
+<script>
+/* 윈도우95는 S3 드라이버가 든 이미지라 DOSBox-X(win95.html)로 바로 실행 → 256색 바탕화면. (v86 으로 열려면 ?os=win95&engine=v86) */
+(function(){try{var q=new URLSearchParams(location.search),o=q.get('os');if((!o||o==='win95')&&q.get('engine')!=='v86'){window.__toDos=1;location.replace('win95.html')}}catch(e){}})();
+</script>
 <title>Windows 웹 에뮬레이터</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -198,6 +202,7 @@ html,body{margin:0;width:100%;height:100%;background:#000;color:#eee;font-family
 
 <script>
 "use strict";
+if(window.__toDos)throw new Error('win95.html 으로 이동 중');
 /* =====================================================================
    Windows 웹 에뮬레이터 (v86)  ·  1.0 / 2.0 / 3.0 / 3.1 / 95 / 98 공용
    - 페이지 주소: winemu.html?os=win95  (win10 win20 win30 win31 win95 win98)

@@ -19,7 +19,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 </style>
 </head>
 <body>
-<a id="back" href="index.html">← 목록</a>
+<a id="back" href="index.html" onclick="if(window.top!==window){try{parent.postMessage('sky-close','*')}catch(_){}return false}">← 목록</a>
 <div id="dos"></div>
 <div id="ov"><div id="tx">준비 중…</div><div id="pb"><i></i></div><div id="acts"></div></div>
 <script src="jsdoslib.js"></script>
@@ -27,7 +27,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 <script>
 (function(){
 /* Windows 95 — DOSBox-X(js-dos v8) 의 S3 Trio64 그래픽으로 부팅 → 이미지에 들어 있는 S3 드라이버로 640x480 256색
-   이미지: os/win95/win95.zip (안에 .img 하나).  v86 으로 열려면 winemu.html?os=win95&engine=v86 */
+   이미지: os/win95/win95.zip (안에 .img 하나).  v86 으로 열려면 winemu.html?os=win95&engine=v86 (이 이미지는 S3 드라이버라 v86 에서는 16색) */
 var ov = document.getElementById('ov'), tx = document.getElementById('tx'), pb = ov.querySelector('#pb i'), acts = document.getElementById('acts');
 function show(t, err){ ov.style.display = 'flex'; ov.className = err ? 'err' : ''; tx.textContent = t; if (err) document.getElementById('pb').style.display = 'none'; }
 function fail(e){
@@ -60,48 +60,60 @@ async function getBuf(url){
   return out;
 }
 
-/* 이미지 크기로 CHS 계산 (63섹터, 16헤드) */
+/* 이미지 크기로 CHS 계산 (63섹터, 16헤드) — 이 이미지는 489 x 16 x 63 */
 function conf(imgName, bytes){
   var sectors = Math.floor(bytes / 512), cyl = Math.max(1, Math.floor(sectors / (63 * 16)));
   return [
     '[sdl]', 'autolock=false', '',
     '[dosbox]', 'machine=svga_s3trio64', 'memsize=64', 'vmemsize=4', '',
     '[render]', 'aspect=true', 'scaler=none', '',
-    '[dos]', 'ver=7.1', '',
-    '[cpu]', 'core=dynamic', 'cputype=pentium_mmx', 'cycles=max', '',
-    '[sblaster]', 'sbtype=sb16', 'sbbase=220', 'irq=5', 'dma=1', 'hdma=5', 'oplmode=opl3', '',
-    '[serial]', 'serial1=disabled', 'serial2=disabled', 'serial3=disabled', 'serial4=disabled', '',
-    '[parallel]', 'parallel1=disabled', 'parallel2=disabled', 'parallel3=disabled', '',
-    '[joystick]', 'joysticktype=none', '',
-    '[ne2000]', 'ne2000=false', '',
+    '[cpu]', 'core=auto', 'cputype=pentium_mmx', 'cycles=max', '',
+    '[sblaster]', 'sbtype=sb16', '',
     '[autoexec]',
     '@echo off',
-    'ver set 7.1',
-    /* 1순위: C 드라이브로 마운트 후 부팅 (실패하면 다음 줄로 자동 진행) */
+    /* 1순위: 정확한 CHS 로 C 드라이브 마운트 → 바로 부팅 (성공하면 아래 줄은 실행되지 않음) */
     'imgmount c ' + imgName + ' -t hdd -size 512,63,16,' + cyl,
     'boot -l c',
     /* 2순위: 지오메트리 자동 인식 */
     'imgmount c ' + imgName + ' -t hdd',
     'boot -l c',
-    /* 3순위: 이미지 직접 부팅 */
+    /* 3순위: 이미지 파일을 직접 부팅 */
     'boot ' + imgName,
-    'imgmount 2 ' + imgName + ' -t hdd -fs none -size 512,63,16,' + cyl,
-    'boot -l c',
+    'echo.',
+    'echo Windows 95 boot failed. Press F5 to retry.',
     ''
   ].join('\n');
 }
 
-/* 부팅 중 새 하드웨어 설치 창(디스크 삽입 · 파일 복사)이 뜨면 자동으로 넘김.
-   Enter = 확인, Alt+S = 파일 무시.  사용자가 직접 마우스/키를 누르면 즉시 중단. */
+/* 부팅 중 새 하드웨어 설치 창(PCI 등 · 디스크 삽입 · 파일 복사)이 뜨면 자동으로 넘김.
+   Enter = 확인, Alt+S = 파일 무시.  바탕화면(작업표시줄)이 보이면 즉시 멈추고,
+   사용자가 직접 마우스/키를 누르거나 150초가 지나도 멈춥니다. */
 function autoPass(ci){
-  var stop = false, t0 = Date.now(), n = 0;
+  var stop = false, t0 = Date.now(), n = 0, seen = 0, canShot = (ci && typeof ci.screenshot === 'function');
   ['pointerdown','keydown'].forEach(function(ev){ document.addEventListener(ev, function(e){ if (e.isTrusted && !(e.target.closest && e.target.closest('.gwpad,#back'))) stop = true; }, true); });
   function tap(codes){ codes.forEach(function(c){ try { ci.sendKeyEvent(c, true); } catch(_){} }); setTimeout(function(){ codes.slice().reverse().forEach(function(c){ try { ci.sendKeyEvent(c, false); } catch(_){} }); }, 120); }
+  /* 화면 아래 작업표시줄(회색 띠) + 청록색 바탕이 보이면 바탕화면 도착 */
+  function onDesktop(){
+    if (!canShot) return Promise.resolve(false);
+    return Promise.resolve(ci.screenshot()).then(function(img){
+      if (!img || !img.data || !img.width) return false;
+      var w = img.width, h = img.height, d = img.data, i, x, y, teal = 0, tot = 0, gray = 0, gt = 0;
+      function px(x, y){ i = (y * w + x) * 4; return [d[i], d[i+1], d[i+2]]; }
+      for (y = Math.floor(h * .08); y < Math.floor(h * .85); y += 6) for (x = 4; x < w - 4; x += 6){ var c = px(x, y); tot++; if (c[0] < 40 && Math.abs(c[1] - 128) < 40 && Math.abs(c[2] - 128) < 40) teal++; }
+      for (y = Math.floor(h * .955); y < Math.floor(h * .985); y += 2) for (x = Math.floor(w * .15); x < Math.floor(w * .6); x += 4){ var g = px(x, y); gt++; if (Math.abs(g[0] - 192) < 24 && Math.abs(g[1] - 192) < 24 && Math.abs(g[2] - 192) < 24) gray++; }
+      return tot > 0 && gt > 0 && teal / tot > .25 && gray / gt > .7;
+    }).catch(function(){ canShot = false; return false; });
+  }
   var iv = setInterval(function(){
-    if (stop || Date.now() - t0 > 300000){ clearInterval(iv); return; }
-    if (Date.now() - t0 < 25000) return;          /* 윈도우 로고가 끝난 뒤부터 시작 */
-    n++;
-    if (n % 3 === 0) tap([342, 83]); else tap([257]);   /* Alt+S / Enter */
+    var el = Date.now() - t0;
+    if (stop || el > 150000){ clearInterval(iv); return; }
+    if (el < 15000) return;                        /* 윈도우 로고가 끝난 뒤부터 시작 */
+    onDesktop().then(function(ok){
+      if (stop) return;
+      if (ok){ if (++seen >= 2){ stop = true; clearInterval(iv); } return; }
+      seen = 0; n++;
+      if (n % 3 === 0) tap([342, 83]); else tap([257]);   /* Alt+S / Enter */
+    });
   }, 2000);
 }
 
@@ -115,6 +127,12 @@ async function main(){
   Object.keys(zip.files).forEach(function(n){ var z = zip.files[n]; if (!z.dir && /\.(img|ima|vhd)$/i.test(n)){ var sz = (z._data && z._data.uncompressedSize) || 0; if (!best || sz > best.sz) best = {n: n, sz: sz}; } });
   if (!best) throw new Error('win95.zip 안에서 디스크 이미지(.img)를 찾지 못했어요.');
   var bytes = await zip.file(best.n).async('uint8array'); zip = null;
+  /* 이미지 끝에 붙은 VHD 꼬리표(512바이트, 'conectix')를 떼어 순수 디스크 이미지로 만든다 → 489x16x63 정확히 맞아야 부팅이 안 막힘 */
+  if (bytes.length > 512 && bytes.length % 512 === 0){
+    var ft = bytes.subarray(bytes.length - 512, bytes.length - 504), sig = '';
+    for (var k = 0; k < 8; k++) sig += String.fromCharCode(ft[k]);
+    if (sig === 'conectix') bytes = bytes.subarray(0, bytes.length - 512);
+  }
   pb.style.width = '90%';
   var opts = { autoStart: true, kiosk: false, backend: 'dosboxX', autoSave: false };
   var mode = GWPad.init({root: '#dos', win: true});
