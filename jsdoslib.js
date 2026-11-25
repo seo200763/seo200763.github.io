@@ -115,7 +115,62 @@
     return drive + ':\\' + p + '\r\n\r\n' + drive + ':\\' + dir;
   }
 
-  var api = { ext: ext, norm: norm, pickExes: pickExes, hasBundleConf: hasBundleConf, findWin31: findWin31,
+
+  /* ---- zip / img 지원 도우미 ---- */
+  /* zip 안의 부팅용 디스크 이미지(.img .ima .vhd .iso) 중 가장 큰 것 */
+  function pickDisk(entries) {
+    var best = null;
+    entries.forEach(function (e) {
+      if (/\.(img|ima|vhd|iso)$/i.test(e.name) && !/^\.jsdos\//i.test(norm(e.name)) && (!best || e.size > best.size)) best = e;
+    });
+    return best;
+  }
+  /* 디스크 종류: iso / floppy(2.88MB 이하) / hdd */
+  function diskKind(name, bytes) {
+    if (/\.iso$/i.test(name)) return 'iso';
+    if (bytes <= 2949120) return 'floppy';
+    return 'hdd';
+  }
+  /* 이미지 끝에 붙은 VHD 꼬리표(512바이트, 'conectix')를 떼어 순수 디스크 이미지로 */
+  function stripVhd(bytes) {
+    if (bytes.length > 512 && bytes.length % 512 === 0) {
+      var sig = '', ft = bytes.subarray(bytes.length - 512, bytes.length - 504);
+      for (var k = 0; k < 8; k++) sig += String.fromCharCode(ft[k]);
+      if (sig === 'conectix') return bytes.subarray(0, bytes.length - 512);
+    }
+    return bytes;
+  }
+  function hddBoot(imgName, bytes) {
+    var sectors = Math.floor(bytes / 512), cyl = Math.max(1, Math.floor(sectors / (63 * 16)));
+    return ['imgmount c ' + imgName + ' -t hdd -size 512,63,16,' + cyl, 'boot -l c',
+            'imgmount c ' + imgName + ' -t hdd', 'boot -l c', 'boot ' + imgName];
+  }
+  function winHead() {
+    return ['[sdl]', 'autolock=false', '', '[dosbox]', 'machine=svga_s3trio64', 'memsize=64', 'vmemsize=4', '',
+            '[render]', 'aspect=true', 'scaler=none', '', '[cpu]', 'core=auto', 'cputype=pentium_mmx', 'cycles=max', '',
+            '[voodoo]', 'voodoo_card=false', '', '[pci]', 'voodoo=false', '', '[sblaster]', 'sbtype=sb16', ''];
+  }
+  /* 디스크 이미지 하나를 그대로 부팅/마운트하는 설정 */
+  function diskConf(imgName, bytes, kind) {
+    if (kind === 'hdd') return winHead().concat(['[autoexec]', '@echo off'], hddBoot(imgName, bytes), ['']).join('\n');
+    var a = ['@echo off', 'mount c .'];
+    if (kind === 'iso') a.push('imgmount d "' + imgName + '" -t iso', 'd:');
+    else a.push('imgmount a "' + imgName + '" -t floppy', 'boot -l a');
+    return '[sdl]\nautolock=false\n\n[dosbox]\nmachine=svga_s3\nmemsize=16\n\n[cpu]\ncore=auto\ncycles=auto\n\n[autoexec]\n' + a.join('\n') + '\n';
+  }
+  /* 설정 없는 일반 zip 을 공용 윈도우 95 이미지(os/win95/win95.zip)로 실행할 때의 설정.
+     게임 파일 폴더는 D 드라이브(가상 FAT)로 붙여 줍니다. */
+  function win95GameConf(imgName, bytes, gameBytes) {
+    var sectors = Math.floor(bytes / 512), cyl = Math.max(1, Math.floor(sectors / (63 * 16)));
+    var gc = Math.max(8, Math.ceil(gameBytes * 1.3 / (512 * 63 * 16)) + 2);
+    return winHead().concat(['[autoexec]', '@echo off',
+      'imgmount d . -t hdd -fs fat -size 512,63,16,' + gc,
+      'imgmount c ' + imgName + ' -t hdd -size 512,63,16,' + cyl, 'boot -l c',
+      'imgmount c ' + imgName + ' -t hdd', 'boot -l c', 'boot ' + imgName, '']).join('\n');
+  }
+
+  var api = { pickDisk: pickDisk, diskKind: diskKind, stripVhd: stripVhd, diskConf: diskConf, win95GameConf: win95GameConf,
+              ext: ext, norm: norm, pickExes: pickExes, hasBundleConf: hasBundleConf, findWin31: findWin31,
               dosConf: dosConf, win31Conf: win31Conf, pickImage: pickImage, baseUrl: baseUrl, jsdosOptions: jsdosOptions, patchGameTxt: patchGameTxt, gameTxtFor: gameTxtFor };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.GWJ = api;
 })(typeof window !== 'undefined' ? window : this);

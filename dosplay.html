@@ -82,8 +82,35 @@ async function main(){
 
   var buf = await getBuf('ROMS/' + folder + '/' + encodeURIComponent(f), '게임');
   show('게임 파일 여는 중…');
-  var zip = await JSZip.loadAsync(buf);
-  var names = Object.keys(zip.files).filter(function(n){ return !zip.files[n].dir; });
+  var zip, names, listNames = function(){ return Object.keys(zip.files).filter(function(n){ return !zip.files[n].dir; }); };
+  if (/\.(img|ima|vhd|iso)$/i.test(f)){            /* 디스크 이미지 한 파일을 그대로 올린 경우 */
+    zip = new JSZip(); zip.file(f, buf);
+  } else {
+    zip = await JSZip.loadAsync(buf);
+  }
+  names = listNames();
+  var rebuilt = false;
+  /* zip 안에 .jsdos / .zip 이 또 들어 있는 경우(예: 게임.jsdos 를 zip 으로 한 번 더 압축) → 안쪽 것을 꺼내서 사용 */
+  for (var depth = 0; depth < 3; depth++){
+    var real = names.filter(function(n){ return !/^\.jsdos\//i.test(n); });
+    var inner = real.filter(function(n){ return /\.(jsdos|zip)$/i.test(n); });
+    var runnable = real.some(function(n){ return /\.(exe|com|bat|img|ima|vhd|iso)$/i.test(n); }) || names.some(function(n){ return /(^|\/)\.jsdos\/dosbox\.conf$/i.test(n); });
+    if (inner.length === 1 && !runnable){
+      show('압축 안의 게임 파일 여는 중…\n' + inner[0]);
+      buf = await zip.file(inner[0]).async('uint8array');
+      zip = await JSZip.loadAsync(buf); names = listNames(); rebuilt = false;
+    } else break;
+  }
+  /* 게임 폴더째로 압축해서 .jsdos 설정이 한 단계 아래 폴더에 들어간 경우 → 그 폴더를 바깥으로 꺼냄 */
+  if (!zip.file('.jsdos/dosbox.conf')){
+    var cn = names.filter(function(n){ return /^[^\/]+\/\.jsdos\/dosbox\.conf$/i.test(n); });
+    if (cn.length === 1){
+      var pre = cn[0].slice(0, cn[0].indexOf('/') + 1), nz = new JSZip();
+      for (var k = 0; k < names.length; k++) if (names[k].indexOf(pre) === 0) nz.file(names[k].slice(pre.length), await zip.file(names[k]).async('uint8array'));
+      zip = nz; names = listNames(); rebuilt = true;
+    }
+  }
+  if (rebuilt) buf = await zip.generateAsync({type: 'uint8array'});
 
   var meta = {}, mf = zip.file('.jsdos/gw.json');
   if (mf) { try { meta = JSON.parse(await mf.async('string')); } catch(e){} }
@@ -92,9 +119,26 @@ async function main(){
   if (cf) conf = await cf.async('string');
 
   /* 설정이 없는 평범한 zip → 자동으로 설정 만들기 */
+  var bootDisk = null;
   if (!conf){
+    var ents0 = names.map(function(n){ return {name: n, size: (zip.files[n]._data && zip.files[n]._data.uncompressedSize) || 0}; });
+    var disk = GWJ.pickDisk(ents0), anyExe = GWJ.pickExes(names, 'win').length > 0;
     var w = GWJ.findWin31(names);
-    if (w){
+    if (disk && !anyExe){
+      /* 디스크 이미지(.img/.iso) 가 든 zip → 이미지를 그대로 부팅 */
+      var dbytes = await zip.file(disk.name).async('uint8array');
+      var dk = GWJ.diskKind(disk.name, dbytes.length);
+      if (dk === 'hdd') dbytes = GWJ.stripVhd(dbytes);
+      bootDisk = {name: disk.name.split('/').pop(), full: disk.name, bytes: dbytes, kind: dk};
+      conf = GWJ.diskConf(bootDisk.name, dbytes.length, dk);
+      meta.kind = dk === 'hdd' ? 'win95' : 'dos';
+    } else if (mid === 'win95game' && !w && anyExe){
+      /* 윈도우 95 폴더의 일반 zip → 공용 윈도우 95 이미지로 부팅하고 게임 폴더를 D 드라이브로 붙임 */
+      var xl = GWJ.pickExes(names, 'win'), xx = xl.length === 1 ? xl[0] : await choose(xl);
+      var gb = 0; names.forEach(function(n){ gb += (zip.files[n]._data && zip.files[n]._data.uncompressedSize) || 0; });
+      meta.kind = 'win95'; meta.base = 'win95'; meta.launch = 'gametxt'; meta.exe = xx; meta.drive = 'D'; meta.gameBytes = gb;
+      conf = '@@WIN95GAME@@';
+    } else if (w){
       meta.kind = 'win31';
       var wl = GWJ.pickExes(names, 'win'), wx = wl.length === 1 ? wl[0] : (wl.length ? await choose(wl.concat(['(프로그램 관리자만 열기)'])) : '');
       conf = GWJ.win31Conf(w, /^\(/.test(wx) ? '' : wx);
@@ -124,8 +168,11 @@ async function main(){
       var img = GWJ.pickImage(ents);
       if (!img) throw new Error('os/' + meta.base + '/' + meta.base + '.zip 안에서 디스크 이미지(.img)를 찾지 못했어요.');
       imgPath = 'win95.img';
-      imgBytes = await bzip.file(img.name).async('uint8array');
+      imgBytes = GWJ.stripVhd(await bzip.file(img.name).async('uint8array'));
       bzip = null;
+      if (conf === '@@WIN95GAME@@') conf = GWJ.win95GameConf('win95.img', imgBytes.length, meta.gameBytes || 0);
+    } else if (bootDisk){
+      imgPath = bootDisk.name; imgBytes = bootDisk.bytes;
     } else if (gametxt){
       var ie = names.map(function(n){ return {name: n, size: (zip.files[n]._data && zip.files[n]._data.uncompressedSize) || 0}; });
       var own = GWJ.pickImage(ie);
@@ -138,7 +185,7 @@ async function main(){
     if (imgBytes) files.push({path: imgPath, contents: imgBytes});
     imgBytes = null;
     for (var i = 0; i < names.length; i++){
-      if (/^\.jsdos\//i.test(names[i]) || names[i] === imgPath) continue;
+      if (/^\.jsdos\//i.test(names[i]) || names[i] === imgPath || (bootDisk && names[i] === bootDisk.full)) continue;
       tx.textContent = '파일 준비 중… ' + (i + 1) + ' / ' + names.length; pb.style.width = ((i + 1) * 100 / names.length) + '%';
       files.push({path: names[i], contents: await zip.file(names[i]).async('uint8array')});
     }

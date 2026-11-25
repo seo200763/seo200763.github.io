@@ -1,6 +1,8 @@
 /* 기종·확장자 정보 — 새 기종은 여기만 고치면 됩니다. ROMS/<폴더>/ 안에 게임을 넣으세요. */
 const CD=['BIOS/bios_CD_U.bin','BIOS/bios_CD_E.bin','BIOS/bios_CD_J.bin'];
 const E=(n,f,core,ex,c,l,o)=>Object.assign({n,f,eng:'ejs',core,ex:ex.split(' '),c,l},o||{});
+const ZW={zip:'zip 으로 압축된 게임입니다. 압축을 풀지 말고 그대로 올리세요. zip 안이 .jsdos 파일·게임 폴더·디스크 이미지(.img) 중 무엇이어도 자동으로 알아보고 실행합니다.',
+img:'부팅할 수 있는 디스크 이미지(.img) 한 파일입니다. 그대로 올리면 바로 부팅해서 실행합니다. 용량이 크면 zip 으로 압축해서 올리세요.'};
 const RD={
 M:{
 nes:E('패미컴 / NES','NES','nes','nes zip','#f0384f','NES'),
@@ -23,9 +25,9 @@ lynx:E('아타리 링스','LYNX','lynx','lnx zip','#ff8a2b','LYNX'),ngp:E('네�
 vb:E('버추얼보이','VB','vb','vb zip','#e82020','VB'),nds:E('닌텐도 DS','NDS','desmume2015','nds zip','#aab6c8','NDS'),
 win31:{n:'윈도우 3.1',eng:'v86',open:'win31',c:'#3b82f6',l:'3.1'},win95:{n:'윈도우 95',eng:'v86',open:'win95',c:'#14b8a6',l:'95'},
 win98:{n:'윈도우 98',eng:'v86',open:'win98',c:'#60a5fa',l:'98'},msdos:{n:'MS-DOS 부팅',eng:'v86',open:'dos',c:'#4b5563',l:'DOS'},
-dosgame:{n:'도스게임',f:'DOS',eng:'jsdos',ex:['jsdos','zip'],c:'#4b5563',l:'DOS',note:'JSDOS 변환기(도스 게임)로 만든 .jsdos 파일을 올리세요. 게임 폴더를 그냥 zip 으로 묶어 올려도 자동 설정으로 실행을 시도합니다(.exe 한 개만 올리면 실행되지 않습니다).'},
-win31game:{n:'윈도우 3.1 게임',f:'WIN31',eng:'jsdos',ex:['jsdos','zip'],c:'#3b82f6',l:'3.1',note:'JSDOS 변환기(윈도우 3.1 게임)로 만든 .jsdos 파일을 올리세요. 윈도우 3.1 폴더가 함께 들어 있어야 하며, 용량이 커서 PC 에서 하는 것을 권장합니다.'},
-win95game:{n:'윈도우 95 게임',f:'WIN95',eng:'jsdos',ex:['jsdos'],c:'#14b8a6',l:'95',note:'JSDOS 변환기(윈도우 95 게임)로 만든 .jsdos 파일을 올리세요. 공용 윈도우 이미지 os/win95/win95.zip 이 있어야 실행됩니다(zip 안에 .img). PC 에서 하는 것을 권장하며 폰에서는 느리거나 안 될 수 있어요.'},
+dosgame:{n:'도스게임',f:'DOS',eng:'jsdos',ex:['jsdos','zip','img'],why:ZW,c:'#4b5563',l:'DOS',note:'JSDOS 변환기(도스 게임)로 만든 .jsdos 파일을 올리세요. 게임 폴더를 그냥 zip 으로 묶어 올려도 자동 설정으로 실행을 시도합니다(.exe 한 개만 올리면 실행되지 않습니다).'},
+win31game:{n:'윈도우 3.1 게임',f:'WIN31',eng:'jsdos',ex:['jsdos','zip','img'],why:ZW,c:'#3b82f6',l:'3.1',note:'JSDOS 변환기(윈도우 3.1 게임)로 만든 .jsdos 파일을 올리세요. 윈도우 3.1 폴더가 함께 들어 있어야 하며, 용량이 커서 PC 에서 하는 것을 권장합니다.'},
+win95game:{n:'윈도우 95 게임',f:'WIN95',eng:'jsdos',ex:['jsdos','zip','img'],why:ZW,c:'#14b8a6',l:'95',note:'JSDOS 변환기(윈도우 95 게임)로 만든 .jsdos 파일, 또는 그것을 zip 으로 압축한 파일, 부팅 디스크 이미지(.img)를 올리세요. 게임 폴더만 zip 으로 묶어 올리면 공용 윈도우 이미지 os/win95/win95.zip 이 있어야 실행됩니다(zip 안에 .img). PC 에서 하는 것을 권장하며 폰에서는 느리거나 안 될 수 있어요.'},
 mame:E('오락실게임 (마메)','MAME','fbneo','zip','#ff7a1a','MAME',{bios:['ROMS/MAME/_bios/neogeo.zip','MAME/_bios/neogeo.zip'],note:'네오지오 게임(킹 오브 파이터즈, 메탈슬러그 등)은 ROMS/MAME/_bios/neogeo.zip 바이오스가 필요합니다.'}),
 folderphone:{n:'폴더폰게임',f:'FOLDER',eng:'none',ex:['jar','jad'],note:'폴더폰·자바 게임(.jar)을 실행해 주는 웹 엔진이 아직 연결되지 않았어요. 파일 보관용 목록으로만 보입니다.'},
 java:{n:'자바게임',f:'JAVA',eng:'none',ex:['jar','jad'],note:'자바(.jar) 게임을 실행해 주는 웹 엔진이 아직 연결되지 않았어요. 파일 보관용 목록으로만 보입니다.'},
@@ -52,7 +54,7 @@ exe:'.exe 는 윈도우 프로그램이라 직접 실행할 수 없습니다. �
 
 /* 게임목록 위에 보이는 '게임 올리는 방법' 안내문 */
 RD.guide=function(m,open){var ex=m.ex.map(function(e){return'.'+e}).join(' '),e1='.'+m.ex[0];
-var more=m.ex.map(function(e){return RD.WHY[e]?'<li><b>.'+e+'</b> '+RD.WHY[e]+'</li>':''}).join('')
+var more=m.ex.map(function(e){var w=(m.why&&m.why[e])||RD.WHY[e];return w?'<li><b>.'+e+'</b> '+w+'</li>':''}).join('')
 +(m.cd?'<li>CD 게임은 용량이 커서 저사양 폰에서 느릴 수 있어요. .chd 로 줄이면 가장 안정적입니다.</li>':'')
 +(m.bios?'<li><b>바이오스</b> '+m.bios[0]+' 같은 파일을 올려 두면 자동으로 사용합니다. (본인이 합법적으로 가진 것만)</li>':'')+(m.note?'<li>'+m.note+'</li>':'');
 return'<details class="card guide"'+(open?' open':'')+'><summary>게임 올리는 방법</summary>'
