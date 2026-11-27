@@ -108,5 +108,14 @@
  "VIRTUALBOY": [],
  "WEB": [],
  "WIN31": [],
- "WIN95": []
+ "WIN95": [
+  {
+   "file": "hwansek.jpg",
+   "size": 61589
+  },
+  {
+   "file": "hwansek.jsdos",
+   "size": 4026908
+  }
+ ]
 }
