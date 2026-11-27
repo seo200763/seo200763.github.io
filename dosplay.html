@@ -172,6 +172,14 @@ async function main(){
       imgBytes = GWJ.stripVhd(await bzip.file(img.name).async('uint8array'));
       bzip = null;
       if (conf === '@@WIN95GAME@@') conf = GWJ.win95GameConf('win95.img', imgBytes.length, meta.gameBytes || 0);
+      else if (conf === '@@WIN95DISK@@'){            /* 게임이 든 디스크 이미지를 D 드라이브로 붙임 */
+        var dfi = zip.files[meta.diskFile || 'disk.img'], dbn = (dfi && dfi._data && dfi._data.uncompressedSize) || 0;
+        var cylOf = function(b){ return Math.max(1, Math.floor(Math.floor(b / 512) / (63 * 16))); };
+        conf = ['[sdl]','autolock=false','','[dosbox]','machine=svga_s3trio64','memsize=64','vmemsize=4','','[render]','aspect=true','scaler=none','','[cpu]','core=auto','cputype=pentium_mmx','cycles=max','','[voodoo]','voodoo_card=false','','[pci]','voodoo=false','','[sblaster]','sbtype=sb16','','[autoexec]','@echo off',
+          'imgmount d ' + (meta.diskFile || 'disk.img') + ' -t hdd -size 512,63,16,' + cylOf(dbn),
+          'imgmount c win95.img -t hdd -size 512,63,16,' + cylOf(imgBytes.length), 'boot -l c',
+          'imgmount c win95.img -t hdd', 'boot -l c', 'boot win95.img', ''].join('\n');
+      }
     } else if (bootDisk){
       imgPath = bootDisk.name; imgBytes = bootDisk.bytes;
     } else if (gametxt){
