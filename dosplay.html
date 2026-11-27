@@ -30,7 +30,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 <script>
 (function(){
 var q = new URLSearchParams(location.search), mid = q.get('m') || 'dosgame', f = q.get('f') || '';
-var M = (typeof RD !== 'undefined' && RD.M[mid]) || {f:'DOS'}, folder = M.f || 'DOS'; if (q.get('s')) folder = folder + '/ROMS/' + folder;
+var FB = {dosgame:'DOS', win31game:'WIN31', win95game:'WIN95', win98game:'WIN98'};
+var M = (typeof RD !== 'undefined' && RD.M[mid]) || {f: FB[mid] || 'DOS'}, folder = M.f || 'DOS'; if (q.get('s')) folder = folder + '/ROMS/' + folder;
 var ov = document.getElementById('ov'), tx = document.getElementById('tx'), pb = ov.querySelector('#pb i');
 document.getElementById('back').href = 'roms.html?m=' + encodeURIComponent(mid);
 
@@ -132,7 +133,7 @@ async function main(){
       bootDisk = {name: disk.name.split('/').pop(), full: disk.name, bytes: dbytes, kind: dk};
       conf = GWJ.diskConf(bootDisk.name, dbytes.length, dk);
       meta.kind = dk === 'hdd' ? 'win95' : 'dos';
-    } else if (mid === 'win95game' && !w && anyExe){
+    } else if ((mid === 'win95game' || mid === 'win98game') && !w && anyExe){
       /* 윈도우 95 폴더의 일반 zip → 공용 윈도우 95 이미지로 부팅하고 게임 폴더를 D 드라이브로 붙임 */
       var xl = GWJ.pickExes(names, 'win'), xx = xl.length === 1 ? xl[0] : await choose(xl);
       var gb = 0; names.forEach(function(n){ gb += (zip.files[n]._data && zip.files[n]._data.uncompressedSize) || 0; });

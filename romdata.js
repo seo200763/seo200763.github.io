@@ -28,6 +28,7 @@ win98:{n:'윈도우 98',eng:'v86',open:'win98',c:'#60a5fa',l:'98'},msdos:{n:'MS-
 dosgame:{n:'도스게임',f:'DOS',eng:'jsdos',ex:['jsdos','zip','img'],why:ZW,c:'#4b5563',l:'DOS',note:'JSDOS 변환기(도스 게임)로 만든 .jsdos 파일을 올리세요. 게임 폴더를 그냥 zip 으로 묶어 올려도 자동 설정으로 실행을 시도합니다(.exe 한 개만 올리면 실행되지 않습니다).'},
 win31game:{n:'윈도우 3.1 게임',f:'WIN31',eng:'jsdos',ex:['jsdos','zip','img'],why:ZW,c:'#3b82f6',l:'3.1',note:'JSDOS 변환기(윈도우 3.1 게임)로 만든 .jsdos 파일을 올리세요. 윈도우 3.1 폴더가 함께 들어 있어야 하며, 용량이 커서 PC 에서 하는 것을 권장합니다.'},
 win95game:{n:'윈도우 95 게임',f:'WIN95',eng:'jsdos',ex:['jsdos','zip','img'],why:ZW,c:'#14b8a6',l:'95',note:'JSDOS 변환기(윈도우 95 게임)로 만든 .jsdos 파일, 또는 그것을 zip 으로 압축한 파일, 부팅 디스크 이미지(.img)를 올리세요. 게임 폴더만 zip 으로 묶어 올리면 공용 윈도우 이미지 os/win95/win95.zip 이 있어야 실행됩니다(zip 안에 .img). PC 에서 하는 것을 권장하며 폰에서는 느리거나 안 될 수 있어요.'},
+win98game:{n:'윈도우 98 게임',f:'WIN98',eng:'jsdos',ex:['jsdos','zip','img'],why:ZW,c:'#60a5fa',l:'98',note:'JSDOS 변환기(윈도우 98 게임)로 만든 .jsdos 파일, 또는 그것을 zip 으로 압축한 파일, 부팅 디스크 이미지(.img)를 올리세요. 게임 폴더만 zip 으로 묶어 올리면 공용 윈도우 이미지 os/win95/win95.zip 이 있어야 실행됩니다(zip 안에 .img). PC 에서 하는 것을 권장하며 폰에서는 느리거나 안 될 수 있어요.'},
 mame:E('오락실게임 (마메)','MAME','fbneo','zip','#ff7a1a','MAME',{bios:['ROMS/MAME/_bios/neogeo.zip','MAME/_bios/neogeo.zip'],note:'네오지오 게임(킹 오브 파이터즈, 메탈슬러그 등)은 ROMS/MAME/_bios/neogeo.zip 바이오스가 필요합니다.'}),
 folderphone:{n:'폴더폰게임',f:'FOLDER',eng:'none',ex:['jar','jad'],note:'폴더폰·자바 게임(.jar)을 실행해 주는 웹 엔진이 아직 연결되지 않았어요. 파일 보관용 목록으로만 보입니다.'},
 java:{n:'자바게임',f:'JAVA',eng:'none',ex:['jar','jad'],note:'자바(.jar) 게임을 실행해 주는 웹 엔진이 아직 연결되지 않았어요. 파일 보관용 목록으로만 보입니다.'},
@@ -36,7 +37,7 @@ html5:{n:'HTML5게임',f:'HTML5',eng:'html',ex:['html','htm'],note:'게임 전�
 flash:{n:'플래시게임',f:'FLASH',eng:'swf',ex:['swf'],note:'Ruffle 플래시 에뮬레이터로 실행합니다. 일부 오래된 ActionScript 3 게임은 안 열릴 수 있어요.'}
 },
 CATS:[
-{k:'pc',n:'PC게임',ms:['win31','win95','win98','msdos']},{k:'dos',n:'도스게임',ms:['dosgame','win31game','win95game']},
+{k:'pc',n:'PC게임',ms:['win31game','win95game','win98game']},{k:'dos',n:'도스게임',ms:['dosgame','msdos']},
 {k:'classic',n:'고전게임',ms:['nes','snes','sms','pce','md','n64','psx','segacd','saturn','s32x','3do','jaguar','atari2600','handheld']},
 {k:'arcade',n:'오락실게임',ms:['mame']},{k:'folder',n:'폴더폰게임',ms:['folderphone']},{k:'web',n:'웹게임',ms:['webgame']},
 {k:'java',n:'자바게임',ms:['java']},{k:'html5',n:'HTML5게임',ms:['html5']},{k:'flash',n:'플래시게임',ms:['flash']}],
