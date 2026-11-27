@@ -6,11 +6,14 @@
    "info": {
     "kind": "win95",
     "kindName": "윈도우 95 게임",
-    "exe": "(디스크 이미지 부팅) image.img",
-    "exes": [],
+    "exe": "HWANSE/HWANSE.EXE",
+    "exes": [
+     "HWANSE/EDITOR.EXE",
+     "HWANSE/HWANSE.EXE"
+    ],
     "files": 1,
     "size": 7340032,
-    "desc": "환세취호전, 모험을 떠나다. 윈도우95",
+    "desc": "모험을 떠나다 환세취호전 K",
     "added": "2026-11-27"
    }
   }
