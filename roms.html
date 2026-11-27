@@ -18,12 +18,14 @@ function grid(title,ids){$("#t").textContent=title;var g=document.createElement(
 function ext(n){var i=n.lastIndexOf(".");return i<0?"":n.slice(i+1).toLowerCase()}
 function base(n){var i=n.lastIndexOf(".");return i<0?n:n.slice(0,i)}
 var enc=function(s){return btoa(unescape(encodeURIComponent(s)))},dec=function(s){return decodeURIComponent(escape(atob(s.replace(/\n/g,""))))};
-function tmap(arr){var t={};arr.forEach(function(g){t[g.file]=g.title});return t}
+var INFO={};function infoHtml(f){var i=INFO[f];if(!i)return"";var a=[],s=[];if(i.exe)a.push("실행: "+i.exe);if(i.exes&&i.exes.length>1)a.push("다른 실행파일: "+i.exes.filter(function(e){return e!==i.exe}).slice(0,4).join(", "));if(i.kindName)s.push(i.kindName);if(i.files)s.push("파일 "+i.files+"개");if(i.size)s.push((i.size/1048576).toFixed(1)+"MB");return'<div style="font-size:13px;color:var(--mut);margin-top:3px;line-height:1.5">'+GW.esc(a.join(" · "))+(a.length?"<br>":"")+GW.esc(s.join(" · "))+(i.desc?"<br>"+GW.esc(i.desc):"")+"</div>"}
+function tmap(arr){var t={};arr.forEach(function(g){t[g.file]=g.title;if(g.info)INFO[g.file]=g.info});return t}
 async function files(f){var p="ROMS/"+f,items=null,t={};
 try{var r=await fetch(API+p+"?ref="+cfg.branch);if(r.ok)items=(await r.json()).filter(function(x){return x.type==="file"});else if(r.status===404)items=[]}catch(e){}
 if(!items||!items.length){try{var lj=await (await fetch("ROMS/list.json",{cache:"no-store"})).json(),la=lj[f];if(la&&la.length)items=la.map(function(g){return{name:g.file,type:"file"}})}catch(e){}}
 if(items){var j=items.find(function(x){return x.name.toLowerCase()==="games.json"});if(j&&j.download_url){try{t=tmap((await (await fetch(j.download_url+"?t="+Date.now())).json()).games||[])}catch(e){}}}
 else{try{var d=(await (await fetch(p+"/games.json",{cache:"no-store"})).json()).games||[];items=d.map(function(g){return{name:g.file}});t=tmap(d)}catch(e){items=[]}}
+try{var np=p+"/ROMS/"+f,nr=await fetch(API+np+"?ref="+cfg.branch);if(nr.ok){var ni=(await nr.json()).filter(function(x){return x.type==="file"});ni.forEach(function(x){x.sub=1});var nj=ni.find(function(x){return x.name.toLowerCase()==="games.json"});if(nj&&nj.download_url){try{var nt=tmap((await (await fetch(nj.download_url+"?t="+Date.now())).json()).games||[]);for(var k in nt)t[k]=nt[k]}catch(e){}}items=(items||[]).concat(ni.filter(function(x){return!(items||[]).some(function(y){return y.name===x.name})}))}else{var ld=(await (await fetch(np+"/games.json",{cache:"no-store"})).json()).games||[];ld.forEach(function(g){t[g.file]=g.title;if(g.info)INFO[g.file]=g.info;if(!(items||[]).some(function(y){return y.name===g.file}))(items=items||[]).push({name:g.file,type:"file",sub:1})})}}catch(e){}
 if(FRESH[f])t=FRESH[f];return{items:items,t:t}}
 async function putFile(tk,path,body,b64){var u=API+path,sha;var ex=await fetch(u+"?ref="+cfg.branch,{headers:H(tk)});if(ex.ok)sha=(await ex.json()).sha;
 var r=await fetch(u,{method:"PUT",headers:H(tk),body:JSON.stringify({message:"게임 추가: "+path.split("/").pop(),content:b64,branch:cfg.branch,sha:sha})});if(!r.ok)throw r.status}
@@ -39,8 +41,8 @@ var gd=RD.guide(m,!ok.length);
 V.innerHTML=gd+'<div id="gl" style="margin-top:14px"></div>';var g=$("#gl");
 if(!ok.length)g.innerHTML='<div class="card empty"><p>게임이 없습니다. 폴더에 게임을 추가해주세요.</p><button class="btn" id="add">게임추가</button></div>';
 else{var d=document.createElement("div");d.className="list";ok.forEach(function(x){var c=cov[base(x.name).toLowerCase()],run=m.eng!=="none",title=R.t[x.name]||base(x.name).replace(/_+/g," "),r=document.createElement("div");r.className="gr";
-r.innerHTML=(c?'<img class="thumb" alt="" src="'+GW.esc(c.download_url||F+"/"+encodeURIComponent(c.name))+'">':'<div class="thumb">사진없음</div>')+'<div class="nm">'+GW.esc(title)+' <small>/ '+GW.esc(m.n)+'</small></div>'
-+(run?'<a class="btn sm" href="play.html?m='+id+'&f='+encodeURIComponent(x.name)+'">실행</a>':'<span class="btn sm off" title="실행 엔진 준비중">준비중</span>')+'<button class="btn sm del" type="button">삭제</button>';
+r.innerHTML=(c?'<img class="thumb" alt="" src="'+GW.esc(c.download_url||F+"/"+encodeURIComponent(c.name))+'">':'<div class="thumb">사진없음</div>')+'<div class="nm">'+GW.esc(title)+' <small>/ '+GW.esc(m.n)+'</small>'+infoHtml(x.name)+'</div>'
++(run?'<a class="btn sm" href="play.html?m='+id+'&f='+encodeURIComponent(x.name)+(x.sub?'&s=1':'')+'">실행</a>':'<span class="btn sm off" title="실행 엔진 준비중">준비중</span>')+'<button class="btn sm del" type="button">삭제</button>';
 r.querySelector(".del").onclick=function(){ask(id,x,c,title)};d.append(r)});g.append(d);g.insertAdjacentHTML("beforeend",'<p class="pill">게임 '+ok.length+'개 · <button class="btn sub" id="add" style="padding:3px 12px">게임추가</button></p>')}
 if(bad.length){var b=document.createElement("div");b.className="list";b.style.marginTop="14px";bad.forEach(function(x){var e=ext(x.name),r=document.createElement("div");r.className="row off";r.innerHTML=GW.esc(x.name)+"<i>"+GW.esc(RD.BAD[e]||"이 기종에서는 ."+e+" 파일을 실행할 수 없어요. 가능: ."+m.ex.join(" ."))+"</i>";b.append(r)});g.append(b)}
 $("#add").onclick=function(){$("#dp").textContent="올릴 위치: "+F+"/";$("#fl").accept="."+m.ex.join(",.");$("#fll").textContent="게임 파일 (."+m.ex.join(" .")+")";$("#dm").textContent="";$("#dm").style.color="";$("#dl").dataset.id=id;$("#dl").showModal()}}

@@ -8,11 +8,11 @@ function msg(t){box.innerHTML='<div id="msg">'+t+'</div>'}
 function ld(s,cb){var e=document.createElement("script");e.src=s;e.onload=cb;e.onerror=function(){msg("실행 엔진을 불러오지 못했어요. 인터넷 연결을 확인해주세요.")};document.head.append(e)}
 if(!m||!m.f||/[\/]|\.\./.test(f)){location.replace("index.html")}else{
 document.getElementById("back").href="roms.html?m="+q.get("m");document.getElementById("fs").onclick=function(){(box.requestFullscreen||box.webkitRequestFullscreen||function(){}).call(box)};
-var url="ROMS/"+m.f+"/"+encodeURIComponent(f),name=f.replace(/\.[^.]+$/,"");
+var url="ROMS/"+(q.get("s")?m.f+"/ROMS/"+m.f:m.f)+"/"+encodeURIComponent(f),name=f.replace(/\.[^.]+$/,"");
 if(m.eng==="ejs")(async function(){var bios=null;for(var b of(m.bios||[])){try{if((await fetch(b,{method:"HEAD"})).ok){bios=b;break}}catch(e){}}
 window.EJS_player="#game";EJS_core=m.core;EJS_gameUrl=url;EJS_gameName=name;EJS_pathtodata="https://cdn.emulatorjs.org/stable/data/";EJS_startOnLoaded=true;if(bios)EJS_biosUrl=bios;ld(EJS_pathtodata+"loader.js")})();
 else if(m.eng==="html")box.innerHTML='<iframe src="'+url+'" allow="fullscreen;gamepad"></iframe>';
 else if(m.eng==="swf")ld("https://unpkg.com/@ruffle-rs/ruffle",function(){var p=RufflePlayer.newest().createPlayer();p.style.cssText="width:100%;height:100%";box.innerHTML="";box.append(p);p.load(url)});
-else if(m.eng==="jsdos")location.replace("dosplay.html?m="+encodeURIComponent(q.get("m"))+"&f="+encodeURIComponent(f))
+else if(m.eng==="jsdos")location.replace("dosplay.html?m="+encodeURIComponent(q.get("m"))+"&f="+encodeURIComponent(f)+(q.get("s")?"&s=1":""))
 else msg("이 종류는 아직 실행 엔진이 없어요.")}
 </script></body></html>
