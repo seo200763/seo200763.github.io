@@ -30,7 +30,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hid
 <script>
 (function(){
 var q = new URLSearchParams(location.search), mid = q.get('m') || 'dosgame', f = q.get('f') || '';
-var M = (window.RD && RD.M[mid]) || {f:'DOS'}, folder = M.f || 'DOS'; if (q.get('s')) folder = folder + '/ROMS/' + folder;
+var M = (typeof RD !== 'undefined' && RD.M[mid]) || {f:'DOS'}, folder = M.f || 'DOS'; if (q.get('s')) folder = folder + '/ROMS/' + folder;
 var ov = document.getElementById('ov'), tx = document.getElementById('tx'), pb = ov.querySelector('#pb i');
 document.getElementById('back').href = 'roms.html?m=' + encodeURIComponent(mid);
 
